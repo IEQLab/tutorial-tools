@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IAQ &amp; Ventilation Calculator — BPSD5030</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --ink: #1c2430; --muted: #5a6675;
+    --line: #dfe4ea; --accent: #0e7c86; --accent-ink: #ffffff;
+    --good: #1a7f4b; --warn: #b4690e; --bad: #b02a37;
+    --field: #ffffff; --result-bg: #eef6f7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #10151b; --card: #171e27; --ink: #e7ecf2; --muted: #9aa7b6;
+      --line: #2a3441; --accent: #38b2bd; --accent-ink: #06212a;
+      --good: #57c98a; --warn: #e0a955; --bad: #e2707a;
+      --field: #0f151c; --result-bg: #13232a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 24px 18px 64px; }
+  header.page { margin-bottom: 8px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  .lede { color: var(--muted); margin: 0 0 20px; max-width: 62ch; }
+  .home { display: inline-block; color: var(--accent); text-decoration: none; font-size: .9rem; margin-bottom: 14px; }
+  .home:hover { text-decoration: underline; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 18px 18px 20px; margin: 16px 0;
+  }
+  h2 { font-size: 1.15rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: .92rem; margin: 0 0 14px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+  label { display: block; font-size: .85rem; color: var(--muted); margin-bottom: 4px; }
+  input, select {
+    width: 100%; padding: 8px 10px; font-size: 1rem; color: var(--ink);
+    background: var(--field); border: 1px solid var(--line); border-radius: 8px;
+  }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .results { margin-top: 16px; background: var(--result-bg); border-radius: 10px; padding: 4px 14px; }
+  .row { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+  .row:last-child { border-bottom: 0; }
+  .row .k { color: var(--muted); }
+  .row .v { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .verdict { margin-top: 14px; padding: 12px 14px; border-radius: 10px; font-weight: 600; border: 1px solid var(--line); }
+  .verdict.good { color: var(--good); }
+  .verdict.bad { color: var(--bad); }
+  .verdict.warn { color: var(--warn); }
+  canvas { width: 100%; height: auto; display: block; margin-top: 8px; }
+  .formula { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .86rem;
+    background: var(--result-bg); border-radius: 8px; padding: 10px 12px; margin: 6px 0; overflow-x: auto; }
+  .note { color: var(--muted); font-size: .86rem; }
+  details { margin-top: 12px; }
+  summary { cursor: pointer; color: var(--accent); font-size: .9rem; }
+  footer.page { color: var(--muted); font-size: .82rem; margin-top: 28px; border-top: 1px solid var(--line); padding-top: 14px; }
+  .rangeval { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="home" href="index.html">&larr; IEQ tools</a>
+  <header class="page">
+    <h1>IAQ &amp; Ventilation Calculator</h1>
+    <p class="lede">Work out the required outdoor airflow for a space (ASHRAE 62.1), then estimate the actual ventilation from measured CO<sub>2</sub> using a steady-state mass balance. The tool does the arithmetic; the interpretation (is the space adequately ventilated, and what would you change) is yours.</p>
+  </header>
+
+  <!-- A: Required airflow -->
+  <section class="card">
+    <h2>1. Required outdoor airflow</h2>
+    <p class="sub">ASHRAE 62.1 Ventilation Rate Procedure. Pick a space type to load typical R<sub>p</sub>/R<sub>a</sub>, or enter your own from Table 6.2.2.1.</p>
+    <div class="grid">
+      <div>
+        <label for="spacetype">Space type (loads R<sub>p</sub>, R<sub>a</sub>)</label>
+        <select id="spacetype">
+          <option value="3.8,0.3">Lecture hall (fixed seats)</option>
+          <option value="3.8,0.3">Classroom (ages 9+)</option>
+          <option value="2.5,0.3">Office space</option>
+          <option value="2.5,0.3">Conference / meeting</option>
+          <option value="2.5,0.6">Library</option>
+          <option value="custom">Custom (enter below)</option>
+        </select>
+      </div>
+      <div>
+        <label for="rp">R<sub>p</sub> — per person (L/s·person)</label>
+        <input id="rp" type="number" step="0.1" value="3.8">
+      </div>
+      <div>
+        <label for="ra">R<sub>a</sub> — per area (L/s·m&sup2;)</label>
+        <input id="ra" type="number" step="0.1" value="0.3">
+      </div>
+      <div>
+        <label for="pz">P<sub>z</sub> — occupants</label>
+        <input id="pz" type="number" step="1" value="50">
+      </div>
+      <div>
+        <label for="len">Floor length (m)</label>
+        <input id="len" type="number" step="0.1" value="11.8">
+      </div>
+      <div>
+        <label for="wid">Floor width (m)</label>
+        <input id="wid" type="number" step="0.1" value="12.3">
+      </div>
+      <div>
+        <label for="ez">E<sub>z</sub> — air distribution effectiveness</label>
+        <input id="ez" type="number" step="0.05" value="1.0">
+      </div>
+    </div>
+    <div class="results" id="reqResults"></div>
+    <div class="formula">Vbz = (Rp &times; Pz) + (Ra &times; Az)   ·   Voz = Vbz / Ez</div>
+    <p class="note">E<sub>z</sub> = 1.0 assumes fully mixed air. Real systems are often 0.5–0.8; lower effectiveness means more airflow is needed for the same air quality.</p>
+  </section>
+
+  <!-- B: Actual ventilation -->
+  <section class="card">
+    <h2>2. Actual ventilation from measured CO<sub>2</sub></h2>
+    <p class="sub">Steady-state mass balance: when indoor CO<sub>2</sub> stops rising, generation and removal are balanced, so you can back-calculate the outdoor airflow. Read the steady-state CO<sub>2</sub> off your measured curve (where it flattens).</p>
+    <div class="grid">
+      <div>
+        <label for="ci">Indoor steady-state CO<sub>2</sub>, C<sub>i</sub> (ppm)</label>
+        <input id="ci" type="number" step="10" value="950">
+      </div>
+      <div>
+        <label for="co">Outdoor CO<sub>2</sub>, C<sub>o</sub> (ppm)</label>
+        <input id="co" type="number" step="10" value="420">
+      </div>
+      <div>
+        <label for="g">Generation per person, G (L/s)</label>
+        <input id="g" type="number" step="0.001" value="0.005">
+      </div>
+      <div>
+        <label for="npeople">People present, N</label>
+        <input id="npeople" type="number" step="1" value="50">
+      </div>
+      <div>
+        <label for="height">Ceiling height (m) — for ACH</label>
+        <input id="height" type="number" step="0.1" value="3.3">
+      </div>
+    </div>
+    <div class="results" id="actResults"></div>
+    <div class="verdict" id="verdict"></div>
+    <div class="formula">Qperson = G / (Ci &minus; Co)   ·   Qtotal = Qperson &times; N   ·   ACH = (Qtotal &times; 3.6) / Volume</div>
+    <p class="note">CO<sub>2</sub> in ppm is converted to a fraction internally (ppm &divide; 1,000,000). G defaults to 0.005 L/s for an adult at rest; adjust for activity or age.</p>
+  </section>
+
+  <!-- C: Scenario explorer -->
+  <section class="card">
+    <h2>3. Occupancy scenario explorer</h2>
+    <p class="sub">Holding the ventilation rate (Q<sub>total</sub>) from section 2 fixed, see how steady-state CO<sub>2</sub> would shift as occupancy changes. The dashed line is the ASHRAE 1,000 ppm guideline.</p>
+    <div class="grid">
+      <div>
+        <label for="scenN">Occupancy in scenario, N = <span class="rangeval" id="scenNval">50</span></label>
+        <input id="scenN" type="range" min="0" max="120" step="1" value="50">
+      </div>
+      <div>
+        <label for="scenQ">Ventilation Q<sub>total</sub> (L/s) = <span class="rangeval" id="scenQval">—</span></label>
+        <input id="scenQ" type="range" min="10" max="1500" step="10" value="470">
+      </div>
+    </div>
+    <div class="results" id="scenResults"></div>
+    <canvas id="chart" width="820" height="360" role="img" aria-label="Predicted steady-state CO2 versus occupancy"></canvas>
+    <div class="formula">Ci = Co + ((N &times; G) / Qtotal) &times; 10&#8310;</div>
+  </section>
+
+  <footer class="page">
+    Formulas: ASHRAE 62.1 Ventilation Rate Procedure and a steady-state single-zone CO<sub>2</sub> mass balance.
+    This is a teaching aid for BPSD5030. Always sanity-check the output against your own data and the source standard.
+  </footer>
+</div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function num(id) { var v = parseFloat($(id).value); return isFinite(v) ? v : 0; }
+  function fmt(x, d) { if (!isFinite(x)) return "—"; return x.toLocaleString(undefined, {minimumFractionDigits: d, maximumFractionDigits: d}); }
+  function row(k, v) { return '<div class="row"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>'; }
+
+  // keep Qtotal slider max sensible and link space-type to Rp/Ra
+  $("spacetype").addEventListener("change", function () {
+    if (this.value === "custom") return;
+    var p = this.value.split(",");
+    $("rp").value = p[0]; $("ra").value = p[1];
+    recompute();
+  });
+  // typing custom values flips the dropdown to Custom
+  ["rp", "ra"].forEach(function (id) {
+    $(id).addEventListener("input", function () { $("spacetype").value = "custom"; });
+  });
+
+  var qtotalActual = 0; // shared from section 2 to section 3 default
+
+  function recompute() {
+    // Section 1
+    var rp = num("rp"), ra = num("ra"), pz = num("pz");
+    var az = num("len") * num("wid");
+    var ez = num("ez") || 1;
+    var vbz = rp * pz + ra * az;
+    var voz = vbz / ez;
+    $("reqResults").innerHTML =
+      row("Floor area, Az", fmt(az, 1) + " m&sup2;") +
+      row("Breathing-zone airflow, Vbz", fmt(vbz, 1) + " L/s") +
+      row("Required outdoor airflow, Voz", "<strong>" + fmt(voz, 1) + " L/s</strong>") +
+      row("Voz per person", (pz > 0 ? fmt(voz / pz, 2) : "—") + " L/s·person");
+
+    // Section 2
+    var ci = num("ci"), co = num("co"), g = num("g"), n = num("npeople");
+    var height = num("height");
+    var volume = az * height;
+    var dppm = ci - co;
+    var qperson = dppm > 0 ? g / (dppm / 1e6) : NaN;
+    var qtotal = qperson * n;
+    var ach = volume > 0 ? (qtotal * 3.6) / volume : NaN;
+    qtotalActual = qtotal;
+    $("actResults").innerHTML =
+      row("Room volume", fmt(volume, 1) + " m&sup3;") +
+      row("Outdoor airflow per person, Qperson", (isFinite(qperson) ? fmt(qperson, 2) : "—") + " L/s·person") +
+      row("Total ventilation, Qtotal", "<strong>" + (isFinite(qtotal) ? fmt(qtotal, 1) : "—") + " L/s</strong>") +
+      row("Air changes per hour, ACH", isFinite(ach) ? fmt(ach, 2) : "—");
+
+    // Adequacy verdict: compare actual Qtotal to required Voz
+    var vEl = $("verdict");
+    if (!isFinite(qtotal) || dppm <= 0) {
+      vEl.className = "verdict warn";
+      vEl.textContent = "Enter an indoor CO₂ above the outdoor value to estimate ventilation.";
+    } else if (qtotal >= voz) {
+      vEl.className = "verdict good";
+      vEl.innerHTML = "Estimated ventilation (" + fmt(qtotal, 0) + " L/s) meets or exceeds the ASHRAE 62.1 requirement (" + fmt(voz, 0) + " L/s).";
+    } else {
+      vEl.className = "verdict bad";
+      var pct = voz > 0 ? (100 * qtotal / voz) : 0;
+      vEl.innerHTML = "Estimated ventilation (" + fmt(qtotal, 0) + " L/s) is about " + fmt(pct, 0) + "% of the ASHRAE 62.1 requirement (" + fmt(voz, 0) + " L/s). The space looks under-ventilated.";
+    }
+
+    // Section 3 default: seed Qtotal slider from actual on first pass
+    if (isFinite(qtotal) && qtotal > 0) {
+      var q = $("scenQ");
+      if (parseFloat(q.max) < qtotal * 1.5) q.max = Math.ceil(qtotal * 2 / 10) * 10;
+    }
+    updateScenario();
+  }
+
+  function ciFor(nPeople, qtot, g, co) {
+    if (qtot <= 0) return NaN;
+    return co + ((nPeople * g) / qtot) * 1e6;
+  }
+
+  function updateScenario() {
+    var g = num("g"), co = num("co");
+    var scenN = num("scenN");
+    var scenQ = num("scenQ");
+    $("scenNval").textContent = scenN;
+    $("scenQval").textContent = fmt(scenQ, 0);
+    var ci = ciFor(scenN, scenQ, g, co);
+    var over = ci > 1000;
+    $("scenResults").innerHTML =
+      row("Predicted steady-state CO₂ at N = " + scenN,
+        '<span style="color:' + (over ? 'var(--bad)' : 'var(--good)') + '">' + (isFinite(ci) ? fmt(ci, 0) + " ppm" : "—") + "</span>") +
+      row("Against 1,000 ppm guideline", over ? "above" : "at or below");
+    drawChart(scenQ, g, co, scenN);
+  }
+
+  function drawChart(qtot, g, co, markN) {
+    var c = $("chart"), ctx = c.getContext("2d");
+    var W = c.width, H = c.height;
+    ctx.clearRect(0, 0, W, H);
+    var css = getComputedStyle(document.documentElement);
+    var ink = css.getPropertyValue("--ink").trim() || "#1c2430";
+    var muted = css.getPropertyValue("--muted").trim() || "#5a6675";
+    var line = css.getPropertyValue("--line").trim() || "#dfe4ea";
+    var accent = css.getPropertyValue("--accent").trim() || "#0e7c86";
+    var bad = css.getPropertyValue("--bad").trim() || "#b02a37";
+
+    var padL = 62, padR = 16, padT = 16, padB = 42;
+    var nMax = parseFloat($("scenN").max) || 120;
+    var ciAtMax = ciFor(nMax, qtot, g, co);
+    var yMax = Math.max(1200, Math.ceil((isFinite(ciAtMax) ? ciAtMax : 1200) / 200) * 200);
+    var yMin = Math.min(co, 400);
+
+    function X(n) { return padL + (n / nMax) * (W - padL - padR); }
+    function Y(v) { return padT + (1 - (v - yMin) / (yMax - yMin)) * (H - padT - padB); }
+
+    // axes
+    ctx.strokeStyle = line; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, H - padB); ctx.lineTo(W - padR, H - padB); ctx.stroke();
+
+    // y gridlines + labels
+    ctx.fillStyle = muted; ctx.font = "12px -apple-system, Segoe UI, Roboto, sans-serif";
+    ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    for (var v = Math.ceil(yMin / 200) * 200; v <= yMax; v += 200) {
+      var y = Y(v);
+      ctx.strokeStyle = line; ctx.globalAlpha = 0.5;
+      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+      ctx.globalAlpha = 1; ctx.fillText(v, padL - 8, y);
+    }
+    // x labels
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    for (var n = 0; n <= nMax; n += Math.max(10, Math.round(nMax / 12 / 10) * 10)) {
+      ctx.fillText(n, X(n), H - padB + 8);
+    }
+
+    // 1000 ppm guideline
+    ctx.strokeStyle = bad; ctx.setLineDash([6, 5]); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(padL, Y(1000)); ctx.lineTo(W - padR, Y(1000)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = bad; ctx.textAlign = "left"; ctx.textBaseline = "bottom";
+    ctx.fillText("1,000 ppm guideline", padL + 6, Y(1000) - 4);
+
+    // curve
+    ctx.strokeStyle = accent; ctx.lineWidth = 2.5; ctx.beginPath();
+    for (var i = 0; i <= nMax; i++) {
+      var ci = ciFor(i, qtot, g, co);
+      var px = X(i), py = Y(ci);
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // marker at current N
+    var mci = ciFor(markN, qtot, g, co);
+    if (isFinite(mci)) {
+      ctx.fillStyle = accent;
+      ctx.beginPath(); ctx.arc(X(markN), Y(mci), 4.5, 0, 2 * Math.PI); ctx.fill();
+    }
+
+    // axis titles
+    ctx.fillStyle = muted; ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+    ctx.fillText("Occupancy, N (people)", padL + (W - padL - padR) / 2, H - 4);
+    ctx.save();
+    ctx.translate(14, padT + (H - padT - padB) / 2); ctx.rotate(-Math.PI / 2);
+    ctx.textBaseline = "top"; ctx.fillText("Steady-state CO₂ (ppm)", 0, 0);
+    ctx.restore();
+  }
+
+  // listeners
+  ["rp","ra","pz","len","wid","ez","ci","co","g","npeople","height"].forEach(function (id) {
+    $(id).addEventListener("input", recompute);
+  });
+  ["scenN","scenQ"].forEach(function (id) { $(id).addEventListener("input", updateScenario); });
+
+  recompute();
+})();
+</script>
+</body>
+</html>

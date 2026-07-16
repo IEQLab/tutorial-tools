@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paired-Data Analysis Helper — BPSD5030 (A2)</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --ink: #1c2430; --muted: #5a6675;
+    --line: #dfe4ea; --accent: #0e7c86; --accent-ink: #ffffff;
+    --good: #1a7f4b; --warn: #b4690e; --bad: #b02a37;
+    --field: #ffffff; --result-bg: #eef6f7;
+    --serA: #0e7c86; --serB: #b4690e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #10151b; --card: #171e27; --ink: #e7ecf2; --muted: #9aa7b6;
+      --line: #2a3441; --accent: #38b2bd; --accent-ink: #06212a;
+      --good: #57c98a; --warn: #e0a955; --bad: #e2707a;
+      --field: #0f151c; --result-bg: #13232a;
+      --serA: #38b2bd; --serB: #e0a955;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 24px 18px 64px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  .lede { color: var(--muted); margin: 0 0 20px; max-width: 64ch; }
+  .home { display: inline-block; color: var(--accent); text-decoration: none; font-size: .9rem; margin-bottom: 14px; }
+  .home:hover { text-decoration: underline; }
+  section.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin: 16px 0; }
+  h2 { font-size: 1.15rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: .92rem; margin: 0 0 14px; }
+  label { display: block; font-size: .85rem; color: var(--muted); margin: 8px 0 4px; }
+  input[type=text] { width: 100%; padding: 8px 10px; font-size: 1rem; color: var(--ink); background: var(--field); border: 1px solid var(--line); border-radius: 8px; }
+  textarea { width: 100%; min-height: 150px; padding: 10px; font: .95rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: var(--ink); background: var(--field); border: 1px solid var(--line); border-radius: 8px; resize: vertical; }
+  .btns { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  button { font: inherit; font-size: .92rem; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--field); color: var(--ink); cursor: pointer; }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+  button:hover { border-color: var(--accent); }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .results { margin-top: 8px; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; font-variant-numeric: tabular-nums; }
+  th, td { text-align: right; padding: 7px 8px; border-bottom: 1px solid var(--line); }
+  th:first-child, td:first-child { text-align: left; }
+  .row { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+  .row:last-child { border-bottom: 0; }
+  .row .k { color: var(--muted); } .row .v { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .callout { background: var(--result-bg); border-radius: 10px; padding: 12px 14px; margin-top: 12px; }
+  .sig { font-weight: 700; }
+  .err { color: var(--bad); font-weight: 600; }
+  canvas { width: 100%; max-width: 460px; height: auto; display: block; margin: 8px auto 0; }
+  .note { color: var(--muted); font-size: .86rem; }
+  .modelprose { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; margin: 8px 0; color: var(--ink); }
+  footer.page { color: var(--muted); font-size: .82rem; margin-top: 28px; border-top: 1px solid var(--line); padding-top: 14px; }
+  details { margin-top: 10px; } summary { cursor: pointer; color: var(--accent); font-size: .9rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="home" href="index.html">&larr; IEQ tools</a>
+  <h1>Paired-Data Analysis Helper</h1>
+  <p class="lede">For the Assignment 2 write-up: paste your two conditions (one participant per row), and this describes the data, runs one appropriate test, and reports the effect. It follows the Week 10 analysis workshop exactly. It does the arithmetic; the words, the figure choices, and the judgement of whether the test suits your design stay yours.</p>
+
+  <section class="card">
+    <h2>1. Your data</h2>
+    <p class="sub">Two columns, one row per participant (paired / within-subjects). Separate values with a space, tab, or comma. A text header row is ignored.</p>
+    <div class="two">
+      <div><label for="labA">Condition A label</label><input id="labA" type="text" value="Quiet"></div>
+      <div><label for="labB">Condition B label</label><input id="labB" type="text" value="Noisy"></div>
+    </div>
+    <label for="data">Data (A &nbsp; B)</label>
+    <textarea id="data" spellcheck="false"></textarea>
+    <div class="btns">
+      <button class="primary" id="run">Analyse</button>
+      <button id="example">Load worked example</button>
+      <button id="clear">Clear</button>
+    </div>
+    <div id="parseMsg" class="note"></div>
+  </section>
+
+  <div id="output" class="results" hidden>
+    <section class="card">
+      <h2>2. Describe before you test</h2>
+      <table id="descTable"></table>
+      <canvas id="chart" width="460" height="320" role="img" aria-label="Mean of each condition with standard-deviation error bars"></canvas>
+      <p class="note" id="figcap"></p>
+    </section>
+
+    <section class="card">
+      <h2>3. Test one difference</h2>
+      <p class="sub">A <strong>paired-samples t-test</strong> is the default for paired numeric data. If your data are ordinal or clearly skewed (e.g. Likert comfort ratings), use the <strong>Wilcoxon signed-rank</strong> result instead.</p>
+      <div id="testResults"></div>
+    </section>
+
+    <section class="card">
+      <h2>4. Report it (IMRaD style)</h2>
+      <p class="sub">A model Results sentence built from your numbers. Edit it into your own words; do not paste verbatim.</p>
+      <div class="modelprose" id="modelProse"></div>
+    </section>
+  </div>
+
+  <footer class="page">
+    Paired t-test p-value from Student's t distribution (regularised incomplete beta). Wilcoxon p-value from the
+    normal approximation with continuity and tie corrections (for small samples, confirm against exact tables or software).
+    Effect size is Cohen's d<sub>z</sub> = mean difference / SD of differences. Teaching aid for BPSD5030; validate against software before relying on it.
+  </footer>
+</div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function fmt(x, d) { if (!isFinite(x)) return "—"; return x.toLocaleString(undefined, {minimumFractionDigits: d, maximumFractionDigits: d}); }
+
+  var EXAMPLE = "Quiet Noisy\n24 21\n19 18\n27 22\n22 20\n25 21\n18 17\n23 19\n26 23";
+
+  // ---- math ----
+  function mean(a) { var s = 0; for (var i = 0; i < a.length; i++) s += a[i]; return s / a.length; }
+  function sd(a) { // sample SD, n-1
+    if (a.length < 2) return NaN;
+    var m = mean(a), s = 0; for (var i = 0; i < a.length; i++) s += (a[i] - m) * (a[i] - m);
+    return Math.sqrt(s / (a.length - 1));
+  }
+  function gammln(x) {
+    var c = [76.18009172947146, -86.50532032941677, 24.01409824083091,
+             -1.231739572450155, 0.1208650973866179e-2, -0.5395239384953e-5];
+    var y = x, tmp = x + 5.5; tmp -= (x + 0.5) * Math.log(tmp);
+    var ser = 1.000000000190015;
+    for (var j = 0; j < 6; j++) { y += 1; ser += c[j] / y; }
+    return -tmp + Math.log(2.5066282746310005 * ser / x);
+  }
+  function betacf(a, b, x) {
+    var MAXIT = 200, EPS = 3e-12, FPMIN = 1e-300;
+    var qab = a + b, qap = a + 1, qam = a - 1;
+    var c = 1, d = 1 - qab * x / qap;
+    if (Math.abs(d) < FPMIN) d = FPMIN; d = 1 / d; var h = d;
+    for (var m = 1; m <= MAXIT; m++) {
+      var m2 = 2 * m;
+      var aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FPMIN) d = FPMIN;
+      c = 1 + aa / c; if (Math.abs(c) < FPMIN) c = FPMIN;
+      d = 1 / d; h *= d * c;
+      aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FPMIN) d = FPMIN;
+      c = 1 + aa / c; if (Math.abs(c) < FPMIN) c = FPMIN;
+      d = 1 / d; var del = d * c; h *= del;
+      if (Math.abs(del - 1) < EPS) break;
+    }
+    return h;
+  }
+  function betai(a, b, x) {
+    if (x <= 0) return 0; if (x >= 1) return 1;
+    var bt = Math.exp(gammln(a + b) - gammln(a) - gammln(b) + a * Math.log(x) + b * Math.log(1 - x));
+    if (x < (a + 1) / (a + b + 2)) return bt * betacf(a, b, x) / a;
+    return 1 - bt * betacf(b, a, 1 - x) / b;
+  }
+  // two-tailed p for Student t
+  function tTwoTailP(t, df) {
+    if (!isFinite(t) || df <= 0) return NaN;
+    var x = df / (df + t * t);
+    return betai(df / 2, 0.5, x);
+  }
+  function erf(x) {
+    var s = x < 0 ? -1 : 1; x = Math.abs(x);
+    var t = 1 / (1 + 0.3275911 * x);
+    var y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x);
+    return s * y;
+  }
+  function normalTwoTailP(z) { return 2 * (1 - 0.5 * (1 + erf(Math.abs(z) / Math.SQRT2))); }
+
+  function wilcoxon(diffs) {
+    // signed-rank on non-zero differences; normal approximation with continuity + tie correction
+    var nz = diffs.filter(function (d) { return d !== 0; });
+    var n = nz.length;
+    if (n < 1) return {W: NaN, z: NaN, p: NaN, n: 0};
+    var abs = nz.map(function (d, i) { return {a: Math.abs(d), s: d > 0 ? 1 : -1, i: i}; });
+    abs.sort(function (p, q) { return p.a - q.a; });
+    // assign average ranks for ties
+    var i = 0, tieTerm = 0;
+    while (i < n) {
+      var j = i; while (j + 1 < n && abs[j + 1].a === abs[i].a) j++;
+      var rank = (i + j + 2) / 2; // average of positions (1-indexed)
+      var t = j - i + 1;
+      if (t > 1) tieTerm += t * t * t - t;
+      for (var k = i; k <= j; k++) abs[k].rank = rank;
+      i = j + 1;
+    }
+    var Wplus = 0, Wminus = 0;
+    for (var m = 0; m < n; m++) { if (abs[m].s > 0) Wplus += abs[m].rank; else Wminus += abs[m].rank; }
+    var W = Math.min(Wplus, Wminus);
+    var mu = n * (n + 1) / 4;
+    var sigma = Math.sqrt((n * (n + 1) * (2 * n + 1) - tieTerm / 2) / 24);
+    var z = sigma > 0 ? (W - mu + 0.5 * Math.sign(mu - W)) / sigma : NaN; // continuity correction toward mean
+    var p = isFinite(z) ? normalTwoTailP(z) : NaN;
+    return {W: W, Wplus: Wplus, Wminus: Wminus, z: z, p: p, n: n};
+  }
+
+  function parse() {
+    var raw = $("data").value.trim();
+    if (!raw) return {ok: false, msg: "Paste some data, or load the worked example."};
+    var lines = raw.split(/\r?\n/);
+    var A = [], B = [], skipped = 0;
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i].trim(); if (!line) continue;
+      var parts = line.split(/[\s,]+/);
+      if (parts.length < 2) { skipped++; continue; }
+      var a = parseFloat(parts[0]), b = parseFloat(parts[1]);
+      if (!isFinite(a) || !isFinite(b)) { skipped++; continue; } // header row etc.
+      A.push(a); B.push(b);
+    }
+    if (A.length < 2) return {ok: false, msg: "Need at least two paired rows of numbers."};
+    return {ok: true, A: A, B: B, skipped: skipped};
+  }
+
+  function pval(p) {
+    if (!isFinite(p)) return "—";
+    if (p < 0.001) return "< 0.001";
+    return "= " + fmt(p, 3);
+  }
+
+  function analyse() {
+    var pr = parse();
+    if (!pr.ok) { $("parseMsg").innerHTML = '<span class="err">' + pr.msg + '</span>'; $("output").hidden = true; return; }
+    var A = pr.A, B = pr.B, n = A.length;
+    var labA = $("labA").value || "A", labB = $("labB").value || "B";
+    $("parseMsg").textContent = n + " paired rows read" + (pr.skipped ? " (" + pr.skipped + " non-numeric row(s) skipped)" : "") + ".";
+
+    var mA = mean(A), mB = mean(B), sA = sd(A), sB = sd(B);
+    var diffs = A.map(function (v, i) { return v - B[i]; });
+    var mD = mean(diffs), sD = sd(diffs), se = sD / Math.sqrt(n);
+    var t = mD / se, df = n - 1;
+    var p = tTwoTailP(t, df);
+    var dz = mD / sD;
+    var pct = mA !== 0 ? 100 * (mA - mB) / mA : NaN;
+    var w = wilcoxon(diffs);
+
+    // descriptives table
+    $("descTable").innerHTML =
+      "<tr><th>Condition</th><th>n</th><th>Mean</th><th>SD</th></tr>" +
+      "<tr><td>" + labA + "</td><td>" + n + "</td><td>" + fmt(mA, 2) + "</td><td>" + fmt(sA, 2) + "</td></tr>" +
+      "<tr><td>" + labB + "</td><td>" + n + "</td><td>" + fmt(mB, 2) + "</td><td>" + fmt(sB, 2) + "</td></tr>" +
+      "<tr><td>Difference (" + labA + " &minus; " + labB + ")</td><td>" + n + "</td><td>" + fmt(mD, 3) + "</td><td>" + fmt(sD, 3) + "</td></tr>";
+
+    // test results
+    $("testResults").innerHTML =
+      '<div class="row"><span class="k">Paired-samples t</span><span class="v">t(' + df + ") = " + fmt(t, 2) + "</span></div>" +
+      '<div class="row"><span class="k">p (two-tailed)</span><span class="v sig">p ' + pval(p) + "</span></div>" +
+      '<div class="row"><span class="k">Mean difference</span><span class="v">' + fmt(mD, 2) + (isFinite(pct) ? " (" + fmt(pct, 1) + "% vs " + labA + ")" : "") + "</span></div>" +
+      '<div class="row"><span class="k">Effect size, Cohen\'s d<sub>z</sub></span><span class="v">' + fmt(dz, 2) + "</span></div>" +
+      '<div class="row"><span class="k">Wilcoxon signed-rank</span><span class="v">W = ' + fmt(w.W, 1) + ", p " + pval(w.p) + "</span></div>" +
+      '<div class="callout">' + interpret(p, mA, mB, mD, pct, labA, labB) + "</div>";
+
+    // model prose
+    var dir = mA === mB ? "did not differ between conditions" : (mA > mB ? "were higher in " + labA + " than " + labB : "were higher in " + labB + " than " + labA);
+    var sigWord = p < 0.05 ? "statistically significant" : "not statistically significant";
+    $("modelProse").innerHTML =
+      "Scores " + dir + " (" + labA + ": M = " + fmt(mA, 1) + ", SD = " + fmt(sA, 1) +
+      "; " + labB + ": M = " + fmt(mB, 1) + ", SD = " + fmt(sB, 1) + "). A paired-samples t-test showed this difference was " +
+      sigWord + ", <em>t</em>(" + df + ") = " + fmt(t, 2) + ", <em>p</em> " + pval(p) +
+      (isFinite(pct) ? ", a difference of about " + fmt(Math.abs(mA - mB), 1) + " points (" + fmt(Math.abs(pct), 0) + "%)" : "") + ".";
+
+    // figure
+    drawChart([mA, mB], [sA, sB], [labA, labB]);
+    $("figcap").innerHTML = "Figure 1. Mean of each condition (n = " + n + "). Error bars show &plusmn;1 SD. A good caption tells the reader what to notice; rewrite this for your paper.";
+
+    $("output").hidden = false;
+  }
+
+  function interpret(p, mA, mB, mD, pct, labA, labB) {
+    if (!isFinite(p)) return "Could not compute a p-value; check your data.";
+    if (p < 0.05) {
+      return "<strong>The difference is statistically significant</strong> (p " + pval(p) + "). That means a difference this large is unlikely if the two conditions truly had the same effect. It does <em>not</em> tell you the effect is large: report the size too (here, " + labA + " differs from " + labB + " by about " + fmt(Math.abs(mD), 2) + (isFinite(pct) ? ", roughly " + fmt(Math.abs(pct), 0) + "%" : "") + "). Always give the reader both the p-value and the size.";
+    }
+    return "<strong>The difference is not statistically significant</strong> (p " + pval(p) + "). With this sample you cannot rule out that the gap is chance variation. Report the observed difference and its spread honestly, and consider whether a larger sample or tighter control would be needed to detect an effect this size.";
+  }
+
+  function drawChart(means, sds, labels) {
+    var c = $("chart"), ctx = c.getContext("2d");
+    var W = c.width, H = c.height; ctx.clearRect(0, 0, W, H);
+    var css = getComputedStyle(document.documentElement);
+    var ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    var line = css.getPropertyValue("--line").trim();
+    var cols = [css.getPropertyValue("--serA").trim(), css.getPropertyValue("--serB").trim()];
+    var padL = 52, padR = 16, padT = 16, padB = 46;
+    var top = 0; for (var i = 0; i < means.length; i++) top = Math.max(top, means[i] + sds[i]);
+    var yMax = Math.ceil(top * 1.15 / 5) * 5 || 10;
+    function Y(v) { return padT + (1 - v / yMax) * (H - padT - padB); }
+    // axis
+    ctx.strokeStyle = line; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, H - padB); ctx.lineTo(W - padR, H - padB); ctx.stroke();
+    ctx.fillStyle = muted; ctx.font = "12px -apple-system, Segoe UI, Roboto, sans-serif";
+    ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    for (var v = 0; v <= yMax; v += Math.max(1, Math.round(yMax / 5))) {
+      ctx.strokeStyle = line; ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.moveTo(padL, Y(v)); ctx.lineTo(W - padR, Y(v)); ctx.stroke();
+      ctx.globalAlpha = 1; ctx.fillText(v, padL - 8, Y(v));
+    }
+    var slot = (W - padL - padR) / means.length, bw = Math.min(90, slot * 0.5);
+    for (var b = 0; b < means.length; b++) {
+      var cx = padL + slot * (b + 0.5);
+      ctx.fillStyle = cols[b % cols.length];
+      ctx.fillRect(cx - bw / 2, Y(means[b]), bw, (H - padB) - Y(means[b]));
+      // error bar
+      ctx.strokeStyle = ink; ctx.lineWidth = 1.5;
+      var yhi = Y(means[b] + sds[b]), ylo = Y(means[b] - sds[b]);
+      ctx.beginPath(); ctx.moveTo(cx, yhi); ctx.lineTo(cx, ylo);
+      ctx.moveTo(cx - 6, yhi); ctx.lineTo(cx + 6, yhi);
+      ctx.moveTo(cx - 6, ylo); ctx.lineTo(cx + 6, ylo); ctx.stroke();
+      // label
+      ctx.fillStyle = muted; ctx.textAlign = "center"; ctx.textBaseline = "top";
+      ctx.fillText(labels[b], cx, H - padB + 8);
+    }
+    ctx.save(); ctx.translate(13, padT + (H - padT - padB) / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillStyle = muted; ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.fillText("Mean (with ±1 SD)", 0, 0); ctx.restore();
+  }
+
+  $("run").addEventListener("click", analyse);
+  $("example").addEventListener("click", function () { $("data").value = EXAMPLE; analyse(); });
+  $("clear").addEventListener("click", function () { $("data").value = ""; $("output").hidden = true; $("parseMsg").textContent = ""; });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Room Acoustics Calculator — BPSD5030</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --ink: #1c2430; --muted: #5a6675;
+    --line: #dfe4ea; --accent: #0e7c86; --accent-ink: #ffffff;
+    --good: #1a7f4b; --warn: #b4690e; --bad: #b02a37;
+    --field: #ffffff; --result-bg: #eef6f7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #10151b; --card: #171e27; --ink: #e7ecf2; --muted: #9aa7b6;
+      --line: #2a3441; --accent: #38b2bd; --accent-ink: #06212a;
+      --good: #57c98a; --warn: #e0a955; --bad: #e2707a;
+      --field: #0f151c; --result-bg: #13232a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 24px 18px 64px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  .lede { color: var(--muted); margin: 0 0 20px; max-width: 64ch; }
+  .home { display: inline-block; color: var(--accent); text-decoration: none; font-size: .9rem; margin-bottom: 14px; }
+  .home:hover { text-decoration: underline; }
+  section.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin: 16px 0; }
+  h2 { font-size: 1.15rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: .92rem; margin: 0 0 14px; }
+  label { display: block; font-size: .85rem; color: var(--muted); margin-bottom: 4px; }
+  input, select { width: 100%; padding: 8px 10px; font-size: 1rem; color: var(--ink); background: var(--field); border: 1px solid var(--line); border-radius: 8px; }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .results { margin-top: 14px; background: var(--result-bg); border-radius: 10px; padding: 4px 14px; }
+  .row { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+  .row:last-child { border-bottom: 0; }
+  .row .k { color: var(--muted); } .row .v { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .formula { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .86rem; background: var(--result-bg); border-radius: 8px; padding: 10px 12px; margin: 8px 0; overflow-x: auto; }
+  .note { color: var(--muted); font-size: .86rem; }
+  .band { font-weight: 700; }
+  .flag { border: 1px solid var(--warn); color: var(--warn); border-radius: 8px; padding: 8px 12px; font-size: .86rem; margin-top: 8px; }
+  footer.page { color: var(--muted); font-size: .82rem; margin-top: 28px; border-top: 1px solid var(--line); padding-top: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="home" href="index.html">&larr; IEQ tools</a>
+  <h1>Room Acoustics Calculator</h1>
+  <p class="lede">Three routine acoustic calculations for the Week 6 tutorial: correctly averaging or combining sound levels in decibels, and the Sabine relationship between room volume, absorption, and reverberation time. It does the arithmetic; benchmarking against AS/NZS 2107 and the design interpretation are yours.</p>
+
+  <section class="card">
+    <h2>1. Average or combine sound levels (dB)</h2>
+    <p class="sub">Decibels are logarithmic, so you cannot take a plain arithmetic mean. Enter your levels (dB), separated by commas or spaces.</p>
+    <label for="levels">Levels (dB)</label>
+    <input id="levels" type="text" value="60, 63, 66">
+    <div class="grid" style="margin-top:12px">
+      <div>
+        <label for="mode">Operation</label>
+        <select id="mode">
+          <option value="avg">Energy average (Leq of several readings)</option>
+          <option value="sum">Combine sources (total level)</option>
+        </select>
+      </div>
+    </div>
+    <div class="results" id="dbResults"></div>
+    <div class="formula">Average: L = 10 &middot; log&#8321;&#8320;( (1/n) &middot; &Sigma; 10^(Li/10) )   ·   Combine: L = 10 &middot; log&#8321;&#8320;( &Sigma; 10^(Li/10) )</div>
+    <p class="note">Use the energy average to summarise repeated LAeq or octave-band readings of the same source. Use combine when adding independent sources together.</p>
+  </section>
+
+  <section class="card">
+    <h2>2. Sabine: absorption and reverberation time</h2>
+    <p class="sub">The Sabine equation links room volume (V), total absorption (A, in m&sup2; sabine), and reverberation time (T, in seconds). Enter volume plus one of T or A; the other is computed.</p>
+    <div class="grid">
+      <div><label for="vol">Room volume, V (m&sup3;)</label><input id="vol" type="number" step="1" value="200"></div>
+      <div><label for="t60">Reverberation time, T (s)</label><input id="t60" type="number" step="0.05" value="0.8"></div>
+      <div><label for="absorp">Absorption, A (m&sup2; sabine)</label><input id="absorp" type="number" step="1" placeholder="computed from V and T"></div>
+    </div>
+    <div class="btns" style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">
+      <button id="calcA" style="font:inherit;font-size:.9rem;padding:8px 12px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);font-weight:600;cursor:pointer">V and T &rarr; A</button>
+      <button id="calcT" style="font:inherit;font-size:.9rem;padding:8px 12px;border-radius:8px;border:1px solid var(--line);background:var(--field);color:var(--ink);cursor:pointer">V and A &rarr; T</button>
+    </div>
+    <div class="results" id="sabResults"></div>
+    <div class="formula">A = 0.16 &middot; V / T   ·   T = 0.16 &middot; V / A</div>
+  </section>
+
+  <section class="card">
+    <h2>3. Speech intelligibility — quick estimate</h2>
+    <p class="sub">A rough Speech Transmission Index from the speech-to-noise ratio. Useful for a first read on whether speech is easy or hard to follow.</p>
+    <div class="grid">
+      <div><label for="sp">Speech level at listener (dBA)</label><input id="sp" type="number" step="1" value="60"></div>
+      <div><label for="ns">Background noise level (dBA)</label><input id="ns" type="number" step="1" value="45"></div>
+    </div>
+    <div class="results" id="stiResults"></div>
+    <div class="formula">SNR = Lspeech &minus; Lnoise   ·   STI &asymp; (SNR + 15) / 30   (clamped 0–1)</div>
+    <div class="flag">Indicative only. This SNR shortcut ignores reverberation and per-band effects. For anything you report, use the class STI spreadsheet or the full IEC 60268-16 method.</div>
+    <p class="note">Qualitative bands (IEC 60268-16): &lt;0.30 bad · 0.30–0.45 poor · 0.45–0.60 fair · 0.60–0.75 good · &gt;0.75 excellent.</p>
+  </section>
+
+  <footer class="page">
+    Sabine equation and logarithmic level arithmetic are exact; the STI figure is a speech-to-noise approximation for teaching only.
+    Teaching aid for BPSD5030; benchmark results against AS/NZS 2107:2016 and confirm against measurement software.
+  </footer>
+</div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function fmt(x, d) { if (!isFinite(x)) return "—"; return x.toLocaleString(undefined, {minimumFractionDigits: d, maximumFractionDigits: d}); }
+  function num(id) { var v = parseFloat($(id).value); return isFinite(v) ? v : NaN; }
+  function row(k, v) { return '<div class="row"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>'; }
+
+  // 1. dB average / combine
+  function dbCalc() {
+    var vals = $("levels").value.split(/[\s,]+/).map(parseFloat).filter(function (x) { return isFinite(x); });
+    if (!vals.length) { $("dbResults").innerHTML = row("Result", "—"); return; }
+    var sumE = 0; for (var i = 0; i < vals.length; i++) sumE += Math.pow(10, vals[i] / 10);
+    var mode = $("mode").value;
+    var res = mode === "avg" ? 10 * Math.log10(sumE / vals.length) : 10 * Math.log10(sumE);
+    var plain = vals.reduce(function (a, b) { return a + b; }, 0) / vals.length;
+    $("dbResults").innerHTML =
+      row("Values entered", vals.length + " (" + vals.join(", ") + " dB)") +
+      row(mode === "avg" ? "Energy-averaged level" : "Combined level", "<strong>" + fmt(res, 1) + " dB</strong>") +
+      (mode === "avg" ? row("(Wrong) plain arithmetic mean", fmt(plain, 1) + " dB") : "");
+  }
+
+  // 2. Sabine
+  function calcA() {
+    var v = num("vol"), t = num("t60");
+    if (!isFinite(v) || !isFinite(t) || t <= 0) { $("sabResults").innerHTML = row("Result", "enter V and T"); return; }
+    var a = 0.16 * v / t;
+    $("absorp").value = fmt(a, 1);
+    $("sabResults").innerHTML = row("Total absorption, A", "<strong>" + fmt(a, 1) + " m&sup2; sabine</strong>") +
+      row("From", "V = " + fmt(v, 0) + " m&sup3;, T = " + fmt(t, 2) + " s");
+  }
+  function calcT() {
+    var v = num("vol"), a = num("absorp");
+    if (!isFinite(v) || !isFinite(a) || a <= 0) { $("sabResults").innerHTML = row("Result", "enter V and A"); return; }
+    var t = 0.16 * v / a;
+    $("t60").value = fmt(t, 2);
+    $("sabResults").innerHTML = row("Reverberation time, T", "<strong>" + fmt(t, 2) + " s</strong>") +
+      row("From", "V = " + fmt(v, 0) + " m&sup3;, A = " + fmt(a, 1) + " m&sup2; sabine");
+  }
+
+  // 3. STI estimate
+  function stiCalc() {
+    var sp = num("sp"), ns = num("ns");
+    if (!isFinite(sp) || !isFinite(ns)) { $("stiResults").innerHTML = row("STI", "—"); return; }
+    var snr = sp - ns;
+    var sti = Math.max(0, Math.min(1, (snr + 15) / 30));
+    var band = sti < 0.30 ? "bad" : sti < 0.45 ? "poor" : sti < 0.60 ? "fair" : sti < 0.75 ? "good" : "excellent";
+    var col = sti < 0.45 ? "var(--bad)" : sti < 0.60 ? "var(--warn)" : "var(--good)";
+    $("stiResults").innerHTML =
+      row("Speech-to-noise ratio", fmt(snr, 0) + " dB") +
+      row("Estimated STI", '<span class="band" style="color:' + col + '">' + fmt(sti, 2) + " (" + band + ")</span>");
+  }
+
+  ["levels"].forEach(function (id) { $(id).addEventListener("input", dbCalc); });
+  $("mode").addEventListener("change", dbCalc);
+  $("calcA").addEventListener("click", calcA);
+  $("calcT").addEventListener("click", calcT);
+  ["sp", "ns"].forEach(function (id) { $(id).addEventListener("input", stiCalc); });
+
+  dbCalc(); calcA(); stiCalc();
+})();
+</script>
+</body>
+</html>
