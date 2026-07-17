@@ -21,18 +21,25 @@ Each tool does the routine arithmetic that used to eat tutorial time, so student
 
 ## Hosting (GitHub Pages)
 
-This repo is intended to be published as a static site:
+This repo is published as a static site from the IEQLab GitHub organisation:
 
-1. Push to a **public** GitHub repository.
-2. Repository **Settings → Pages → Build and deployment → Deploy from a branch**, branch `main`, folder `/ (root)`.
-3. Tools are then live at `https://<user>.github.io/<repo>/iaq.html` etc.
+- Repo: [github.com/IEQLab/tutorial-tools](https://github.com/IEQLab/tutorial-tools) (public)
+- Live site: [ieqlab.github.io/tutorial-tools](https://ieqlab.github.io/tutorial-tools/)
+
+Pages is configured under **Settings → Pages → Build and deployment → Deploy from a branch**, branch `main`, folder `/ (root)`. The tools are live at:
+
+- `https://ieqlab.github.io/tutorial-tools/iaq.html`
+- `https://ieqlab.github.io/tutorial-tools/acoustics.html`
+- `https://ieqlab.github.io/tutorial-tools/stats.html`
+
+(GitHub Pages on the free org plan requires the repo to be **public**.)
 
 ## Embedding in Canvas
 
 Link out to a tool, or embed with an iframe in the Rich Content Editor's HTML view:
 
 ```html
-<iframe src="https://<user>.github.io/<repo>/iaq.html" width="100%" height="900" style="border:1px solid #ccc;border-radius:8px"></iframe>
+<iframe src="https://ieqlab.github.io/tutorial-tools/iaq.html" width="100%" height="900" style="border:1px solid #ccc;border-radius:8px"></iframe>
 ```
 
 Note: some Canvas instances restrict iframe embeds to an allow-listed set of domains. If the embed does not render, use a plain link (opens in a new tab) instead.
