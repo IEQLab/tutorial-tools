@@ -31,6 +31,7 @@
   .home:hover { text-decoration: underline; }
   section.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin: 16px 0; }
   h2 { font-size: 1.15rem; margin: 0 0 4px; }
+  h3 { font-size: 1rem; margin: 16px 0 4px; }
   .sub { color: var(--muted); font-size: .92rem; margin: 0 0 14px; }
   label { display: block; font-size: .85rem; color: var(--muted); margin: 8px 0 4px; }
   input[type=text] { width: 100%; padding: 8px 10px; font-size: 1rem; color: var(--ink); background: var(--field); border: 1px solid var(--line); border-radius: 8px; }
@@ -51,21 +52,57 @@
   .callout { background: var(--result-bg); border-radius: 10px; padding: 12px 14px; margin-top: 12px; }
   .sig { font-weight: 700; }
   .err { color: var(--bad); font-weight: 600; }
+  .flag { border-left: 3px solid var(--warn); background: var(--result-bg); padding: 10px 14px; border-radius: 6px; margin: 12px 0; }
   canvas { width: 100%; max-width: 460px; height: auto; display: block; margin: 8px auto 0; }
   .note { color: var(--muted); font-size: .86rem; }
   .modelprose { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; margin: 8px 0; color: var(--ink); }
+  .modelprose.bad { border-left-color: var(--bad); }
+  .modelprose ul { margin: 4px 0; padding-left: 18px; }
   footer.page { color: var(--muted); font-size: .82rem; margin-top: 28px; border-top: 1px solid var(--line); padding-top: 14px; }
-  details { margin-top: 10px; } summary { cursor: pointer; color: var(--accent); font-size: .9rem; }
+  /* "The maths behind it" panels, matching the tutorial house style but theme-aware */
+  details.maths { margin: 12px 0; border-left: 3px solid var(--accent); background: var(--result-bg); padding: 10px 16px; border-radius: 6px; }
+  details.maths > summary { cursor: pointer; color: var(--accent); font-weight: 600; font-size: .92rem; }
+  details.maths > summary::marker { color: var(--accent); }
+  details.maths .body { margin-top: 8px; font-size: .92rem; }
+  details.maths .body p { margin: 6px 0; }
+  details.maths code, .modelprose code, .sub code { font: .85em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background: color-mix(in srgb, var(--ink) 8%, transparent); padding: 1px 5px; border-radius: 4px; }
+  .work { font: .9rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin: 6px 0; overflow-x: auto; }
+  .work .step { display: block; padding: 2px 0; }
+  ul.checklist { list-style: none; padding-left: 0; margin: 8px 0; }
+  ul.checklist li { padding: 5px 0 5px 26px; position: relative; border-bottom: 1px solid var(--line); }
+  ul.checklist li:last-child { border-bottom: 0; }
+  ul.checklist li::before { content: "\2610"; position: absolute; left: 0; top: 5px; color: var(--accent); font-size: 1.1rem; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <a class="home" href="index.html">&larr; BPSD5030 tutorial tools</a>
   <h1>Paired-Data Analysis Helper</h1>
-  <p class="lede">For the Assignment 2 write-up: paste your two conditions (one participant per row), and this describes the data, runs one appropriate test, and reports the effect. It follows the Week 10 analysis workshop exactly. It does the arithmetic; the words, the figure choices, and the judgement of whether the test suits your design stay yours.</p>
+  <p class="lede">Your Assignment 2 analysis companion. Paste your two conditions (one participant per row) and this describes the data, runs one appropriate test, shows the working, and models how to report it in IMRaD prose. It follows the four steps of the Week 10 analysis workshop end to end. It does the arithmetic; the words, the figure choices, and the judgement of whether the test suits your design stay yours.</p>
 
   <section class="card">
-    <h2>1. Your data</h2>
+    <h2>Step 1. Name your design first</h2>
+    <p class="sub">Before you paste anything, write down what you are comparing. This decides which test is correct, so it comes before the numbers.</p>
+    <ul style="margin:0; padding-left:18px;">
+      <li><strong>Research question</strong> — the one difference you are testing (e.g. "Does background noise lower math-task scores at a fixed temperature?").</li>
+      <li><strong>Independent variable</strong> — what you changed (e.g. noise: quiet vs noisy). Anything held constant is not a variable.</li>
+      <li><strong>Dependent variable</strong> — what you measured (e.g. problems answered correctly).</li>
+      <li><strong>Design</strong> — paired or independent? See the flag below; it is the most common mistake in this assignment.</li>
+    </ul>
+    <div class="flag">
+      <strong>This tool is for paired (within-subjects) data only:</strong> one row = one person measured in <em>both</em> conditions (e.g. the same participant tested quiet <em>and</em> noisy). If your A2 angle compares <em>different people</em> — for example noisy scores split by gender or by age group — that is an <strong>independent-samples</strong> comparison and needs a different test (an independent-samples t-test or Mann–Whitney). Pasting unpaired groups here will produce a number, but the wrong one. Match the test to your design.
+    </div>
+    <details class="maths">
+      <summary>Paired vs independent, in one line</summary>
+      <div class="body">
+        <p><em>Paired: every row is one person, and the two columns are the same people under two conditions, so you analyse each person's <code>A − B</code> difference. Independent: the two groups are different people, so there are no per-row differences to take and you compare the two group means directly. Counterbalancing condition order (some people quiet-first, some noisy-first) keeps a paired design valid; it does not make two separate groups paired.</em></p>
+      </div>
+    </details>
+  </section>
+
+  <section class="card">
+    <h2>Step 2. Your data</h2>
     <p class="sub">Two columns, one row per participant (paired / within-subjects). Separate values with a space, tab, or comma. A text header row is ignored.</p>
     <div class="two">
       <div><label for="labA">Condition A label</label><input id="labA" type="text" value="Quiet"></div>
@@ -83,22 +120,73 @@
 
   <div id="output" class="results" hidden>
     <section class="card">
-      <h2>2. Describe before you test</h2>
+      <h2>Step 3. Describe before you test</h2>
       <table id="descTable"></table>
       <canvas id="chart" width="460" height="320" role="img" aria-label="Mean of each condition with standard-deviation error bars"></canvas>
       <p class="note" id="figcap"></p>
+      <details class="maths">
+        <summary>The maths behind the mean and SD</summary>
+        <div class="body">
+          <p><em>The mean is the typical score: add the values and divide by <code>n</code>. The standard deviation is how far scores sit from that mean on average: <code>SD = sqrt( sum of (value − mean)² / (n − 1) )</code>. The <code>n − 1</code> (not <code>n</code>) is the sample correction. Report the mean <em>and</em> the SD for each condition, never the mean alone: a 3-point gap means little until you know whether scores already vary by 1 point or by 10.</em></p>
+        </div>
+      </details>
     </section>
 
     <section class="card">
-      <h2>3. Test one difference</h2>
+      <h2>Step 4. Test one difference</h2>
       <p class="sub">A <strong>paired-samples t-test</strong> is the default for paired numeric data. If your data are ordinal or clearly skewed (e.g. Likert comfort ratings), use the <strong>Wilcoxon signed-rank</strong> result instead.</p>
       <div id="testResults"></div>
+      <details class="maths">
+        <summary>The maths behind the paired t-test (on your numbers)</summary>
+        <div class="body" id="tWork"></div>
+      </details>
+      <details class="maths">
+        <summary>Prefer a spreadsheet, R, Python, or AI?</summary>
+        <div class="body">
+          <p><em>Any of these gives the same paired result, so use whichever you know:</em></p>
+          <p><em><strong>Excel:</strong> <code>=T.TEST(A_range, B_range, 2, 1)</code> returns the two-tailed paired p-value (the <code>2</code> = two tails, the <code>1</code> = paired). The Data Analysis add-in's "t-Test: Paired Two Sample for Means" gives the full table.</em></p>
+          <p><em><strong>R:</strong> <code>t.test(A, B, paired = TRUE)</code> &nbsp;·&nbsp; ordinal/skewed: <code>wilcox.test(A, B, paired = TRUE)</code></em></p>
+          <p><em><strong>Python:</strong> <code>scipy.stats.ttest_rel(A, B)</code> &nbsp;·&nbsp; ordinal/skewed: <code>scipy.stats.wilcoxon(A, B)</code></em></p>
+          <p><em><strong>AI-assisted:</strong> you can ask an AI tool to run it, but then check the output yourself: is it a paired test, are the columns in the right order, is the p-value in a plausible range? Under the unit's Lane 2 AI stance any tool can run the test, but you own the result, not the tool.</em></p>
+        </div>
+      </details>
     </section>
 
     <section class="card">
-      <h2>4. Report it (IMRaD style)</h2>
+      <h2>Step 5. Report it (IMRaD style)</h2>
       <p class="sub">A model Results sentence built from your numbers. Edit it into your own words; do not paste verbatim.</p>
       <div class="modelprose" id="modelProse"></div>
+
+      <h3>Write the Methods too, as replicable prose</h3>
+      <p class="sub">The tool cannot write your Methods, because they describe <em>your</em> experiment. Here is the shape a High Distinction Methods paragraph takes, on the worked-example scenario. Notice it lets another researcher reproduce the study.</p>
+      <div class="modelprose">
+        Eight participants each completed a 4-minute arithmetic task twice at a fixed air temperature of 22&deg;C, once under a quiet background (~30 dBA) and once under a noisy background (~54 dBA), with condition order counterbalanced. The score was the number of problems answered correctly. Because each participant completed both conditions, differences between conditions were assessed with a paired-samples t-test (&alpha; = 0.05). Analysis was carried out in [tool], and outputs were checked by hand against the condition means.
+      </div>
+      <p class="sub">The same facts as an AI-style bullet list are <strong>not</strong> what to submit:</p>
+      <div class="modelprose bad">
+        <ul>
+          <li>8 participants</li>
+          <li>Math task, 4 min</li>
+          <li>Two conditions: quiet, noisy</li>
+          <li>Temperature: 22&deg;C</li>
+          <li>Paired t-test used</li>
+          <li>Significance level 0.05</li>
+        </ul>
+      </div>
+      <p class="note">Both hold the same facts. The bullets list ingredients; the prose lets someone reproduce your study, which is the whole point of a Methods section. It states the order was counterbalanced, defines the score, justifies <em>why</em> a paired test (each participant did both conditions), and names the tool. A2's Methods criterion rewards the prose version.</p>
+    </section>
+
+    <section class="card">
+      <h2>Before you submit A2</h2>
+      <ul class="checklist">
+        <li>Research question and IV/DV stated clearly, and the right variable labelled as which.</li>
+        <li>Means <strong>and</strong> SDs (or equivalent spread) reported for each condition, not means alone.</li>
+        <li>At least one figure with labelled axes, units, a legend where needed, and a caption that says what to notice.</li>
+        <li>One appropriate inferential test, correctly matched to your design (paired t-test or Wilcoxon for paired data; an independent-samples test if you compared different people).</li>
+        <li>The <strong>size</strong> of the effect reported alongside the p-value, in plain units.</li>
+        <li>Methods written as replicable prose, not a bullet list.</li>
+        <li>If you used AI at any step, acknowledged it (see the A2 brief) and validated its output yourself.</li>
+      </ul>
     </section>
   </div>
 
@@ -113,6 +201,7 @@
 (function () {
   var $ = function (id) { return document.getElementById(id); };
   function fmt(x, d) { if (!isFinite(x)) return "—"; return x.toLocaleString(undefined, {minimumFractionDigits: d, maximumFractionDigits: d}); }
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
   var EXAMPLE = "Quiet Noisy\n24 21\n19 18\n27 22\n22 20\n25 21\n18 17\n23 19\n26 23";
 
@@ -239,25 +328,28 @@
     // descriptives table
     $("descTable").innerHTML =
       "<tr><th>Condition</th><th>n</th><th>Mean</th><th>SD</th></tr>" +
-      "<tr><td>" + labA + "</td><td>" + n + "</td><td>" + fmt(mA, 2) + "</td><td>" + fmt(sA, 2) + "</td></tr>" +
-      "<tr><td>" + labB + "</td><td>" + n + "</td><td>" + fmt(mB, 2) + "</td><td>" + fmt(sB, 2) + "</td></tr>" +
-      "<tr><td>Difference (" + labA + " &minus; " + labB + ")</td><td>" + n + "</td><td>" + fmt(mD, 3) + "</td><td>" + fmt(sD, 3) + "</td></tr>";
+      "<tr><td>" + esc(labA) + "</td><td>" + n + "</td><td>" + fmt(mA, 2) + "</td><td>" + fmt(sA, 2) + "</td></tr>" +
+      "<tr><td>" + esc(labB) + "</td><td>" + n + "</td><td>" + fmt(mB, 2) + "</td><td>" + fmt(sB, 2) + "</td></tr>" +
+      "<tr><td>Difference (" + esc(labA) + " &minus; " + esc(labB) + ")</td><td>" + n + "</td><td>" + fmt(mD, 3) + "</td><td>" + fmt(sD, 3) + "</td></tr>";
 
     // test results
     $("testResults").innerHTML =
       '<div class="row"><span class="k">Paired-samples t</span><span class="v">t(' + df + ") = " + fmt(t, 2) + "</span></div>" +
       '<div class="row"><span class="k">p (two-tailed)</span><span class="v sig">p ' + pval(p) + "</span></div>" +
-      '<div class="row"><span class="k">Mean difference</span><span class="v">' + fmt(mD, 2) + (isFinite(pct) ? " (" + fmt(pct, 1) + "% vs " + labA + ")" : "") + "</span></div>" +
+      '<div class="row"><span class="k">Mean difference</span><span class="v">' + fmt(mD, 2) + (isFinite(pct) ? " (" + fmt(pct, 1) + "% vs " + esc(labA) + ")" : "") + "</span></div>" +
       '<div class="row"><span class="k">Effect size, Cohen\'s d<sub>z</sub></span><span class="v">' + fmt(dz, 2) + "</span></div>" +
       '<div class="row"><span class="k">Wilcoxon signed-rank</span><span class="v">W = ' + fmt(w.W, 1) + ", p " + pval(w.p) + "</span></div>" +
       '<div class="callout">' + interpret(p, mA, mB, mD, pct, labA, labB) + "</div>";
 
+    // dynamic "show the working" for the t-test, on the user's own numbers
+    $("tWork").innerHTML = tWorking(diffs, mD, sD, se, t, df, p, labA, labB);
+
     // model prose
-    var dir = mA === mB ? "did not differ between conditions" : (mA > mB ? "were higher in " + labA + " than " + labB : "were higher in " + labB + " than " + labA);
+    var dir = mA === mB ? "did not differ between conditions" : (mA > mB ? "were higher in " + esc(labA) + " than " + esc(labB) : "were higher in " + esc(labB) + " than " + esc(labA));
     var sigWord = p < 0.05 ? "statistically significant" : "not statistically significant";
     $("modelProse").innerHTML =
-      "Scores " + dir + " (" + labA + ": M = " + fmt(mA, 1) + ", SD = " + fmt(sA, 1) +
-      "; " + labB + ": M = " + fmt(mB, 1) + ", SD = " + fmt(sB, 1) + "). A paired-samples t-test showed this difference was " +
+      "Scores " + dir + " (" + esc(labA) + ": M = " + fmt(mA, 1) + ", SD = " + fmt(sA, 1) +
+      "; " + esc(labB) + ": M = " + fmt(mB, 1) + ", SD = " + fmt(sB, 1) + "). A paired-samples t-test showed this difference was " +
       sigWord + ", <em>t</em>(" + df + ") = " + fmt(t, 2) + ", <em>p</em> " + pval(p) +
       (isFinite(pct) ? ", a difference of about " + fmt(Math.abs(mA - mB), 1) + " points (" + fmt(Math.abs(pct), 0) + "%)" : "") + ".";
 
@@ -268,10 +360,26 @@
     $("output").hidden = false;
   }
 
+  function tWorking(diffs, mD, sD, se, t, df, p, labA, labB) {
+    var n = diffs.length;
+    var list = diffs.map(function (d) { return fmt(d, 2); }).join(", ");
+    var ss = 0; for (var i = 0; i < n; i++) ss += (diffs[i] - mD) * (diffs[i] - mD);
+    return '<p><em>There is no magic in the t-test. It runs on the per-participant differences (' + esc(labA) + ' &minus; ' + esc(labB) + '):</em></p>' +
+      '<div class="work">' +
+      '<span class="step">1. differences (d): ' + esc(list) + '</span>' +
+      '<span class="step">2. mean difference (d&#772;) = sum(d) / n = ' + fmt(mD * n, 2) + " / " + n + " = <strong>" + fmt(mD, 3) + "</strong></span>" +
+      '<span class="step">3. SD of differences = sqrt( sum(d &minus; d&#772;)&sup2; / (n &minus; 1) ) = sqrt( ' + fmt(ss, 2) + " / " + (n - 1) + " ) = <strong>" + fmt(sD, 3) + "</strong></span>" +
+      '<span class="step">4. standard error = SD / sqrt(n) = ' + fmt(sD, 3) + " / " + fmt(Math.sqrt(n), 3) + " = <strong>" + fmt(se, 3) + "</strong></span>" +
+      '<span class="step">5. t = d&#772; / SE = ' + fmt(mD, 3) + " / " + fmt(se, 3) + " = <strong>" + fmt(t, 2) + "</strong>, &nbsp; df = n &minus; 1 = <strong>" + df + "</strong></span>" +
+      '<span class="step">6. two-tailed p for t(' + df + ") = " + fmt(t, 2) + " &rarr; <strong>p " + pval(p) + "</strong></span>" +
+      '</div>' +
+      '<p><em>A large t means the mean difference is large relative to how much the differences scatter. The p-value converts that into: how often a gap this big would appear if the two conditions truly had the same effect.</em></p>';
+  }
+
   function interpret(p, mA, mB, mD, pct, labA, labB) {
     if (!isFinite(p)) return "Could not compute a p-value; check your data.";
     if (p < 0.05) {
-      return "<strong>The difference is statistically significant</strong> (p " + pval(p) + "). That means a difference this large is unlikely if the two conditions truly had the same effect. It does <em>not</em> tell you the effect is large: report the size too (here, " + labA + " differs from " + labB + " by about " + fmt(Math.abs(mD), 2) + (isFinite(pct) ? ", roughly " + fmt(Math.abs(pct), 0) + "%" : "") + "). Always give the reader both the p-value and the size.";
+      return "<strong>The difference is statistically significant</strong> (p " + pval(p) + "). That means a difference this large is unlikely if the two conditions truly had the same effect. It does <em>not</em> tell you the effect is large: report the size too (here, " + esc(labA) + " differs from " + esc(labB) + " by about " + fmt(Math.abs(mD), 2) + (isFinite(pct) ? ", roughly " + fmt(Math.abs(pct), 0) + "%" : "") + "). Always give the reader both the p-value and the size.";
     }
     return "<strong>The difference is not statistically significant</strong> (p " + pval(p) + "). With this sample you cannot rule out that the gap is chance variation. Report the observed difference and its spread honestly, and consider whether a larger sample or tighter control would be needed to detect an effect this size.";
   }
