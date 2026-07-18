@@ -9,26 +9,27 @@
     --bg: #f6f7f9; --card: #ffffff; --ink: #1c2430; --muted: #5a6675;
     --line: #dfe4ea; --accent: #0e7c86; --accent-ink: #ffffff;
     --good: #1a7f4b; --warn: #b4690e; --bad: #b02a37;
-    --field: #ffffff; --result-bg: #eef6f7;
+    --field: #ffffff; --result-bg: #eef6f7; --hover: #f0f4f5;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #10151b; --card: #171e27; --ink: #e7ecf2; --muted: #9aa7b6;
       --line: #2a3441; --accent: #38b2bd; --accent-ink: #06212a;
       --good: #57c98a; --warn: #e0a955; --bad: #e2707a;
-      --field: #0f151c; --result-bg: #13232a;
+      --field: #0f151c; --result-bg: #13232a; --hover: #1c2733;
     }
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink);
     font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-  .wrap { max-width: 860px; margin: 0 auto; padding: 24px 18px 64px; }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 24px 18px 64px; }
   h1 { font-size: 1.5rem; margin: 0 0 4px; }
-  .lede { color: var(--muted); margin: 0 0 20px; max-width: 64ch; }
+  .lede { color: var(--muted); margin: 0 0 20px; max-width: 68ch; }
   .home { display: inline-block; color: var(--accent); text-decoration: none; font-size: .9rem; margin-bottom: 14px; }
   .home:hover { text-decoration: underline; }
   section.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin: 16px 0; }
   h2 { font-size: 1.15rem; margin: 0 0 4px; }
+  h3 { font-size: 1rem; margin: 18px 0 6px; }
   .sub { color: var(--muted); font-size: .92rem; margin: 0 0 14px; }
   label { display: block; font-size: .85rem; color: var(--muted); margin-bottom: 4px; }
   input, select { width: 100%; padding: 8px 10px; font-size: 1rem; color: var(--ink); background: var(--field); border: 1px solid var(--line); border-radius: 8px; }
@@ -42,16 +43,49 @@
   .note { color: var(--muted); font-size: .86rem; }
   .band { font-weight: 700; }
   .flag { border: 1px solid var(--warn); color: var(--warn); border-radius: 8px; padding: 8px 12px; font-size: .86rem; margin-top: 8px; }
+  .big { font-size: 2.4rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  button { font: inherit; font-size: .9rem; cursor: pointer; border-radius: 8px; padding: 8px 12px; }
+  .btn-primary { border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .btn-ghost { border: 1px solid var(--line); background: var(--field); color: var(--ink); }
+  .btn-sm { padding: 4px 9px; font-size: .82rem; }
+  .btns { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .tablewrap { overflow-x: auto; margin-top: 12px; border: 1px solid var(--line); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: .88rem; }
+  th, td { padding: 6px 9px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+  th { background: var(--result-bg); position: sticky; top: 0; color: var(--muted); font-weight: 600; }
+  td.name, th.name { text-align: left; white-space: normal; min-width: 220px; }
+  td.cat { text-align: left; color: var(--muted); font-size: .8rem; font-style: italic; }
+  tbody tr:hover { background: var(--hover); }
+  .bandgrid { display: grid; grid-template-columns: 120px repeat(7, 1fr); gap: 6px; align-items: end; margin-top: 8px; min-width: 640px; }
+  .bandgrid label { margin: 0 0 2px; font-size: .78rem; text-align: center; }
+  .bandgrid .rowlabel { font-size: .82rem; color: var(--muted); align-self: center; padding-right: 6px; }
+  .bandgrid input { padding: 6px 4px; text-align: center; font-size: .9rem; }
+  .scrollx { overflow-x: auto; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+  .tab { border: 1px solid var(--line); background: var(--field); color: var(--muted); border-radius: 999px; padding: 6px 14px; }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .surf-row { display: grid; grid-template-columns: 1fr 90px 34px; gap: 8px; margin-bottom: 8px; align-items: center; }
+  .toc { columns: 2; column-gap: 24px; font-size: .9rem; margin: 0 0 8px; padding: 0; list-style: none; }
+  .toc a { color: var(--accent); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
   footer.page { color: var(--muted); font-size: .82rem; margin-top: 28px; border-top: 1px solid var(--line); padding-top: 14px; }
+  @media (max-width: 560px) { .surf-row { grid-template-columns: 1fr 70px 32px; } }
 </style>
 </head>
 <body>
 <div class="wrap">
   <a class="home" href="index.html">&larr; BPSD5030 tutorial tools</a>
   <h1>Room Acoustics Calculator</h1>
-  <p class="lede">Three routine acoustic calculations for the Week 6 tutorial: correctly averaging or combining sound levels in decibels, and the Sabine relationship between room volume, absorption, and reverberation time. It does the arithmetic; benchmarking against AS/NZS 2107 and the design interpretation are yours.</p>
+  <p class="lede">The routine acoustic calculations for the Week 6 tutorial, in one place: averaging and combining decibels, the Sabine relationship, building a room's absorption from its surfaces, the full octave-band Speech Transmission Index, and the material data tables. It does the arithmetic; benchmarking against AS/NZS 2107 and the design interpretation are yours.</p>
+  <ul class="toc">
+    <li><a href="#s-db">1. Average / combine sound levels</a></li>
+    <li><a href="#s-sabine">2. Sabine: absorption &amp; reverberation</a></li>
+    <li><a href="#s-room">3. Build room absorption from surfaces</a></li>
+    <li><a href="#s-sti">4. Speech intelligibility (STI)</a></li>
+    <li><a href="#s-data">5. Material data tables</a></li>
+  </ul>
 
-  <section class="card">
+  <section class="card" id="s-db">
     <h2>1. Average or combine sound levels (dB)</h2>
     <p class="sub">Decibels are logarithmic, so you cannot take a plain arithmetic mean. Enter your levels (dB), separated by commas or spaces.</p>
     <label for="levels">Levels (dB)</label>
@@ -70,7 +104,7 @@
     <p class="note">Use the energy average to summarise repeated LAeq or octave-band readings of the same source. Use combine when adding independent sources together.</p>
   </section>
 
-  <section class="card">
+  <section class="card" id="s-sabine">
     <h2>2. Sabine: absorption and reverberation time</h2>
     <p class="sub">The Sabine equation links room volume (V), total absorption (A, in m&sup2; sabine), and reverberation time (T, in seconds). Enter volume plus one of T or A; the other is computed.</p>
     <div class="grid">
@@ -78,41 +112,105 @@
       <div><label for="t60">Reverberation time, T (s)</label><input id="t60" type="number" step="0.05" value="0.8"></div>
       <div><label for="absorp">Absorption, A (m&sup2; sabine)</label><input id="absorp" type="number" step="1" placeholder="computed from V and T"></div>
     </div>
-    <div class="btns" style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">
-      <button id="calcA" style="font:inherit;font-size:.9rem;padding:8px 12px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);font-weight:600;cursor:pointer">V and T &rarr; A</button>
-      <button id="calcT" style="font:inherit;font-size:.9rem;padding:8px 12px;border-radius:8px;border:1px solid var(--line);background:var(--field);color:var(--ink);cursor:pointer">V and A &rarr; T</button>
+    <div class="btns">
+      <button id="calcA" class="btn-primary">V and T &rarr; A</button>
+      <button id="calcT" class="btn-ghost">V and A &rarr; T</button>
     </div>
     <div class="results" id="sabResults"></div>
     <div class="formula">A = 0.16 &middot; V / T   ·   T = 0.16 &middot; V / A</div>
   </section>
 
-  <section class="card">
-    <h2>3. Speech intelligibility — quick estimate</h2>
-    <p class="sub">A rough Speech Transmission Index from the speech-to-noise ratio. Useful for a first read on whether speech is easy or hard to follow.</p>
+  <section class="card" id="s-room">
+    <h2>3. Build a room's absorption from its surfaces</h2>
+    <p class="sub">Add each major surface (ceiling, walls, floor, glazing, furniture, people), pick a material from the data table, and give its area in m&sup2;. The tool sums the octave-band absorption A = &Sigma;(S&middot;&alpha;) and predicts the reverberation time per band from your room volume, so you can see which surfaces drive the acoustics and compare with your measured RT60.</p>
+    <div class="grid" style="max-width:320px">
+      <div><label for="roomVol">Room volume, V (m&sup3;)</label><input id="roomVol" type="number" step="1" value="200"></div>
+    </div>
+    <h3>Surfaces</h3>
+    <div id="surfList"></div>
+    <div class="btns">
+      <button id="addSurf" class="btn-ghost btn-sm">+ Add surface</button>
+      <button id="clearSurf" class="btn-ghost btn-sm">Clear all</button>
+    </div>
+    <div class="scrollx"><div id="roomResults"></div></div>
+    <div class="grid" style="max-width:420px; margin-top:12px">
+      <div><label for="measA">Your measured A (optional, m&sup2; sabine)</label><input id="measA" type="number" step="1" placeholder="from Sabine on measured RT60"></div>
+    </div>
+    <div class="btns">
+      <button id="sendSabine" class="btn-primary btn-sm">Send mid-freq A &rarr; Sabine (section 2)</button>
+    </div>
+    <p class="note">Absorption coefficients are per m&sup2; of surface. Seating/audience values are per m&sup2; of floor area they occupy. Predicted RT uses T = 0.16&middot;V / A in each band; it will differ from measurement because the table is generic and does not model geometry.</p>
+  </section>
+
+  <section class="card" id="s-sti">
+    <h2>4. Speech intelligibility (STI)</h2>
+    <p class="sub">Two routes, matching the tutorial. A one-line quick read from the speech-to-noise ratio, and the full octave-band Speech Transmission Index (IEC&nbsp;60268-16) ported from the class STI spreadsheet.</p>
+
+    <h3>Quick estimate (speech-to-noise)</h3>
+    <p class="sub">A rough STI from the speech-to-noise ratio &mdash; useful for a first read in the room.</p>
     <div class="grid">
       <div><label for="sp">Speech level at listener (dBA)</label><input id="sp" type="number" step="1" value="60"></div>
       <div><label for="ns">Background noise level (dBA)</label><input id="ns" type="number" step="1" value="45"></div>
     </div>
     <div class="results" id="stiResults"></div>
     <div class="formula">SNR = Lspeech &minus; Lnoise   ·   STI &asymp; (SNR + 15) / 30   (clamped 0–1)</div>
-    <div class="flag">Indicative only. This SNR shortcut ignores reverberation and per-band effects. For anything you report, use the class STI spreadsheet or the full IEC 60268-16 method.</div>
-    <p class="note">Qualitative bands (IEC 60268-16): &lt;0.30 bad · 0.30–0.45 poor · 0.45–0.60 fair · 0.60–0.75 good · &gt;0.75 excellent.</p>
+    <div class="flag">Indicative only. This SNR shortcut ignores reverberation and per-band effects. Use the full octave-band method below for anything you report.</div>
+
+    <h3>Full octave-band STI (IEC 60268-16)</h3>
+    <p class="sub">Enter room volume, talker-to-listener distance, and the octave-band reverberation time and background noise. This reproduces the class STI spreadsheet (statistical room-acoustics method, with auditory masking).</p>
+    <div class="grid" style="margin-bottom:6px">
+      <div><label for="stiVol">Room volume, V (m&sup3;)</label><input id="stiVol" type="number" step="1" value="1000"></div>
+      <div><label for="stiDist">Talker–listener distance (m)</label><input id="stiDist" type="number" step="0.1" value="1"></div>
+      <div><label for="stiGain">Voice</label>
+        <select id="stiGain">
+          <option value="0">Conversational (0 dB)</option>
+          <option value="6">Raised (+6 dB)</option>
+          <option value="12">Stage / loud (+12 dB)</option>
+        </select>
+      </div>
+    </div>
+    <div class="scrollx">
+      <div class="bandgrid" id="stiBands"></div>
+    </div>
+    <div class="btns"><button id="calcSTI" class="btn-primary">Calculate STI</button></div>
+    <div class="results" id="stiFullResults"></div>
+    <p class="note">If you could not measure RT at 125&nbsp;Hz or 8&nbsp;kHz, substitute the 250&nbsp;Hz and 4&nbsp;kHz values respectively and note that you did so. Qualitative bands used here (as in the spreadsheet): &lt;0.20 none · 0.20–0.40 poor · 0.40–0.60 fair · 0.60–0.80 good · &gt;0.80 excellent.</p>
+  </section>
+
+  <section class="card" id="s-data">
+    <h2>5. Material data tables</h2>
+    <p class="sub">Octave-band absorption coefficients and sound reduction indices for common generic materials and constructions. Indicative historical data for rough calculations only &mdash; not for Building-Control submissions.</p>
+    <div class="tabs">
+      <button class="tab active" data-tab="abs">Absorption coefficients</button>
+      <button class="tab" data-tab="sri">Sound reduction indices</button>
+    </div>
+    <div class="grid" style="grid-template-columns: 2fr 1fr; margin-bottom:6px">
+      <div><label for="matSearch">Search material</label><input id="matSearch" type="text" placeholder="e.g. carpet, glazing, plasterboard"></div>
+      <div><label for="matCat">Category</label><select id="matCat"></select></div>
+    </div>
+    <p class="note" id="matCount"></p>
+    <div class="tablewrap" style="max-height:460px; overflow-y:auto"><table id="matTable"></table></div>
+    <p class="note" id="matHint">Tip: click <strong>+</strong> on an absorption row to add it to the room-absorption builder in section 3.</p>
   </section>
 
   <footer class="page">
-    Sabine equation and logarithmic level arithmetic are exact; the STI figure is a speech-to-noise approximation for teaching only.
-    Teaching aid for BPSD5030; benchmark results against AS/NZS 2107:2016 and confirm against measurement software.
+    Sabine and logarithmic level arithmetic are exact; the octave-band STI reproduces the BPSD5030 STI workbook (Cabrera, rev. 2019) using the IEC&nbsp;60268-16 statistical method with masking. Material data are indicative generic values (BB93 / Adrian James data). Teaching aid for BPSD5030; benchmark results against AS/NZS&nbsp;2107:2016 and confirm against measurement software.
   </footer>
 </div>
 
 <script>
+var MAT = {"ab":[["MASONRY WALLS","Rough concrete","",null,0.02,0.03,0.03,0.03,0.04,0.07,null],["MASONRY WALLS","Smooth unpainted concrete","",null,0.01,0.01,0.02,0.02,0.02,0.05,null],["MASONRY WALLS","Smooth concrete, painted or glazed","",null,0.01,0.01,0.01,0.02,0.02,0.02,null],["MASONRY WALLS","Porous concrete blocks  (no surface finish)","",null,0.05,0.05,0.05,0.08,0.14,0.2,null],["MASONRY WALLS","Clinker concrete  (no surface finish)","",null,0.1,0.2,0.4,0.6,0.5,0.6,null],["MASONRY WALLS","Smooth brickwork with flush pointing","",null,0.02,0.03,0.03,0.04,0.05,0.07,null],["MASONRY WALLS","Smooth brickwork with flush pointing, painted","",null,0.01,0.01,0.02,0.02,0.02,0.02,null],["MASONRY WALLS","Standard brickwork","",0.05,0.05,0.04,0.02,0.04,0.05,0.05,0.05],["MASONRY WALLS","Brickwork, 10mm flush pointing","",null,0.08,0.09,0.12,0.16,0.22,0.24,null],["MASONRY WALLS","Lime cement plaster on masonry wall","",null,0.02,0.02,0.03,0.04,0.05,0.05,null],["MASONRY WALLS","Glaze plaster on masonry wall","",null,0.01,0.01,0.01,0.02,0.02,0.02,null],["MASONRY WALLS","Painted plaster surface on masonry wall","",null,0.02,0.02,0.02,0.02,0.02,0.02,null],["MASONRY WALLS","Plaster on masonry wall with wall paper on backing paper","",null,0.02,0.03,0.04,0.05,0.07,0.08,null],["MASONRY WALLS","Ceramic tiles with smooth surface","",null,0.01,0.01,0.01,0.02,0.02,0.02,null],["MASONRY WALLS","Breeze block","",0.1,0.2,0.45,0.6,0.4,0.45,0.4,0.4],["MASONRY WALLS","Plaster on solid wall","",0.04,0.04,0.05,0.06,0.08,0.04,0.06,0.05],["MASONRY WALLS","Plaster, lime or gypsum on solid backing","",null,0.03,0.03,0.02,0.03,0.04,0.05,null],["STUDWORK AND LIGHTWEIGHT WALLS","Plasterboard on battens, 18mm airspace with glass wool","",null,0.3,0.2,0.15,0.05,0.05,0.05,null],["STUDWORK AND LIGHTWEIGHT WALLS","Plasterboard on frame, 100mm airspace","",null,0.3,0.12,0.08,0.06,0.06,0.05,null],["STUDWORK AND LIGHTWEIGHT WALLS","Plasterboard on frame, 100mm airspace with glass wool","",null,0.08,0.11,0.05,0.03,0.02,0.03,null],["STUDWORK AND LIGHTWEIGHT WALLS","Plasterboard on 50mm battens","",null,0.29,0.1,0.05,0.04,0.07,0.09,null],["STUDWORK AND LIGHTWEIGHT WALLS","Plasterboard on 25mm battens","",null,0.31,0.33,0.14,0.1,0.1,0.12,null],["STUDWORK AND LIGHTWEIGHT WALLS","2 x plasterboard on frame, 50mm airspace with mineral wool","2 x 13mm",null,0.15,0.1,0.06,0.04,0.04,0.05,null],["STUDWORK AND LIGHTWEIGHT WALLS","Plasterboard on cellular core partition","",null,0.15,0.0,0.07,0.0,0.04,0.05,null],["STUDWORK AND LIGHTWEIGHT WALLS","Plasterboard on frame 100mm cavity","13mm",null,0.08,0.11,0.05,0.03,0.02,0.03,null],["STUDWORK AND LIGHTWEIGHT WALLS","Plasterboard on frame, 100mm cavity with mineral wool","13mm",null,0.3,0.12,0.08,0.06,0.06,0.05,null],["STUDWORK AND LIGHTWEIGHT WALLS","2 x 13mm plasterboard on steel frame, 50mm mineral wool in cavity, surface painted","26mm",null,0.15,0.01,0.06,0.04,0.04,0.05,null],["GLASS AND GLAZING","4mm glass","4mm",null,0.3,0.2,0.1,0.07,0.05,0.02,null],["GLASS AND GLAZING","6mm glass","6mm",null,0.1,0.06,0.04,0.03,0.02,0.02,null],["GLASS AND GLAZING","Double glazing, 2-3mm glass, 10mm air gap","",null,0.15,0.05,0.03,0.03,0.02,0.02,null],["WOOD AND WOOD PANELLING","3-4mm plywood, 75mm cavity containing mineral wool","1.0",null,0.5,0.3,0.1,0.05,0.05,0.05,null],["WOOD AND WOOD PANELLING","5mm plywood on battens, 50mm airspace filled with glass wool","",null,0.4,0.35,0.2,0.15,0.05,0.05,null],["WOOD AND WOOD PANELLING","12mm plywood over 50mm airgap","1.0",null,0.25,0.05,0.04,0.03,0.03,0.02,null],["WOOD AND WOOD PANELLING","12mm plywood over 150mm airgap","1.0",null,0.28,0.08,0.07,0.07,0.09,0.09,null],["WOOD AND WOOD PANELLING","12mm plywood over 200mm airgap containing 50mm mineral wool","1.0",null,0.14,0.1,0.1,0.08,0.1,0.08,null],["WOOD AND WOOD PANELLING","Plywood mounted solidly","",null,0.05,null,0.05,null,0.05,0.05,null],["WOOD AND WOOD PANELLING","12mm plywood in framework with 30mm airspace behind","12mm",null,0.35,0.2,0.15,0.1,0.05,0.05,null],["WOOD AND WOOD PANELLING","12mm plywood in framework with 30mm airspace containing glass wool","12mm",null,0.4,0.2,0.15,0.1,0.1,0.05,null],["WOOD AND WOOD PANELLING","Plywood, hardwood panels over 25mm airspace on solid backing","",null,0.3,0.2,0.15,0.1,0.1,0.05,null],["WOOD AND WOOD PANELLING","Plywood, hardwood panels over 25mm airspace on solid backing with absorbent material in air space","",null,0.4,0.25,0.15,0.1,0.1,0.05,null],["WOOD AND WOOD PANELLING","12mm wood panelling on 25mm battens","12mm",null,0.31,0.33,0.14,0.1,0.1,0.12,null],["WOOD AND WOOD PANELLING","Timber boards, 100mm wide, 10mm gaps, 500mm airspace with mineral wool","22mm",null,0.05,0.25,0.6,0.15,0.05,0.1,null],["WOOD AND WOOD PANELLING","t & g board on frame, 50mm airspace with mineral wool","16mm",null,0.25,0.15,0.1,0.09,0.08,0.07,null],["WOOD AND WOOD PANELLING","16-22mm t&g wood on 50mm cavity filled with mineral wool","",null,0.25,0.15,0.1,0.09,0.08,0.07,null],["WOOD AND WOOD PANELLING","Cedar, slotted and profiled on battens mineral wool in airspace","",null,0.2,0.62,0.98,0.62,0.21,0.15,null],["WOOD AND WOOD PANELLING","Wood boards on on joists or battens","",null,0.15,0.2,0.1,0.1,0.1,0.1,null],["WOOD AND WOOD PANELLING","20mm dense veneered chipboard over 100mm airgap","",null,0.03,0.05,0.04,0.03,0.03,0.02,null],["WOOD AND WOOD PANELLING","20mm dense veneered chipboard over 200mm airgap","",null,0.06,0.1,0.08,0.09,0.07,0.04,null],["WOOD AND WOOD PANELLING","20mm dense veneered chipboard over 250mm airgap containing 50mm mineral wool","",null,0.12,0.1,0.08,0.07,0.1,0.08,null],["WOOD AND WOOD PANELLING","6mm wood fibre board, cavity > 100mm, empty","",null,0.3,0.2,0.2,0.1,0.05,0.05,null],["WOOD AND WOOD PANELLING","22mm chipboard, 50mm cavity filled with mineral wool","",null,0.12,0.04,0.06,0.05,0.05,0.05,null],["WOOD AND WOOD PANELLING","Acoustic timber wall panelling","",null,0.18,0.34,0.42,0.59,0.83,0.68,null],["WOOD AND WOOD PANELLING","Hardwood, mahogany","",null,0.19,0.23,0.25,0.3,0.37,0.42,null],["WOOD AND WOOD PANELLING","Chipboard on 16mm battens","20mm",null,0.2,0.25,0.2,0.2,0.15,0.2,null],["WOOD AND WOOD PANELLING","Chipboard on frame, 50mm airspace with mineral wool","22mm",null,0.12,0.04,0.06,0.05,0.05,0.05,null],["MINERAL WOOL AND FOAMS","Melamine based foam 25mm","",null,0.09,0.22,0.54,0.76,0.88,0.93,null],["MINERAL WOOL AND FOAMS","Melamine based foam 50mm","",null,0.18,0.56,0.96,1.0,1.0,1.0,null],["MINERAL WOOL AND FOAMS","Glass wool 25mm 16 kg/m3","",null,0.12,0.28,0.55,0.71,0.74,0.83,null],["MINERAL WOOL AND FOAMS","Glass wool 50mm, 16 kg/m3","",null,0.17,0.45,0.8,0.89,0.97,0.94,null],["MINERAL WOOL AND FOAMS","Glass wool 75mm, 16 kg/m3","",null,0.3,0.69,0.94,1.0,1.0,1.0,null],["MINERAL WOOL AND FOAMS","Glass wool 100mm, 16 kg/m3","",null,0.43,0.86,1.0,1.0,1.0,1.0,null],["MINERAL WOOL AND FOAMS","Glass wool 25mm, 24 kg/m3","",null,0.11,0.32,0.56,0.77,0.89,0.91,null],["MINERAL WOOL AND FOAMS","Glass wool 50mm, 24 kg/m3","",null,0.27,0.54,0.94,1.0,0.96,0.96,null],["MINERAL WOOL AND FOAMS","Glass wool 75mm, 24 kg/m3","",null,0.28,0.79,1.0,1.0,1.0,1.0,null],["MINERAL WOOL AND FOAMS","Glass wool 100mm, 24 kg/m3","",null,0.46,1.0,1.0,1.0,1.0,1.0,null],["MINERAL WOOL AND FOAMS","Glass wool 50mm, 33 kg/m3","",null,0.2,0.55,1.0,1.0,1.0,1.0,null],["MINERAL WOOL AND FOAMS","Glass wool 75mm, 33 kg/m3","",null,0.37,0.85,1.0,1.0,1.0,1.0,null],["MINERAL WOOL AND FOAMS","Glass wool 100mm, 33 kg/m3","",null,0.53,0.92,1.0,1.0,1.0,1.0,null],["MINERAL WOOL AND FOAMS","Glass wool 50mm, 48 kg/m3","",null,0.3,0.8,1.0,1.0,1.0,1.0,null],["MINERAL WOOL AND FOAMS","Glass wool 75mm, 48 kg/m3","",null,0.43,0.97,1.0,1.0,1.0,1.0,null],["MINERAL WOOL AND FOAMS","Glass wool 100mm, 48 kg/m3","",null,0.65,1.0,1.0,1.0,1.0,1.0,null],["MINERAL WOOL AND FOAMS","Rock wool 50mm, 33 kg/m3 direct to masonry","17.0",null,0.15,0.6,0.9,0.9,0.9,0.85,null],["MINERAL WOOL AND FOAMS","Rock wool 100mm, 33 kg/m3 direct to masonry","17.0",null,0.35,0.95,0.98,0.92,0.9,0.85,null],["MINERAL WOOL AND FOAMS","Rock wool 50mm, 60 kg/m3 direct to masonry","17.0",null,0.11,0.6,0.96,0.94,0.92,0.82,null],["MINERAL WOOL AND FOAMS","Rock wool 75mm, 60 kg/m3 direct to masonry","17.0",null,0.34,0.95,0.98,0.82,0.87,0.86,null],["MINERAL WOOL AND FOAMS","Rock wool 30mm, 100 kg/m3 direct to masonry","17.0",null,0.1,0.4,0.8,0.9,0.9,0.9,null],["MINERAL WOOL AND FOAMS","Rock wool 30mm, 200 kg/m3 over 300mm air gap","17.0",null,0.4,0.75,0.9,0.8,0.9,0.85,null],["MINERAL WOOL AND FOAMS","Glass wool or mineral wool on solid backing","25mm",null,0.2,0.0,0.7,0.0,0.9,0.8,null],["MINERAL WOOL AND FOAMS","Glass wool or mineral wool on solid backing","50mm",null,0.3,0.0,0.8,0.0,0.95,0.9,null],["MINERAL WOOL AND FOAMS","Glass wool or mineral wool over air space on solid backing","25mm",null,0.4,0.0,0.8,0.0,0.9,0.8,null],["MINERAL WOOL AND FOAMS","Fibreglass super fine mat","50mm",null,0.15,0.4,0.75,0.85,0.8,0.85,null],["MINERAL WOOL AND FOAMS","Fibreglass scrim-covered sewn sheet","40mm",null,0.4,0.8,0.95,0.95,0.8,0.85,null],["MINERAL WOOL AND FOAMS","Fibreglass bitumen bonded mat","25mm",null,0.1,0.35,0.5,0.55,0.7,0.7,null],["MINERAL WOOL AND FOAMS","Fibreglass bitumen bonded mat","50mm",null,0.3,0.55,0.8,0.85,0.75,0.8,null],["MINERAL WOOL AND FOAMS","Fibreglass resin-bonded mat","25mm",null,0.1,0.35,0.55,0.65,0.75,0.8,null],["MINERAL WOOL AND FOAMS","Fibreglass resin-bonded mat","50mm",null,0.2,0.5,0.7,0.8,0.75,0.8,null],["MINERAL WOOL AND FOAMS","Fibreglass resin-bonded board","25mm",null,0.1,0.25,0.55,0.7,0.8,0.85,null],["MINERAL WOOL AND FOAMS","Flexible polyurethane foam 50mm","",null,0.25,0.5,0.85,0.95,0.9,0.9,null],["MINERAL WOOL AND FOAMS","Rigid polyurethane foam 50mm","",null,0.2,0.4,0.65,0.55,0.7,0.7,null],["MINERAL WOOL AND FOAMS","12mm expanded polystyrene on 45mm battens","",null,0.05,0.15,0.4,0.35,0.2,0.2,null],["MINERAL WOOL AND FOAMS","25mm expanded polystyrene on 50mm battens","",null,0.1,0.25,0.55,0.2,0.1,0.15,null],["WALL TREATMENTS & CONSTRUCTIONS","Cork tiles 25mm on solid backing","",null,0.05,0.1,0.2,0.55,0.6,0.55,null],["WALL TREATMENTS & CONSTRUCTIONS","Cork board, 25mm on solid backing","25mm",null,0.03,0.05,0.17,0.52,0.5,0.52,null],["WALL TREATMENTS & CONSTRUCTIONS","Cork board, 25mm, 2.9kg/m2, on battens","25mm",null,0.15,0.4,0.65,0.35,0.35,0.3,null],["WALL TREATMENTS & CONSTRUCTIONS","Glass blocks or glazed tiles as wall finish","",null,0.01,0.0,0.01,0.0,0.01,0.01,null],["WALL TREATMENTS & CONSTRUCTIONS","Muslin covered cotton felt","25mm",null,0.15,0.45,0.7,0.85,0.95,0.85,null],["WALL TREATMENTS & CONSTRUCTIONS","Pin up boarding- medium hardboard on solid backing","",null,0.05,0.0,0.1,0.0,0.1,0.1,null],["WALL TREATMENTS & CONSTRUCTIONS","Fibreboard on solid backing","12mm",0.05,0.05,0.1,0.15,0.25,0.3,0.3,0.25],["WALL TREATMENTS & CONSTRUCTIONS","25mm thick hair felt, covered by scrim cloth on solid backing","25mm",null,0.1,0.0,0.7,0.0,0.8,0.8,null],["WALL TREATMENTS & CONSTRUCTIONS","Fibreboard on solid backing","soft 12mm",null,0.05,0.0,0.15,0.0,0.3,0.3,null],["WALL TREATMENTS & CONSTRUCTIONS","Fibreboard on solid backing - painted","",null,0.05,0.0,0.1,0.0,0.15,0.15,null],["WALL TREATMENTS & CONSTRUCTIONS","Fibreboard over airspace on solid wall","12mm",null,0.3,0.0,0.3,0.0,0.3,0.3,null],["WALL TREATMENTS & CONSTRUCTIONS","Fibreboard over airspace on solid wall - painted","",null,0.3,0.0,0.15,0.0,0.1,0.1,null],["WALL TREATMENTS & CONSTRUCTIONS","Plaster on lath, deep air space","",null,0.2,0.15,0.1,0.05,0.05,0.05,null],["WALL TREATMENTS & CONSTRUCTIONS","Plaster decorative panels, walls","",null,0.2,0.15,0.1,0.08,0.04,0.02,null],["WALL TREATMENTS & CONSTRUCTIONS","Acoustic plaster to solid backing","25mm",null,0.03,0.15,0.5,0.8,0.85,0.8,null],["WALL TREATMENTS & CONSTRUCTIONS","9mm acoustic plaster to solid backing","9mm",null,0.02,0.08,0.3,0.6,0.8,0.9,null],["WALL TREATMENTS & CONSTRUCTIONS","9mm acoustic plaster on plasterboard, 75mm airspace","9mm",null,0.3,0.3,0.6,0.8,0.75,0.75,null],["WALL TREATMENTS & CONSTRUCTIONS","12.5mm acoustic plaster on plaster backing over 75mm air space","12.5mm",null,0.35,0.35,0.4,0.55,0.7,0.7,null],["WALL TREATMENTS & CONSTRUCTIONS","Woodwool slabs, unplastered on solid backing","25mm",null,0.1,0.0,0.4,0.0,0.6,0.6,null],["WALL TREATMENTS & CONSTRUCTIONS","Woodwool slabs, unplastered on solid backing","50mm",null,0.1,0.2,0.45,0.8,0.6,0.75,null],["WALL TREATMENTS & CONSTRUCTIONS","Woodwool slabs, unplastered on solid backing","75mm",null,0.2,0.0,0.8,0.0,0.8,0.8,null],["WALL TREATMENTS & CONSTRUCTIONS","Woodwool slabs, unplastered over 20mm airspace on solid backing","25mm",null,0.15,0.0,0.6,0.0,0.6,0.7,null],["WALL TREATMENTS & CONSTRUCTIONS","Plasterboard backed with 25mm thick bitumen-bonded fibreglass on 50mm battens","10mm",null,0.3,0.2,0.15,0.05,0.05,0.05,null],["WALL TREATMENTS & CONSTRUCTIONS","Curtains hung in folds against soild wall","",0.05,0.05,0.15,0.35,0.4,0.5,0.5,0.4],["WALL TREATMENTS & CONSTRUCTIONS","Cotton Curtains (0.5kg/m2),draped to 75% area approx. 130mm from wall","",null,0.3,0.45,0.65,0.56,0.59,0.71,null],["WALL TREATMENTS & CONSTRUCTIONS","Lightweight curtains (0.2 kg/m2) hung 90mm from wall","",null,0.05,0.06,0.39,0.63,0.7,0.73,null],["WALL TREATMENTS & CONSTRUCTIONS","Curtains of close-woven glass mat hung 50mm from wall","",null,0.03,0.03,0.15,0.4,0.5,0.5,null],["WALL TREATMENTS & CONSTRUCTIONS","Curtains, medium velour, 50% gather, over soild backing","",null,0.05,0.25,0.4,0.5,0.6,0.5,null],["WALL TREATMENTS & CONSTRUCTIONS","Curtains (medium fabrics) hung straight and close to wall","",null,0.05,0.0,0.25,0.0,0.3,0.4,null],["WALL TREATMENTS & CONSTRUCTIONS","Curtains in folds against wall","",null,0.05,0.15,0.35,0.4,0.5,0.5,null],["WALL TREATMENTS & CONSTRUCTIONS","Curtains ( medium fabrics ) double widths in folds spaced away from wall","",null,0.1,0.0,0.4,0.0,0.5,0.6,null],["WALL TREATMENTS & CONSTRUCTIONS","Acoustic banner, 0.5 kg/m2 wool serge, 100mm from wall","",null,0.11,0.4,0.7,0.74,0.88,0.89,null],["FLOORS","Smooth marble or terrazzo slabs","",null,0.01,0.01,0.01,0.01,0.02,0.02,null],["FLOORS","Raised computer floor, steel-faced 45mm chipboard 800mm above concrete floor, no carpet","",null,0.08,0.07,0.06,0.07,0.08,0.08,null],["FLOORS","Raised computer floor, steel-faced 45mm chipboard 800mm above concrete floor, office-grade carpet tiles","",null,0.27,0.26,0.52,0.43,0.51,0.58,null],["FLOORS","Wooden floor on joists","",null,0.15,0.11,0.1,0.07,0.06,0.07,null],["FLOORS","Parquet fixed in asphalt, on concrete","",null,0.04,0.04,0.07,0.06,0.06,0.07,null],["FLOORS","Parquet on counterfloor","",null,0.2,0.15,0.1,0.1,0.05,0.1,null],["FLOORS","Linoleum or vinyl stuck to concrete","",null,0.02,0.02,0.03,0.04,0.04,0.05,null],["FLOORS","Layer of rubber, cork, linoleum + underlay, or vinyl+underlay stuck to concrete","",null,0.02,0.02,0.04,0.05,0.05,0.1,null],["FLOORS","5mm needle-felt stuck to concrete","5mm",null,0.01,0.02,0.05,0.15,0.3,0.4,null],["FLOORS","6mm pile carpet bonded to closed-cell foam underlay","6mm",null,0.03,0.09,0.25,0.31,0.33,0.44,null],["FLOORS","6mm pile carpet bonded to open-cell foam underlay","6mm",null,0.03,0.09,0.2,0.54,0.7,0.72,null],["FLOORS","9mm pile carpet, tufted on felt underlay","9mm",null,0.08,0.08,0.3,0.6,0.75,0.8,null],["FLOORS","Composition flooring","",0.05,0.05,0.05,0.05,0.05,0.05,0.05,0.05],["FLOORS","Haircord carpet on felt underlay","6mm",0.05,0.05,0.05,0.1,0.2,0.45,0.65,0.65],["FLOORS","Medium pile carpet on sponge rubber underlay","10mm",0.5,0.5,0.1,0.3,0.5,0.65,0.7,0.65],["FLOORS","Thick pile carpet on sponge rubber underlay","15mm",0.05,0.15,0.25,0.5,0.6,0.7,0.7,0.65],["FLOORS","Rubber floor tiles","6mm",0.05,0.05,0.05,0.1,0.1,0.05,0.05,0.05],["FLOORS","Carpet, thin, over thin felt on concrete","",null,0.1,0.15,0.25,0.3,0.3,0.3,null],["FLOORS","Carpet, thin, over thin felt on wood floor","",null,0.2,0.25,0.3,0.3,0.3,0.3,null],["FLOORS","Carpet, needlepunch","5mm",null,0.03,0.05,0.05,0.25,0.35,0.5,null],["FLOORS","Stone floor, plain or tooled or granolithic finish","",null,0.02,0.0,0.02,0.0,0.05,0.05,null],["FLOORS","Corkfloor tiles","14mm",null,0.0,0.05,0.15,0.25,0.25,0.0,null],["FLOORS","Sheet rubber ( hard )","6mm",null,0.0,0.05,0.05,0.1,0.05,0.0,null],["FLOORS","Woodblock/linoleum/rubber/cork tiles (thin) on solid floor (or wall)","",null,0.02,0.04,0.05,0.05,0.1,0.05,null],["FLOORS","Floor tiles, plastic or linoleum","",null,0.03,0.0,0.03,0.0,0.05,0.05,null],["FLOORS","Steel decking","",null,0.13,0.09,0.08,0.09,0.11,0.11,null],["PANELS AND DOORS","Wood hollowcore door","",null,0.3,0.25,0.15,0.1,0.1,0.07,null],["PANELS AND DOORS","Solid timber door","",null,0.14,0.1,0.06,0.08,0.1,0.1,null],["PANELS AND DOORS","Acoustic door, steel frame, double seals, absorbant in airspace,","",null,0.35,0.39,0.44,0.49,0.54,0.57,null],["CEILINGS","Mineral wool tiles, 180mm airspace","",null,0.42,0.72,0.83,0.88,0.89,0.8,null],["CEILINGS","Mineral wool tiles, glued/screwed to soffit","",null,0.06,0.4,0.75,0.95,0.96,0.83,null],["CEILINGS","Gypsum plaster tiles, 17% perforated, 22mm mineral wool backing","",null,0.45,0.7,0.8,0.8,0.65,0.45,null],["CEILINGS","Metal ceiling, 32.5% perforated, backed by 30mm rockwool","",null,0.12,0.45,0.87,0.98,1.0,1.0,null],["CEILINGS","Perforated underside of structural steel decking (typical, depends on perforations)","",null,0.3,0.7,0.85,0.9,0.7,0.65,null],["CEILINGS","12% perforated plaster tiles, absorbent felt glued to back, 200mm ceiling void","",null,0.45,0.7,0.88,0.52,0.42,0.35,null],["CEILINGS","100mm woodwool slabs on 25mm cavity, pre-screeded surface facing cavity","",null,0.5,0.75,0.85,0.65,0.7,0.7,null],["CEILINGS","50mm woodwool slabs on 25mm cavity, pre-screeded surface facing cavity","",null,0.3,0.4,0.5,0.85,0.5,0.65,null],["CEILINGS","100mm woodwool fixed directly to concrete, pre-screeded surface facing backing","",null,0.25,0.8,0.85,0.65,0.7,0.75,null],["CEILINGS","75mm woodwool fixed directly to concrete, pre-screeded surface facing backing","",null,0.15,0.4,0.95,0.6,0.7,0.6,null],["CEILINGS","Plasterboard 10mm thick backed with 25mm thick bitumen","10mm",null,0.3,0.2,0.15,0.05,0.05,0.05,null],["CEILINGS","Plasterboard 10mm thick, perforated 8mm diameter holes 2755m2 14% open area backed with 25mm thick bitumen- bonded fibreglass on 90mm battens","10mm",null,0.25,0.7,0.85,0.55,0.4,0.3,null],["CEILINGS","Plywood, 5mm, on battens 50mm airspace filled with glass wool","5mm",null,0.4,0.35,0.2,0.15,0.05,0.05,null],["CEILINGS","Plywood, 12mm, with 30mm thick fibreglass backing between 30mm battens","",null,0.4,0.2,0.15,0.1,0.1,0.05,null],["CEILINGS","Plywood 12mm thick perforated 5mm diameter holes 6200 m2 11% open area with 60mm deep air space behind","",null,0.2,0.35,0.55,0.3,0.25,0.3,null],["CEILINGS","Plywood 12mm thick perforated 5mm diameter holes 6200 m2 11% open area backed with 60mm thick fibreglass between mounting battens","",null,0.4,0.9,0.8,0.5,0.4,0.3,null],["CEILINGS","Hardboard, 25% perforated over 50mm mineral wool","",null,0.27,0.87,1.0,1.0,0.98,0.96,null],["CEILINGS","0.8mm unperforated metal panels backed with 25mm thick resin bonded fibreglass, mounted on 22mm diameter pipes 135mm from wall.","0.8mm",null,0.5,0.35,0.15,0.05,0.05,0.0,null],["CEILINGS","0.8mm perforated metal tiles 2mm diameter holes 29440/m2. 13% open area backed with 25mm thick resin-bonded fibreglass slab. No airspace.","0.8mm",null,0.1,0.3,0.6,0.75,0.8,0.8,null],["CEILINGS","50mm mineral wool ( 96 kg/m3 ) behind 25% open area perforated steel.","50mm",null,0.2,0.35,0.65,0.85,0.9,0.8,null],["CEILINGS","Wood panels, 18mm alternate 15mm slot & 35mm wooden slat","18mm",null,0.1,0.36,0.74,0.91,0.61,0.5,null],["CEILINGS","Plaster decorative panels, ceilings","",null,0.2,0.22,0.18,0.15,0.15,0.16,null],["AUDIENCE AND SEATING","Children, standing (per child) in m2 units","",null,0.12,0.22,0.37,0.4,0.42,0.37,null],["AUDIENCE AND SEATING","Children, seated in plastic or metal chairs (per child) in m2 units","",null,0.28,0.0,0.33,0.0,0.37,0.37,null],["AUDIENCE AND SEATING","Students seated in tablet arm chairs","",null,0.3,0.41,0.49,0.84,0.87,0.84,null],["AUDIENCE AND SEATING","Adults per person seated","",null,0.33,0.4,0.44,0.45,0.45,0.45,null],["AUDIENCE AND SEATING","Adults per person standing","",null,0.15,0.38,0.42,0.43,0.45,0.45,null],["AUDIENCE AND SEATING","Empty plastic or metal chairs (per chair) in m2 units","",null,0.07,0.0,0.14,0.0,0.14,0.14,null],["AUDIENCE AND SEATING","Seats, leather covers, per m2","",null,0.4,0.5,0.58,0.61,0.58,0.5,null],["AUDIENCE AND SEATING","Cloth-upholstered seats, per m2","",null,0.44,0.6,0.77,0.89,0.82,0.7,null],["AUDIENCE AND SEATING","Floor and cloth-upholstered seats, per m2","",null,0.49,0.66,0.8,0.88,0.82,0.7,null],["AUDIENCE AND SEATING","Adults in plastic and metal chairs in m2 units","",null,0.3,0.0,0.4,0.0,0.43,0.4,null],["AUDIENCE AND SEATING","Adults in wooden or padded chairs or seats (per item) in m2","",null,0.16,0.0,0.4,0.0,0.44,0.4,null],["AUDIENCE AND SEATING","Adults on timber seats, 1 per m2 per item","",null,0.16,0.24,0.56,0.69,0.81,0.78,null],["AUDIENCE AND SEATING","Adults on timber seats, 2 per m2 per item","",null,0.24,0.4,0.78,0.98,0.96,0.87,null],["AUDIENCE AND SEATING","Wooden or padded chairs or seats (per item) in m2","",null,0.08,0.0,0.15,0.0,0.18,0.2,null],["AUDIENCE AND SEATING","Seating, slighty upholstered, unoccupied","",null,0.07,0.12,0.26,0.42,0.5,0.55,null],["AUDIENCE AND SEATING","Seating, slighty upholstered, occupied","",null,0.32,0.62,0.74,0.76,0.81,0.9,null],["AUDIENCE AND SEATING","Fully upholstered seats (per item) in m2","",null,0.12,0.0,0.28,0.0,0.32,0.37,null],["AUDIENCE AND SEATING","Upholstered tip-up theatre seats, empty","",null,0.33,0.51,0.64,0.71,0.77,0.81,null],["AUDIENCE AND SEATING","Areas with audience, orchestra, or seats, including narrow aisles","",null,0.6,0.74,0.88,0.96,0.93,0.85,null],["AUDIENCE AND SEATING","Auditorium seat, unoccupied","",null,0.13,0.33,0.59,0.58,0.61,0.62,null],["AUDIENCE AND SEATING","Auditorium seat, occupied","",null,0.37,0.48,0.68,0.73,0.77,0.74,null],["AUDIENCE AND SEATING","Orchestra with instruments on podium, 1.5 m2 per person","",null,0.27,0.53,0.67,0.93,0.87,0.8,null],["AUDIENCE AND SEATING","Orchestral player with instrument (average)  per person","",null,0.37,0.8,1.0,1.0,1.0,1.0,null],["AUDIENCE AND SEATING","Prosenium opening with average stage set per m2 of opening","",null,0.2,0.0,0.3,0.0,0.4,0.5,null],["AUDIENCE AND SEATING","Wood platform with large space beneath","",null,0.4,0.3,0.2,0.17,0.15,0.1,null],["AUDIENCE AND SEATING","Adult office furniture per desk","",null,0.5,0.4,0.45,0.45,0.6,0.7,null],["OTHER","Water surface, ie swimming pool","",null,0.01,0.01,0.01,0.01,0.02,0.02,null],["OTHER","Ventilation grille per m2","",null,0.6,0.6,0.6,0.6,0.6,0.6,null]],"sri":[["MASONRY","125mm solid breeze or clinker blocks, 12mm plaster both sides","125mm",145.0,20.0,27.0,33.0,40.0,50.0,57.0,56.0,59.0,44.0],["MASONRY","75mm solid breeze or clinker blocks, unplastered","75mm",85.0,12.0,17.0,18.0,20.0,24.0,30.0,38.0,43.0,25.0],["MASONRY","75mm clinker concrete slabs 12mm plaster both sides","100mm",146.0,null,26.0,33.0,40.0,50.0,57.0,58.0,null,44.0],["MASONRY","50mm clinker concrete blocks with 12mm plaster both sides","76mm",96.0,null,30.0,35.0,30.0,40.0,46.0,51.0,null,38.0],["MASONRY","100mm hollow cinder concrete blocks, painted (cement based paint)","100mm",75.0,22.0,30.0,34.0,40.0,50.0,50.0,52.0,53.0,45.0],["MASONRY","100mm hollow cinder concrete blocks, unpainted","100mm",75.0,22.0,27.0,32.0,37.0,40.0,41.0,45.0,48.0,40.0],["MASONRY","110mm concrete bricks","110mm",110.0,null,32.0,30.0,32.0,38.0,45.0,49.0,null,38.0],["MASONRY","100mm dense blockwork (1900 kg/m3)","100mm",190.0,null,28.0,30.0,41.0,47.0,53.0,56.0,null,44.0],["MASONRY","150mm dense blockwork (1900 kg/m3)","150mm",285.0,null,31.0,36.0,43.0,49.0,55.0,59.0,null,47.0],["MASONRY","100mm dense concrete (2300 kg/m3)","100mm",230.0,null,37.0,39.0,45.0,52.0,58.0,62.0,null,50.0],["MASONRY","150mm dense concrete (2300 kg/m3)","150mm",345.0,null,29.0,39.0,45.0,52.0,60.0,70.0,null,48.0],["MASONRY","150mm dense concrete (2300 kg/m3)","150mm",345.0,null,40.0,43.0,48.0,55.0,59.0,63.0,null,53.0],["MASONRY","200mm dense concrete (2300 kg/m3)","200mm",460.0,null,42.0,46.0,50.0,57.0,60.0,65.0,null,55.0],["MASONRY","300mm dense concrete (2300 kg/m3)","300mm",690.0,null,40.0,45.0,52.0,59.0,63.0,67.0,null,56.0],["MASONRY","100mm reinforced concrete","100mm",230.0,null,38.0,38.0,41.0,48.0,57.0,65.0,null,47.0],["MASONRY","220mm cellular concrete, plaster one side","220mm",220.0,null,22.0,34.0,43.0,51.0,56.0,58.0,null,44.0],["MASONRY","90mm hollow clay blocks, plaster one side","90mm",75.0,null,30.0,33.0,32.0,33.0,37.0,41.0,null,35.0],["MASONRY","90mm terracotta","90mm",null,null,26.0,26.0,30.0,35.0,40.0,41.0,null,35.0],["MASONRY","90mm terracotta, plastered both sides","114mm",null,null,32.0,30.0,33.0,40.0,49.0,54.0,null,39.0],["MASONRY","200mm glass bricks","200mm",510.0,25.0,30.0,35.0,40.0,49.0,49.0,43.0,45.0,45.0],["MASONRY","100mm lightweight blockwork, fair faced","100mm",125.0,null,32.0,32.0,33.0,41.0,49.0,57.0,null,40.0],["MASONRY","100mm lightweight blockwork, plaster both sides","125mm",125.0,null,32.0,34.0,37.0,45.0,52.0,57.0,null,43.0],["MASONRY","100mm lightweight blockwork, with plasterboard on dabs both sides","125mm",125.0,null,28.0,34.0,45.0,53.0,55.0,52.0,null,46.0],["MASONRY","Single leaf blockwork fair faced","102.5mm",125.0,null,36.0,37.0,40.0,46.0,54.0,56.0,null,45.0],["MASONRY","Single leaf blockwork plaster both sides","127.5mm",240.0,30.0,36.0,37.0,40.0,46.0,54.0,57.0,59.0,45.0],["MASONRY","Single leaf blockwork plaster both sides","240mm",480.0,34.0,41.0,45.0,48.0,56.0,65.0,69.0,72.0,54.0],["MASONRY","Single leaf blockwork plaster both sides","352.5mm",720.0,36.0,44.0,43.0,49.0,57.0,66.0,70.0,72.0,54.0],["MASONRY","200mm lightweight blockwork, fair faced","200mm",240.0,null,35.0,38.0,43.0,49.0,54.0,58.0,null,48.0],["MASONRY","200mm lightweight blockwork, plaster both sides","225mm",240.0,null,37.0,39.0,46.0,53.0,57.0,61.0,null,50.0],["MASONRY","200mm lightweight blockwork, with plasterboard on dabs both sides","230mm",240.0,null,33.0,39.0,50.0,55.0,56.0,60.0,null,51.0],["MASONRY","100mm aircrete blocks with 9.5mm plasterboard on dabs on both sides","119mm",78.0,null,37.0,35.0,39.0,47.0,49.0,41.0,null,45.0],["MASONRY","215mm aircrete blocks with 12.5mm plasterboard on dabs both sides","240mm",170.0,27.0,33.0,35.0,45.0,55.0,56.0,47.0,null,48.0],["MASONRY","215mm aircrete blocks with 13mm plaster both sides","241mm",170.0,27.0,35.0,38.0,47.0,53.0,57.0,57.0,null,50.0],["CAVITY MASONRY WALLS","Two leaves of 102.5mm brickwork, 50mm cavity,rigid wall ties","255mm",430.0,null,37.0,42.0,52.0,60.0,63.0,68.0,null,54.0],["CAVITY MASONRY WALLS","Two leaves of 102.5mm brickwork, 50mm cavity,rigid wall ties, plastered both sides","280mm",480.0,null,41.0,45.0,48.0,56.0,58.0,60.0,null,54.0],["CAVITY MASONRY WALLS","Two leaves of 280mm brick, 56mm cavity, strip ties, outer faces 12mm plaster on both sides","300mm",380.0,28.0,34.0,34.0,40.0,56.0,73.0,76.0,78.0,45.0],["CAVITY MASONRY WALLS","Two leaves of 280mm brick, 56mm cavity, metal ties, plaster on both sides","300mm",380.0,27.0,27.0,43.0,55.0,66.0,77.0,85.0,85.0,51.0],["CAVITY MASONRY WALLS","Two leaves of 75mm hollow blocks and 50mm cavity, plaster on both sides","200mm",136.0,null,38.0,48.0,52.0,57.0,68.0,78.0,null,56.0],["CAVITY MASONRY WALLS","Two leaves of 280mm brick, 56mm cavity, no ties, outer faces plastered 12mm","300mm",420.0,null,39.0,48.0,58.0,57.0,77.0,86.0,null,58.0],["CAVITY MASONRY WALLS","Two leaves of 75mm clinker concrete slabs, 50mm cavity, outer faces plastered","200mm",195.0,null,41.0,44.0,46.0,52.0,61.0,69.0,null,52.0],["CAVITY MASONRY WALLS","Two leaves of 100mm dense concrete blocks, 50mm cavity, wall ties, 13mm plaster on both sides","276mm",195.0,null,35.0,41.0,49.0,58.0,67.0,75.0,null,52.0],["CAVITY MASONRY WALLS","Two leaves of 100mm aircrete blocks, 75mm cavity, butterfly ties, 13mm plaster both sides","301mm",166.0,30.0,41.0,44.0,50.0,63.0,69.0,76.0,null,55.0],["CAVITY MASONRY WALLS","Two leaves of 100mm aircrete blocks, 75mm cavity, butterfly ties, 12.5mm plasterboard on dabs both sides","320mm",166.0,33.0,41.0,46.0,51.0,66.0,69.0,67.0,null,57.0],["CAVITY MASONRY WALLS","Triple leaf cavity wall, brickwork 112/215/112mm with 50mm cavities between leaves","539mm",935.0,null,53.0,56.0,62.0,69.0,78.0,84.0,null,67.0],["SINGLE SHEET MATERIALS","6mm steel plate","6mm",50.0,null,27.0,35.0,41.0,39.0,39.0,46.0,null,40.0],["SINGLE SHEET MATERIALS","20g galvanised sheet steel","0.9mm",7.0,null,8.0,14.0,20.0,26.0,32.0,38.0,null,24.0],["SINGLE SHEET MATERIALS","18g galvanised sheet steel","1.2mm",10.0,null,13.0,20.0,24.0,29.0,33.0,39.0,null,29.0],["SINGLE SHEET MATERIALS","18g fluted steel panels stiffened at edges, joints sealed","1.2mm",39.0,null,30.0,20.0,22.0,30.0,28.0,31.0,null,27.0],["SINGLE SHEET MATERIALS","19mm chipboard sheets on wood framework","19mm",11.0,null,17.0,18.0,25.0,30.0,26.0,32.0,null,27.0],["SINGLE SHEET MATERIALS","25mm woodwool slabs unplastered","25mm",19.0,null,0.0,2.0,6.0,6.0,8.0,8.0,null,7.0],["SINGLE SHEET MATERIALS","25mm woodwool slabs plastered (12mm on each face)","50mm",75.0,null,23.0,27.0,30.0,32.0,36.0,39.0,null,33.0],["SINGLE SHEET MATERIALS","50mm woodwool screeded to source side","50mm",28.0,null,26.0,28.0,30.0,32.0,33.0,36.0,null,32.0],["SINGLE SHEET MATERIALS","100mm woodwool screeded to source side","100mm",50.0,null,28.0,28.0,32.0,34.0,33.0,36.0,null,34.0],["SINGLE SHEET MATERIALS","12mm fibreboard on wood frame","12mm",4.0,null,12.0,16.0,20.0,24.0,30.0,31.0,null,24.0],["SINGLE SHEET MATERIALS","9mm plasterboard on wood frame 400mm","9mm",9.5,null,15.0,19.0,25.0,28.0,31.0,null,null,28.0],["SINGLE SHEET MATERIALS","25mm t & g timber boards, joints sealed","25mm",14.0,null,21.0,17.0,22.0,24.0,30.0,36.0,null,25.0],["SINGLE SHEET MATERIALS","Mahogany panels","50mm",25.0,null,19.0,23.0,25.0,30.0,37.0,42.0,null,30.0],["SINGLE SHEET MATERIALS","9mm plywood on frame","9mm",5.0,null,7.0,13.0,19.0,25.0,19.0,22.0,null,21.0],["SINGLE SHEET MATERIALS","18mm plywood","18mm",10.0,null,24.0,22.0,27.0,28.0,25.0,27.0,null,27.0],["SINGLE SHEET MATERIALS","Two layers of 13mm plasterboard","25mm",22.0,null,24.0,29.0,31.0,32.0,30.0,35.0,null,32.0],["STUD PARTITIONS","9.5mm plasterboard on 50 x 100 studs at 400 centres","120mm",49.0,null,38.0,34.0,41.0,46.0,50.0,54.0,null,45.0],["STUD PARTITIONS","12.5mm plasterboard on 50 x 100 studs at 400 centres","145mm",51.0,null,25.0,32.0,34.0,47.0,39.0,50.0,null,39.0],["STUD PARTITIONS","Plasterboard 12.5mm on 50 x 100 studs at 400 centres with 25mm mineral wool between studs","165mm",73.0,null,25.0,37.0,42.0,49.0,46.0,59.0,null,44.0],["STUD PARTITIONS","75mm metal studs 12.7mm plasterboard each side","100mm",null,null,15.0,24.0,32.0,43.0,43.0,38.0,null,34.0],["STUD PARTITIONS","75mm metal studs 12.7mm plasterboard each side with 25mm glass wool in cavity","100mm",null,null,17.0,29.0,42.0,50.0,50.0,41.0,null,39.0],["STUD PARTITIONS","122mm metal studs, two layers of 12.7mm plasterboard each side","147mm",null,null,20.0,35.0,45.0,53.0,51.0,48.0,null,44.0],["STUD PARTITIONS","122mm metal studs, two layers of 12.7mm plasterboard each side with 25mm glass wool in cavity","147mm",null,null,24.0,36.0,51.0,56.0,59.0,52.0,null,46.0],["STUD PARTITIONS","146mm metal studs at 600 centres, two layers of 12.7mm plasterboard each side","200mm",43.0,null,32.0,41.0,47.0,49.0,53.0,58.0,null,49.0],["STUD PARTITIONS","178mm staggered stud partition, one layer of 15mm plasterboard each side with 50mm glass wool in cavity","308mm",null,null,32.0,48.0,61.0,69.0,61.0,58.0,null,56.0],["FLOORS","21mm t & g timber boards, wood joists joints sealed","21mm",13.0,null,21.0,18.0,22.0,24.0,30.0,33.0,null,26.0],["FLOORS","100mm concrete slab","100mm",250.0,null,37.0,36.0,45.0,52.0,59.0,62.0,null,49.0],["FLOORS","200mm concrete slab","200mm",460.0,null,42.0,41.0,50.0,57.0,60.0,65.0,null,54.0],["FLOORS","300mm concrete slab","300mm",690.0,null,40.0,45.0,52.0,59.0,63.0,67.0,null,56.0],["FLOORS","50mm screed on 13mm glass wool on 125mm reinforced concrete","188mm",420.0,null,38.0,43.0,48.0,54.0,60.0,64.0,null,53.0],["FLOORS","65mm screed on 13mm glass wool on 125mm concrete slab","200mm",420.0,null,38.0,43.0,48.0,54.0,61.0,null,null,53.0],["FLOORS","125mm reinforced concrete topped with 50mm screed","175mm",null,null,35.0,37.0,42.0,49.0,58.0,63.0,null,47.0],["FLOORS","130mm concrete and 25mm screed and plaster soffit","171mm",null,null,37.0,38.0,43.0,51.0,60.0,64.0,null,48.0],["FLOORS","131mm concrete and 25mm screed and plaster soffit","172mm",null,null,38.0,39.0,44.0,52.0,61.0,65.0,null,49.0],["FLOORS","200mm reinforced concrete topped with 50mm screed","250mm",null,null,38.0,45.0,47.0,52.0,60.0,64.0,null,52.0],["FLOORS","150mm concrete and hollow tile and wood floor on 50 x 50 battens and plaster soffit","",null,null,36.0,38.0,39.0,47.0,54.0,55.0,null,46.0],["SINGLE GLAZED WINDOWS","6mm glass in unsealed openable frames, tightly closed","6mm",15.0,null,20.0,24.0,28.0,29.0,26.0,30.0,null,28.0],["SINGLE GLAZED WINDOWS","6mm glass in sealed frame","6mm",15.0,null,17.0,24.0,30.0,28.0,24.0,28.0,null,27.0],["SINGLE GLAZED WINDOWS","6mm glass in heavy frame","6mm",15.0,null,25.0,28.0,31.0,34.0,30.0,37.0,null,32.0],["SINGLE GLAZED WINDOWS","6mm glass set in gaskets in wooden frame","6mm",15.0,null,23.0,26.0,31.0,33.0,26.0,33.0,null,31.0],["SINGLE GLAZED WINDOWS","6.4mm laminated glass","6.4mm",15.0,null,22.0,24.0,30.0,36.0,33.0,38.0,null,33.0],["SINGLE GLAZED WINDOWS","7mm acoustic laminate glass","7mm",15.0,null,24.0,26.0,32.0,37.0,40.0,37.0,null,36.0],["SINGLE GLAZED WINDOWS","8mm glass in heavy frame","8mm",20.0,null,18.0,25.0,31.0,32.0,28.0,36.0,null,31.0],["SINGLE GLAZED WINDOWS","9mm glass in heavy frame","9mm",22.5,null,22.0,26.0,31.0,30.0,32.0,39.0,null,32.0],["SINGLE GLAZED WINDOWS","9mm acoustic laminate glass","9mm",26.0,null,26.0,29.0,34.0,39.0,40.0,39.0,null,38.0],["SINGLE GLAZED WINDOWS","10mm glass","10mm",26.0,null,26.0,27.0,34.0,35.0,36.0,44.0,null,35.0],["SINGLE GLAZED WINDOWS","11mm acoustic laminate glass","11mm",26.0,null,28.0,31.0,35.0,40.0,38.0,44.0,null,38.0],["SINGLE GLAZED WINDOWS","12mm glazing in sealed frame","12mm",30.0,null,24.0,27.0,27.0,27.0,29.0,41.0,null,28.0],["SINGLE GLAZED WINDOWS","12mm glass","12mm",30.0,null,26.0,30.0,35.0,34.0,39.0,47.0,null,37.0],["SINGLE GLAZED WINDOWS","13mm acoustic laminate glass","13mm",30.0,null,30.0,32.0,37.0,41.0,39.0,46.0,null,39.0],["SINGLE GLAZED WINDOWS","16mm glass in heavy frame","16mm",40.0,null,25.0,28.0,33.0,30.0,38.0,45.0,null,34.0],["SINGLE GLAZED WINDOWS","16mm acoustic laminate glass","16mm",40.0,null,29.0,31.0,38.0,40.0,39.0,50.0,null,39.0],["SINGLE GLAZED WINDOWS","19mm glass","19mm",40.0,null,28.0,32.0,37.0,37.0,46.0,54.0,null,40.0],["SINGLE GLAZED WINDOWS","25mm single glass in heavy frame","25mm",62.5,null,27.0,31.0,30.0,33.0,43.0,48.0,null,35.0],["DOUBLE GLAZED WINDOWS","4/12/4 sealed units","20mm",null,null,22.0,17.0,24.0,37.0,41.0,38.0,null,29.0],["DOUBLE GLAZED WINDOWS","4/12/4 double glazing","20mm",null,null,24.0,20.0,25.0,35.0,38.0,35.0,null,31.0],["DOUBLE GLAZED WINDOWS","4/12/12 sealed units","28mm",null,null,25.0,22.0,33.0,41.0,44.0,44.0,null,36.0],["DOUBLE GLAZED WINDOWS","4/150/4 with absorbent reveal","158mm",20.0,null,38.0,35.0,41.0,54.0,48.0,38.0,null,45.0],["DOUBLE GLAZED WINDOWS","4/180/6 absorbant reveals, tightly closed","190mm",null,null,23.0,37.0,41.0,34.0,39.0,35.0,null,38.0],["DOUBLE GLAZED WINDOWS","4/200/4","208mm",null,null,27.0,33.0,39.0,42.0,46.0,44.0,null,42.0],["DOUBLE GLAZED WINDOWS","4/200/4 sealed frame, absorbent reveals","208mm",null,null,30.0,35.0,43.0,46.0,47.0,39.0,null,45.0],["DOUBLE GLAZED WINDOWS","4/200/4 opposite sliders open 25mm","208mm",null,null,15.0,23.0,34.0,32.0,28.0,32.0,null,31.0],["DOUBLE GLAZED WINDOWS","4/200/4 opposite sliders open 100mm","208mm",null,null,10.0,16.0,27.0,25.0,27.0,27.0,null,26.0],["DOUBLE GLAZED WINDOWS","6/12/6 sealed units","24mm",null,null,20.0,19.0,29.0,38.0,36.0,45.0,null,32.0],["DOUBLE GLAZED WINDOWS","6/12/10 sealed units","28mm",null,null,26.0,27.0,34.0,40.0,38.0,46.0,null,37.0],["DOUBLE GLAZED WINDOWS","6/12/11 acoustic laminate","29mm",null,null,26.0,28.0,38.0,47.0,43.0,51.0,null,40.0],["DOUBLE GLAZED WINDOWS","6/20/12 double glazing","38mm",null,null,26.0,34.0,40.0,42.0,40.0,50.0,null,41.0],["DOUBLE GLAZED WINDOWS","6/100/4 double glazing","110mm",null,null,26.0,34.0,44.0,56.0,53.0,52.0,null,45.0],["DOUBLE GLAZED WINDOWS","6/150/4","160mm",null,null,29.0,35.0,45.0,56.0,52.0,50.0,null,47.0],["DOUBLE GLAZED WINDOWS","6/150/4 unsealed openable frame, absorbent reveal","160mm",25.0,null,25.0,28.0,50.0,51.0,45.0,42.0,null,42.0],["DOUBLE GLAZED WINDOWS","6/50/6","62mm",34.0,null,25.0,29.0,34.0,41.0,45.0,53.0,null,39.0],["DOUBLE GLAZED WINDOWS","6/100/6 sound absorptive reveals","112mm",34.0,null,28.0,35.0,45.0,47.0,48.0,54.0,null,45.0],["DOUBLE GLAZED WINDOWS","6/188/6","200mm",34.0,null,30.0,35.0,41.0,48.0,50.0,56.0,null,46.0],["DOUBLE GLAZED WINDOWS","6/188/6 cavity with absorptive reveals","200mm",34.0,null,33.0,39.0,42.0,48.0,50.0,57.0,null,47.0],["DOUBLE GLAZED WINDOWS","6/200/6","212mm",null,null,37.0,41.0,48.0,54.0,47.0,47.0,null,49.0],["DOUBLE GLAZED WINDOWS","6/200/6 sealed frame, cavity with absorbent reveals","212mm",30.0,null,38.0,41.0,49.0,56.0,49.0,40.0,null,50.0],["DOUBLE GLAZED WINDOWS","6.4 lam/12/10","28.4mm",null,null,27.0,29.0,36.0,41.0,42.0,52.0,null,39.0],["DOUBLE GLAZED WINDOWS","6/200/9 cavity with absorbent reveals","215mm",42.0,null,36.0,45.0,58.0,59.0,55.0,66.0,null,55.0],["DOUBLE GLAZED WINDOWS","6/200/10 double glazing","210mm",null,null,35.0,46.0,46.0,46.0,56.0,65.0,null,49.0],["DOUBLE GLAZED WINDOWS","9/340/9 sealed frame, absorbent reveals","358mm",null,null,38.0,43.0,49.0,53.0,63.0,63.0,null,53.0],["DOUBLE GLAZED WINDOWS","10/12/16 acoustic laminate","38mm",null,null,30.0,33.0,42.0,41.0,42.0,56.0,null,42.0],["DOUBLE GLAZED WINDOWS","13/12/13 acoustic laminate","38mm",null,null,28.0,34.0,44.0,52.0,47.0,55.0,null,45.0],["DOORS","Flush panel, hollow core, normal gaps at edges","43mm",9.0,null,12.0,13.0,14.0,16.0,18.0,24.0,null,17.0],["DOORS","Plywood door, hollow core, no gaskets","",null,null,12.0,11.0,14.0,17.0,16.0,16.0,null,16.0],["DOORS","Plywood door, hollow core, with gaskets on top and sides","",null,null,13.0,15.0,17.0,22.0,21.0,21.0,null,21.0],["DOORS","Solid core wood door, no seals around perimeter","",24.0,null,19.0,22.0,26.0,24.0,23.0,20.0,null,25.0],["DOORS","Solid core wood door with foam tape seals around perimeter","",24.0,null,22.0,25.0,29.0,25.0,26.0,28.0,null,27.0],["DOORS","Solid core wood door with magnetic seals around perimeter","",24.0,null,25.0,29.0,30.0,27.0,30.0,34.0,null,30.0],["DOORS","Solid-core door, 40mm with perimeter and threshold seals","40mm",null,null,17.0,21.0,26.0,29.0,31.0,34.0,null,29.0],["DOORS","Solid core door with drop seals and gaskets","",null,null,21.0,24.0,27.0,37.0,39.0,38.0,null,34.0],["DOORS","Single leaf acoustic doorset with perimeter and threshold seals","",null,null,15.0,29.0,25.0,29.0,34.0,38.0,null,30.0],["DOORS","Steel door with good seals","50mm",null,null,21.0,27.0,32.0,34.0,36.0,36.0,null,34.0],["DOORS","Hollow-core steel door, 18g steel faces; no seals around perimeter","",26.0,null,13.0,15.0,16.0,17.0,18.0,20.0,null,18.0],["DOORS","Steel acoustic doorset with perimeter and threshold seals","",null,null,34.0,37.0,38.0,38.0,41.0,42.0,null,40.0],["DOORS","Acoustic door, double heavy sheet steel skin, absorbent in airspace, acoustic metal doorset and double seals in heavy steel frame","100mm",null,null,35.0,39.0,44.0,49.0,54.0,57.0,null,48.0],["DOORS","50mm solid wood, normal hanging","50mm",null,null,15.0,20.0,22.0,16.0,24.0,24.0,null,21.0]]};
+</script>
+<script>
 (function () {
   var $ = function (id) { return document.getElementById(id); };
-  function fmt(x, d) { if (!isFinite(x)) return "—"; return x.toLocaleString(undefined, {minimumFractionDigits: d, maximumFractionDigits: d}); }
+  function fmt(x, d) { if (x == null || !isFinite(x)) return "—"; return x.toLocaleString(undefined, {minimumFractionDigits: d, maximumFractionDigits: d}); }
   function num(id) { var v = parseFloat($(id).value); return isFinite(v) ? v : NaN; }
   function row(k, v) { return '<div class="row"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>'; }
+  var BANDS8 = [63,125,250,500,1000,2000,4000,8000];
+  var BANDS7 = [125,250,500,1000,2000,4000,8000];
 
-  // 1. dB average / combine
+  // ---------- 1. dB average / combine ----------
   function dbCalc() {
     var vals = $("levels").value.split(/[\s,]+/).map(parseFloat).filter(function (x) { return isFinite(x); });
     if (!vals.length) { $("dbResults").innerHTML = row("Result", "—"); return; }
@@ -126,7 +224,7 @@
       (mode === "avg" ? row("(Wrong) plain arithmetic mean", fmt(plain, 1) + " dB") : "");
   }
 
-  // 2. Sabine
+  // ---------- 2. Sabine ----------
   function calcA() {
     var v = num("vol"), t = num("t60");
     if (!isFinite(v) || !isFinite(t) || t <= 0) { $("sabResults").innerHTML = row("Result", "enter V and T"); return; }
@@ -144,26 +242,284 @@
       row("From", "V = " + fmt(v, 0) + " m&sup3;, A = " + fmt(a, 1) + " m&sup2; sabine");
   }
 
-  // 3. STI estimate
-  function stiCalc() {
+  // ---------- 3. Room absorption builder ----------
+  // MAT.ab rows: [cat, name, thick, a63,a125,a250,a500,a1000,a2000,a4000,a8000]
+  var surfaces = [];
+  function materialOptions() {
+    var byCat = {};
+    MAT.ab.forEach(function (m, i) { (byCat[m[0]] = byCat[m[0]] || []).push(i); });
+    var html = '<option value="">— select material —</option>';
+    Object.keys(byCat).forEach(function (cat) {
+      html += '<option disabled>── ' + cat + ' ──</option>';
+      byCat[cat].forEach(function (i) {
+        var m = MAT.ab[i];
+        html += '<option value="' + i + '">' + m[1] + (m[2] ? ' (' + m[2] + ')' : '') + '</option>';
+      });
+    });
+    return html;
+  }
+  var MATOPTS = null;
+  function renderSurfaces() {
+    if (!MATOPTS) MATOPTS = materialOptions();
+    var host = $("surfList");
+    host.innerHTML = "";
+    surfaces.forEach(function (s, idx) {
+      var div = document.createElement("div");
+      div.className = "surf-row";
+      div.innerHTML =
+        '<select data-role="mat">' + MATOPTS + '</select>' +
+        '<input data-role="area" type="number" step="0.1" placeholder="area m²" value="' + (s.area || "") + '">' +
+        '<button class="btn-ghost btn-sm" data-role="del" title="remove">✕</button>';
+      var sel = div.querySelector('[data-role=mat]');
+      sel.value = s.mat == null ? "" : String(s.mat);
+      sel.addEventListener("change", function () { s.mat = this.value === "" ? null : parseInt(this.value, 10); roomCalc(); });
+      div.querySelector('[data-role=area]').addEventListener("input", function () { s.area = parseFloat(this.value); roomCalc(); });
+      div.querySelector('[data-role=del]').addEventListener("click", function () { surfaces.splice(idx, 1); renderSurfaces(); roomCalc(); });
+      host.appendChild(div);
+    });
+  }
+  function roomCalc() {
+    var v = num("roomVol");
+    var A = [0,0,0,0,0,0,0,0];       // octave-band totals
+    var present = [false,false,false,false,false,false,false,false];
+    var any = false;
+    surfaces.forEach(function (s) {
+      if (s.mat == null || !isFinite(s.area) || s.area <= 0) return;
+      var m = MAT.ab[s.mat];
+      for (var b = 0; b < 8; b++) {
+        var c = m[3 + b];
+        if (c != null) { A[b] += s.area * c; present[b] = true; any = true; }
+      }
+    });
+    if (!any) { $("roomResults").innerHTML = '<p class="note" style="padding:8px 0">Add surfaces above to build up the room absorption.</p>'; return; }
+    // mid-frequency A (average of 500 and 1000 Hz), the value used for the Sabine comparison
+    var midA = (A[3] + A[4]) / 2;
+    var html = '<div class="tablewrap"><table><thead><tr><th class="name">Octave band (Hz)</th>';
+    BANDS8.forEach(function (f) { html += '<th>' + f + '</th>'; });
+    html += '</tr></thead><tbody>';
+    html += '<tr><td class="name">Absorption A (m² sabine)</td>';
+    for (var b = 0; b < 8; b++) html += '<td>' + (present[b] ? fmt(A[b], 1) : '—') + '</td>';
+    html += '</tr><tr><td class="name">Predicted RT60 = 0.16·V/A (s)</td>';
+    for (var b2 = 0; b2 < 8; b2++) html += '<td>' + (present[b2] && A[b2] > 0 && isFinite(v) ? fmt(0.16 * v / A[b2], 2) : '—') + '</td>';
+    html += '</tr></tbody></table></div>';
+    html += '<div class="results" style="margin-top:12px">';
+    html += row("Mid-frequency absorption (500 &amp; 1k avg)", "<strong>" + fmt(midA, 1) + " m² sabine</strong>");
+    if (isFinite(v) && midA > 0) html += row("Mid-frequency predicted RT60", fmt(0.16 * v / midA, 2) + " s");
+    var meas = num("measA");
+    if (isFinite(meas)) {
+      var diff = midA - meas;
+      html += row("Your measured A", fmt(meas, 1) + " m² sabine");
+      html += row("Built minus measured", (diff >= 0 ? "+" : "") + fmt(diff, 1) + " m² sabine");
+    }
+    html += '</div>';
+    $("roomResults").innerHTML = html;
+    $("roomResults").dataset.midA = midA;
+  }
+  function addSurface(matIdx, area) { surfaces.push({ mat: matIdx == null ? null : matIdx, area: area || undefined }); renderSurfaces(); roomCalc(); }
+
+  // ---------- 4a. Quick STI ----------
+  function stiQuick() {
     var sp = num("sp"), ns = num("ns");
     if (!isFinite(sp) || !isFinite(ns)) { $("stiResults").innerHTML = row("STI", "—"); return; }
     var snr = sp - ns;
     var sti = Math.max(0, Math.min(1, (snr + 15) / 30));
-    var band = sti < 0.30 ? "bad" : sti < 0.45 ? "poor" : sti < 0.60 ? "fair" : sti < 0.75 ? "good" : "excellent";
-    var col = sti < 0.45 ? "var(--bad)" : sti < 0.60 ? "var(--warn)" : "var(--good)";
+    var lab = stiBand(sti), col = stiColor(sti);
     $("stiResults").innerHTML =
       row("Speech-to-noise ratio", fmt(snr, 0) + " dB") +
-      row("Estimated STI", '<span class="band" style="color:' + col + '">' + fmt(sti, 2) + " (" + band + ")</span>");
+      row("Estimated STI", '<span class="band" style="color:' + col + '">' + fmt(sti, 2) + " (" + lab + ")</span>");
+  }
+  function stiBand(s) { return s < 0.20 ? "no" : s < 0.40 ? "poor" : s < 0.60 ? "fair" : s < 0.80 ? "good" : "excellent"; }
+  function stiColor(s) { return s < 0.40 ? "var(--bad)" : s < 0.60 ? "var(--warn)" : "var(--good)"; }
+
+  // ---------- 4b. Full octave-band STI (IEC 60268-16), ported from the class workbook ----------
+  // Verified cell-for-cell against STI_spreadsheet.xls (Cabrera, rev. 2019).
+  var STI = (function () {
+    var Ls = [58, 60.5, 62, 56, 50, 45, 40];                 // male voice spectrum, 1 m free field
+    var DI = [1.3, 2.9, 1.8, 1.5, 4.0, 5.0, 5.1];            // ISO 3382-3 talker directivity index
+    var Q = DI.map(function (d) { return Math.pow(10, d / 10); });
+    var Ql = 1;                                              // listener directivity
+    var Irt = [46, 27, 12, 6.5, 7.5, 8, 12].map(function (l) { return Math.pow(10, l / 10); }); // reception threshold
+    var Aw = [-16.1, -8.6, -3.2, 0, 1.2, 1.0, -1.1];        // A-weighting offsets
+    var Fm = [0.63, 0.8, 1.0, 1.25, 1.6, 2.0, 2.5, 3.15, 4.0, 5.0, 6.3, 8.0, 10.0, 12.5]; // modulation freqs
+    var alphaM = [0.085, 0.127, 0.23, 0.233, 0.309, 0.224, 0.173];
+    var betaM = [0.085, 0.078, 0.065, 0.011, 0.047, 0.095];
+    var TWOPI = 2 * Math.PI, L10 = Math.log10;
+    function amf(L) { return L < 63 ? 0.5 * L - 65 : L < 67 ? 1.8 * L - 146.9 : L < 100 ? 0.5 * L - 59.8 : -10; }
+    // aWeightedLevel of a per-band level spectrum
+    function aw(levels) { var s = 0; for (var k = 0; k < 7; k++) s += Math.pow(10, (levels[k] + Aw[k]) / 10); return 10 * L10(s); }
+    function calc(V, d, gain, RT, N) {
+      var Dc2 = RT.map(function (t) { return 0.0032 * V / t; });
+      var Aabs = RT.map(function (t) { return 0.16 * V / t; });
+      var Lw = Ls.map(function (s, k) { return (s + gain) - 10 * L10(Q[k] / (4 * Math.PI)); });
+      var Lp = Lw.map(function (lw, k) { return lw + 10 * L10(Q[k] * Ql / (4 * Math.PI * d * d) + 4 / Aabs[k]); });
+      var Is = Lp.map(function (lp) { return Math.pow(10, lp / 10); });
+      var In = N.map(function (n) { return Math.pow(10, n / 10); });
+      var LSN = Is.map(function (is, k) { return 10 * L10(is + In[k]); });
+      var Iam = Is.map(function (_, k) { return k === 0 ? 0 : (Is[k - 1] + In[k - 1]) * Math.pow(10, amf(LSN[k - 1]) / 10); });
+      var MTI = [];
+      for (var k = 0; k < 7; k++) {
+        var sum = 0;
+        for (var j = 0; j < Fm.length; j++) {
+          var F = Fm[j], x = TWOPI * F * RT[k] / 13.8;
+          var Ar = Q[k] * Ql / (d * d) + 1 / (Dc2[k] * (1 + x * x));
+          var Bi = (TWOPI * F * RT[k]) / (13.8 * Dc2[k] * (1 + x * x));
+          var Cn = Q[k] * Ql / (d * d) + 1 / Dc2[k] + Q[k] * Math.pow(10, (N[k] - Lp[k]) / 10);
+          var mF = Math.sqrt(Ar * Ar + Bi * Bi) / Cn;
+          var mM = mF * Is[k] / (Is[k] + In[k] + Iam[k] + Irt[k]);
+          var snr = 10 * L10(mM / (1 - mM));
+          if (snr > 15) snr = 15; else if (snr < -15) snr = -15;
+          sum += snr;
+        }
+        MTI.push((sum / Fm.length + 15) / 30);
+      }
+      var sti = 0;
+      for (var a = 0; a < 7; a++) sti += alphaM[a] * MTI[a];
+      for (var b = 0; b < 6; b++) sti -= betaM[b] * Math.sqrt(MTI[b] * MTI[b + 1]);
+      var aSpeech = aw(Lp), aNoise = aw(N);
+      return { Lp: Lp, MTI: MTI, sti: sti, aSpeech: aSpeech, aNoise: aNoise, aSNR: aSpeech - aNoise };
+    }
+    return { calc: calc };
+  })();
+
+  function buildStiBands() {
+    var host = $("stiBands");
+    var rtDefault = [1, 1, 1, 1, 1, 1, 1];
+    var nDefault = [55, 50, 45, 40, 35, 30, 25];
+    var html = '<div class="rowlabel">Band (Hz)</div>';
+    BANDS7.forEach(function (f) { html += '<label>' + (f >= 1000 ? (f / 1000) + 'k' : f) + '</label>'; });
+    html += '<div class="rowlabel">RT60 (s)</div>';
+    BANDS7.forEach(function (f, i) { html += '<input data-rt="' + i + '" type="number" step="0.05" value="' + rtDefault[i] + '">'; });
+    html += '<div class="rowlabel">Noise (dB)</div>';
+    BANDS7.forEach(function (f, i) { html += '<input data-ns="' + i + '" type="number" step="1" value="' + nDefault[i] + '">'; });
+    host.innerHTML = html;
+  }
+  function calcFullSTI() {
+    var V = num("stiVol"), d = num("stiDist"), gain = parseFloat($("stiGain").value);
+    var RT = [], N = [], ok = true;
+    for (var i = 0; i < 7; i++) {
+      var rt = parseFloat($("stiBands").querySelector('[data-rt="' + i + '"]').value);
+      var ns = parseFloat($("stiBands").querySelector('[data-ns="' + i + '"]').value);
+      if (!isFinite(rt) || rt <= 0 || !isFinite(ns)) ok = false;
+      RT.push(rt); N.push(ns);
+    }
+    if (!isFinite(V) || V <= 0 || !isFinite(d) || d <= 0 || !ok) {
+      $("stiFullResults").innerHTML = row("Result", "check volume, distance, and all 7 RT / noise values"); return;
+    }
+    var r = STI.calc(V, d, gain, RT, N);
+    var lab = stiBand(r.sti), col = stiColor(r.sti);
+    var html = '<div style="display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; padding:8px 0">';
+    html += '<div class="big" style="color:' + col + '">' + fmt(r.sti, 2) + '</div>';
+    html += '<div class="band" style="color:' + col + '; font-size:1.05rem">' + lab.charAt(0).toUpperCase() + lab.slice(1) + ' speech intelligibility</div></div>';
+    html += '<div class="tablewrap"><table><thead><tr><th class="name">Octave band (Hz)</th>';
+    BANDS7.forEach(function (f) { html += '<th>' + (f >= 1000 ? (f / 1000) + 'k' : f) + '</th>'; });
+    html += '</tr></thead><tbody><tr><td class="name">Speech level at receiver (dB)</td>';
+    r.Lp.forEach(function (x) { html += '<td>' + fmt(x, 1) + '</td>'; });
+    html += '</tr><tr><td class="name">Modulation transfer index (MTI)</td>';
+    r.MTI.forEach(function (x) { html += '<td>' + fmt(x, 2) + '</td>'; });
+    html += '</tr></tbody></table></div>';
+    html += '<div class="results" style="margin-top:12px">' +
+      row("A-weighted speech level", fmt(r.aSpeech, 1) + " dBA") +
+      row("A-weighted noise level", fmt(r.aNoise, 1) + " dBA") +
+      row("A-weighted speech-to-noise ratio", fmt(r.aSNR, 1) + " dB") + '</div>';
+    $("stiFullResults").innerHTML = html;
   }
 
+  // ---------- 5. Material data tables ----------
+  var matTab = "abs";
+  function matCats() {
+    var rows = matTab === "abs" ? MAT.ab : MAT.sri;
+    var cats = [];
+    rows.forEach(function (r) { if (cats.indexOf(r[0]) < 0) cats.push(r[0]); });
+    var sel = $("matCat");
+    sel.innerHTML = '<option value="">All categories</option>' + cats.map(function (c) { return '<option>' + c + '</option>'; }).join("");
+  }
+  function renderMat() {
+    var q = $("matSearch").value.trim().toLowerCase();
+    var cat = $("matCat").value;
+    var t = $("matTable");
+    if (matTab === "abs") {
+      var head = '<thead><tr><th class="name">Material</th><th>Thick.</th>';
+      BANDS8.forEach(function (f) { head += '<th>' + f + '</th>'; });
+      head += '<th></th></tr></thead>';
+      var body = '', n = 0;
+      MAT.ab.forEach(function (m, i) {
+        if (cat && m[0] !== cat) return;
+        if (q && (m[1] + ' ' + m[0]).toLowerCase().indexOf(q) < 0) return;
+        n++;
+        body += '<tr><td class="name">' + m[1] + '<div class="cat">' + m[0] + '</div></td><td>' + (m[2] || '') + '</td>';
+        for (var b = 0; b < 8; b++) body += '<td>' + (m[3 + b] == null ? '·' : fmt(m[3 + b], 2)) + '</td>';
+        body += '<td><button class="btn-primary btn-sm" data-add="' + i + '" title="add to room builder">+</button></td></tr>';
+      });
+      t.innerHTML = head + '<tbody>' + body + '</tbody>';
+      $("matCount").textContent = n + " materials · absorption coefficient α per octave band";
+      Array.prototype.forEach.call(t.querySelectorAll('[data-add]'), function (btn) {
+        btn.addEventListener("click", function () {
+          addSurface(parseInt(this.getAttribute("data-add"), 10), undefined);
+          document.getElementById("s-room").scrollIntoView({ behavior: "smooth" });
+        });
+      });
+      $("matHint").style.display = "";
+    } else {
+      // sri rows: [cat, name, thick, weight, r63..r8000, rw]
+      var head2 = '<thead><tr><th class="name">Construction</th><th>Thick.</th><th>kg/m²</th>';
+      BANDS8.forEach(function (f) { head2 += '<th>' + f + '</th>'; });
+      head2 += '<th>Rw</th></tr></thead>';
+      var body2 = '', n2 = 0;
+      MAT.sri.forEach(function (m) {
+        if (cat && m[0] !== cat) return;
+        if (q && (m[1] + ' ' + m[0]).toLowerCase().indexOf(q) < 0) return;
+        n2++;
+        body2 += '<tr><td class="name">' + m[1] + '<div class="cat">' + m[0] + '</div></td><td>' + (m[2] || '') + '</td><td>' + (m[3] == null ? '·' : fmt(m[3], 0)) + '</td>';
+        for (var b = 0; b < 8; b++) body2 += '<td>' + (m[4 + b] == null ? '·' : fmt(m[4 + b], 0)) + '</td>';
+        body2 += '<td><strong>' + (m[12] == null ? '·' : fmt(m[12], 0)) + '</strong></td></tr>';
+      });
+      t.innerHTML = head2 + '<tbody>' + body2 + '</tbody>';
+      $("matCount").textContent = n2 + " constructions · sound reduction index R (dB) per octave band, Rw single-number rating";
+      $("matHint").style.display = "none";
+    }
+  }
+
+  // ---------- wiring ----------
   ["levels"].forEach(function (id) { $(id).addEventListener("input", dbCalc); });
   $("mode").addEventListener("change", dbCalc);
   $("calcA").addEventListener("click", calcA);
   $("calcT").addEventListener("click", calcT);
-  ["sp", "ns"].forEach(function (id) { $(id).addEventListener("input", stiCalc); });
 
-  dbCalc(); calcA(); stiCalc();
+  $("addSurf").addEventListener("click", function () { addSurface(null, undefined); });
+  $("clearSurf").addEventListener("click", function () { surfaces = []; renderSurfaces(); roomCalc(); });
+  $("roomVol").addEventListener("input", roomCalc);
+  $("measA").addEventListener("input", roomCalc);
+  $("sendSabine").addEventListener("click", function () {
+    var midA = parseFloat($("roomResults").dataset.midA);
+    var v = num("roomVol");
+    if (isFinite(midA) && midA > 0) {
+      $("absorp").value = fmt(midA, 1);
+      if (isFinite(v)) $("vol").value = fmt(v, 0);
+      calcT();
+      document.getElementById("s-sabine").scrollIntoView({ behavior: "smooth" });
+    }
+  });
+
+  ["sp", "ns"].forEach(function (id) { $(id).addEventListener("input", stiQuick); });
+  $("calcSTI").addEventListener("click", calcFullSTI);
+
+  $("matSearch").addEventListener("input", renderMat);
+  $("matCat").addEventListener("change", renderMat);
+  Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (tab) {
+    tab.addEventListener("click", function () {
+      document.querySelectorAll(".tab").forEach(function (t) { t.classList.remove("active"); });
+      this.classList.add("active");
+      matTab = this.getAttribute("data-tab");
+      $("matSearch").value = "";
+      matCats(); renderMat();
+    });
+  });
+
+  // init
+  dbCalc(); calcA(); stiQuick();
+  addSurface(null, undefined);
+  buildStiBands(); calcFullSTI();
+  matCats(); renderMat();
 })();
 </script>
 </body>
