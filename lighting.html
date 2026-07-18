@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lighting Uniformity Explorer — BPSD5030 (Week 4)</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --ink: #1c2430; --muted: #5a6675;
+    --line: #dfe4ea; --accent: #0e7c86; --accent-ink: #ffffff;
+    --good: #1a7f4b; --warn: #b4690e; --bad: #b02a37;
+    --field: #ffffff; --result-bg: #eef6f7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #10151b; --card: #171e27; --ink: #e7ecf2; --muted: #9aa7b6;
+      --line: #2a3441; --accent: #38b2bd; --accent-ink: #06212a;
+      --good: #57c98a; --warn: #e0a955; --bad: #e2707a;
+      --field: #0f151c; --result-bg: #13232a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 24px 18px 64px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  .lede { color: var(--muted); margin: 0 0 20px; max-width: 66ch; }
+  .home { display: inline-block; color: var(--accent); text-decoration: none; font-size: .9rem; margin-bottom: 14px; }
+  .home:hover { text-decoration: underline; }
+  section.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin: 16px 0; }
+  h2 { font-size: 1.15rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: .92rem; margin: 0 0 14px; }
+  label { display: block; font-size: .85rem; color: var(--muted); margin: 8px 0 4px; }
+  .dims { display: flex; gap: 18px; align-items: flex-end; flex-wrap: wrap; }
+  .dims .fld { display: flex; flex-direction: column; }
+  .dims label { margin: 0 0 4px; }
+  input[type=number].dim { width: 90px; padding: 8px 10px; font-size: 1rem; color: var(--ink); background: var(--field); border: 1px solid var(--line); border-radius: 8px; }
+  .btns { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+  button { font: inherit; font-size: .92rem; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--field); color: var(--ink); cursor: pointer; }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+  button:hover { border-color: var(--accent); }
+  .gridwrap { overflow-x: auto; margin-top: 14px; }
+  table.grid { border-collapse: separate; border-spacing: 6px; margin: 0 auto; }
+  table.grid td { padding: 0; }
+  table.grid input { width: 66px; padding: 7px 6px; text-align: center; font-size: .95rem;
+    color: var(--ink); background: var(--field); border: 1px solid var(--line); border-radius: 8px; font-variant-numeric: tabular-nums; }
+  table.grid input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: var(--accent); }
+  .axhint { color: var(--muted); font-size: .8rem; text-align: center; margin-top: 8px; }
+  .results { margin-top: 8px; }
+  .row { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+  .row:last-child { border-bottom: 0; }
+  .row .k { color: var(--muted); } .row .v { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .row .v.big { font-size: 1.05rem; }
+  .callout { background: var(--result-bg); border-radius: 10px; padding: 12px 14px; margin-top: 12px; }
+  .callout.verdict-good { border-left: 3px solid var(--good); }
+  .callout.verdict-warn { border-left: 3px solid var(--warn); }
+  .callout.verdict-bad { border-left: 3px solid var(--bad); }
+  .err { color: var(--bad); font-weight: 600; }
+  canvas { width: 100%; height: auto; display: block; margin: 8px auto 0; }
+  #heat { max-width: 560px; } #box { max-width: 460px; }
+  .note { color: var(--muted); font-size: .86rem; }
+  .flag { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; margin: 10px 0 0; }
+  footer.page { color: var(--muted); font-size: .82rem; margin-top: 28px; border-top: 1px solid var(--line); padding-top: 14px; }
+  details { margin-top: 12px; } summary { cursor: pointer; color: var(--accent); font-size: .9rem; }
+  details p { color: var(--muted); font-size: .9rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="home" href="index.html">&larr; IEQ tools</a>
+  <h1>Lighting Uniformity Explorer</h1>
+  <p class="lede">Enter the illuminance readings you took across a working plane, laid out as a grid in the positions you measured them. This maps the light spatially so you can <em>see</em> the unevenness that a single average lux value hides, and it reports the uniformity ratio you compute for Assignment 1. It does the arithmetic and the picture; the figure you submit, and the reading of what it means, stay yours.</p>
+
+  <section class="card">
+    <h2>1. Your measurement grid</h2>
+    <p class="sub">Set the grid to match how you walked the space (e.g. 4 columns across the desk, 4 rows front-to-back), then type each reading in lux into the cell at that position. Leave a cell blank where you did not take a reading; blanks are ignored in the maths and shown empty on the map.</p>
+    <div class="dims">
+      <div class="fld"><label for="cols">Columns (across)</label><input id="cols" class="dim" type="number" min="2" max="10" step="1" value="4"></div>
+      <div class="fld"><label for="rows">Rows (deep)</label><input id="rows" class="dim" type="number" min="2" max="10" step="1" value="4"></div>
+    </div>
+    <div class="btns">
+      <button class="primary" id="example">Load worked example</button>
+      <button id="clear">Clear grid</button>
+    </div>
+    <div class="gridwrap"><table class="grid" id="grid"></table></div>
+    <div class="axhint">Values are in lux. Grid positions are relative, so orient it however you measured (e.g. top row nearest the window).</div>
+    <div id="parseMsg" class="note" style="margin-top:10px"></div>
+  </section>
+
+  <div id="output" class="results" hidden>
+    <section class="card">
+      <h2>2. Spatial map</h2>
+      <p class="sub">Each cell is shaded by its reading (dark = low lux, bright = high lux). The lowest and highest readings are ringed. This is what the mean cannot show you: <em>where</em> the light falls away.</p>
+      <canvas id="heat" role="img" aria-label="Heatmap of illuminance readings across the measured grid"></canvas>
+      <p class="note" id="heatcap"></p>
+    </section>
+
+    <section class="card">
+      <h2>3. Uniformity</h2>
+      <div id="metrics"></div>
+      <div id="verdict"></div>
+      <details>
+        <summary>How these relate to the lighting standards (EN 12464-1)</summary>
+        <p>The uniformity ratio here, U<sub>0</sub> = minimum &divide; average, is the same quantity EN 12464-1 uses to specify indoor lighting. That standard sets a minimum U<sub>0</sub> on a defined task-area grid: commonly <strong>U<sub>0</sub> &ge; 0.60</strong> for the task area itself (e.g. a desk or workbench) and 0.40 for the immediate surround. AS/NZS 1680 works from the same idea. Two cautions before you quote a number: the standards prescribe a <em>grid spacing and a task area</em> (roughly square cells, sized to the space), so a comparable U<sub>0</sub> needs a reasonably regular grid over the task plane, not a handful of scattered points; and <strong>diversity</strong> (minimum &divide; maximum) is a different, stricter ratio some guides also quote, so name which one you are reporting.</p>
+      </details>
+    </section>
+
+    <section class="card">
+      <h2>4. Spread of readings</h2>
+      <p class="sub">The same readings as a box plot: the box spans the middle half (25th to 75th percentile), the line is the median, the whiskers reach the minimum and maximum, and each dot is one reading.</p>
+      <canvas id="box" role="img" aria-label="Box plot of the illuminance readings"></canvas>
+      <p class="note" id="boxcap"></p>
+      <p class="flag">Take-home reminder: this view is for understanding the spread in class. The figure you submit for the analytical thread must be one <em>you</em> build (labelled axes with units, a legend where needed, and a caption that tells the reader what to notice), not a screenshot of this tool. Building it is the A2 Results skill being marked.</p>
+    </section>
+  </div>
+
+  <footer class="page">
+    Uniformity ratio U<sub>0</sub> = minimum &divide; average illuminance; diversity = minimum &divide; maximum. Statistics are computed over the cells you filled in.
+    Teaching aid for BPSD5030; a comparable, standards-quotable uniformity figure needs a regular measurement grid over the task area (see the EN 12464-1 note). Validate against the source standard before reporting.
+  </footer>
+</div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function fmt(x, d) { if (!isFinite(x)) return "—"; return x.toLocaleString(undefined, {minimumFractionDigits: d, maximumFractionDigits: d}); }
+
+  // top row nearest a window; light drops away toward the back and to one side
+  var EXAMPLE = [
+    [520, 480, 300, 210],
+    [500, 460, 290, 200],
+    [470, 430, 270, 190],
+    [440, 400, 250, 180]
+  ];
+
+  // ---- state ----
+  var data = [];   // 2D array of strings (cell raw values), sized rows x cols
+  function dims() { return { cols: clampDim($("cols").value), rows: clampDim($("rows").value) }; }
+  function clampDim(v) { v = parseInt(v, 10); if (!isFinite(v)) v = 4; return Math.max(2, Math.min(10, v)); }
+
+  function buildGrid() {
+    var d = dims();
+    // resize data, preserving existing cells
+    var next = [];
+    for (var r = 0; r < d.rows; r++) {
+      next[r] = [];
+      for (var c = 0; c < d.cols; c++) {
+        next[r][c] = (data[r] && data[r][c] != null) ? data[r][c] : "";
+      }
+    }
+    data = next;
+    var t = $("grid"); t.innerHTML = "";
+    for (var r2 = 0; r2 < d.rows; r2++) {
+      var tr = document.createElement("tr");
+      for (var c2 = 0; c2 < d.cols; c2++) {
+        var td = document.createElement("td");
+        var inp = document.createElement("input");
+        inp.type = "number"; inp.min = "0"; inp.step = "1"; inp.inputMode = "decimal";
+        inp.setAttribute("aria-label", "Row " + (r2 + 1) + " column " + (c2 + 1) + " illuminance in lux");
+        inp.dataset.r = r2; inp.dataset.c = c2;
+        inp.value = data[r2][c2];
+        td.appendChild(inp); tr.appendChild(td);
+      }
+      t.appendChild(tr);
+    }
+    recompute();
+  }
+
+  function readGrid() {
+    var d = dims(), vals = [], matrix = [];
+    var inputs = $("grid").querySelectorAll("input");
+    inputs.forEach(function (inp) {
+      var r = +inp.dataset.r, c = +inp.dataset.c;
+      data[r][c] = inp.value;
+    });
+    for (var r = 0; r < d.rows; r++) {
+      matrix[r] = [];
+      for (var c = 0; c < d.cols; c++) {
+        var raw = (data[r] && data[r][c] != null) ? String(data[r][c]).trim() : "";
+        var v = raw === "" ? null : parseFloat(raw);
+        if (v != null && (!isFinite(v) || v < 0)) v = null;
+        matrix[r][c] = v;
+        if (v != null) vals.push(v);
+      }
+    }
+    return { matrix: matrix, vals: vals, rows: d.rows, cols: d.cols };
+  }
+
+  // ---- stats ----
+  function mean(a) { var s = 0; for (var i = 0; i < a.length; i++) s += a[i]; return s / a.length; }
+  function sd(a) {
+    if (a.length < 2) return NaN;
+    var m = mean(a), s = 0; for (var i = 0; i < a.length; i++) s += (a[i] - m) * (a[i] - m);
+    return Math.sqrt(s / (a.length - 1));
+  }
+  function quantile(sorted, q) {
+    var n = sorted.length; if (n === 1) return sorted[0];
+    var pos = (n - 1) * q, base = Math.floor(pos), rest = pos - base;
+    return sorted[base + 1] !== undefined ? sorted[base] + rest * (sorted[base + 1] - sorted[base]) : sorted[base];
+  }
+
+  // ---- colour scale (viridis-like, colourblind-friendly) ----
+  var VIRIDIS = [[68,1,84],[59,82,139],[33,145,140],[94,201,98],[253,231,37]];
+  function ramp(t) {
+    if (!isFinite(t)) t = 0.5; t = Math.max(0, Math.min(1, t));
+    var seg = t * (VIRIDIS.length - 1), i = Math.floor(seg), f = seg - i;
+    if (i >= VIRIDIS.length - 1) return VIRIDIS[VIRIDIS.length - 1].slice();
+    var a = VIRIDIS[i], b = VIRIDIS[i + 1];
+    return [Math.round(a[0] + f * (b[0] - a[0])), Math.round(a[1] + f * (b[1] - a[1])), Math.round(a[2] + f * (b[2] - a[2]))];
+  }
+  function rgb(c) { return "rgb(" + c[0] + "," + c[1] + "," + c[2] + ")"; }
+
+  function recompute() {
+    var g = readGrid();
+    if (g.vals.length < 2) {
+      $("output").hidden = true;
+      $("parseMsg").innerHTML = g.vals.length === 0
+        ? 'Enter your readings above, or load the worked example.'
+        : '<span class="err">Enter at least two readings to map the space.</span>';
+      return;
+    }
+    var mn = Math.min.apply(null, g.vals), mx = Math.max.apply(null, g.vals);
+    var m = mean(g.vals), s = sd(g.vals);
+    var u0 = m > 0 ? mn / m : NaN;
+    var div = mx > 0 ? mn / mx : NaN;
+    var cv = m > 0 ? 100 * s / m : NaN;
+    $("parseMsg").textContent = g.vals.length + " reading(s) across a " + g.cols + " × " + g.rows + " grid.";
+
+    // metrics
+    $("metrics").innerHTML =
+      '<div class="row"><span class="k">Readings (n)</span><span class="v">' + g.vals.length + "</span></div>" +
+      '<div class="row"><span class="k">Average illuminance</span><span class="v">' + fmt(m, 0) + " lux</span></div>" +
+      '<div class="row"><span class="k">Minimum / maximum</span><span class="v">' + fmt(mn, 0) + " / " + fmt(mx, 0) + " lux</span></div>" +
+      '<div class="row"><span class="k">Std. deviation (CV)</span><span class="v">' + fmt(s, 0) + " lux (" + fmt(cv, 0) + "%)</span></div>" +
+      '<div class="row"><span class="k">Uniformity U<sub>0</sub> = min ÷ avg</span><span class="v big">' + fmt(u0, 2) + "</span></div>" +
+      '<div class="row"><span class="k">Diversity = min ÷ max</span><span class="v">' + fmt(div, 2) + "</span></div>";
+
+    // verdict on U0
+    var vClass, vText;
+    if (u0 >= 0.6) { vClass = "verdict-good";
+      vText = "<strong>Fairly uniform (U<sub>0</sub> = " + fmt(u0, 2) + ").</strong> This meets the U<sub>0</sub> &ge; 0.60 a task area is commonly held to, so the light is reasonably even across what you measured. Check the map: is the even coverage actually over the task, or does a bright patch prop the average up?"; }
+    else if (u0 >= 0.4) { vClass = "verdict-warn";
+      vText = "<strong>Noticeably uneven (U<sub>0</sub> = " + fmt(u0, 2) + ").</strong> Below the U<sub>0</sub> &ge; 0.60 task-area guide: the dimmest spot gets well under half the local light. A space like this can still hit its <em>average</em> target and feel patchy in use. Point to the low cell on the map and name what a designer would change."; }
+    else { vClass = "verdict-bad";
+      vText = "<strong>Very uneven (U<sub>0</sub> = " + fmt(u0, 2) + ").</strong> The darkest reading is under 40% of the average. This is exactly the case the average hides: report the uniformity ratio alongside the mean, or a reader would never know how uneven the plane is."; }
+    $("verdict").innerHTML = '<div class="callout ' + vClass + '">' + vText + "</div>";
+
+    drawHeat(g, mn, mx);
+    $("heatcap").innerHTML = "Illuminance across the measured plane (" + g.vals.length + " readings). Darkest = " + fmt(mn, 0) + " lux, brightest = " + fmt(mx, 0) + " lux.";
+
+    drawBox(g.vals);
+    $("boxcap").innerHTML = "Spread of the " + g.vals.length + " readings (lux). Median " + fmt(quantile(g.vals.slice().sort(function(a,b){return a-b;}), 0.5), 0) + " lux.";
+
+    $("output").hidden = false;
+  }
+
+  function drawHeat(g, mn, mx) {
+    var c = $("heat"), ctx = c.getContext("2d");
+    var maxW = 560, gap = 4, pad = 26; // pad leaves room for the legend below
+    var cell = Math.min(96, Math.floor((maxW - (g.cols - 1) * gap) / g.cols));
+    var gridW = g.cols * cell + (g.cols - 1) * gap;
+    var gridH = g.rows * cell + (g.rows - 1) * gap;
+    var legendH = 30;
+    var Wc = gridW, Hc = gridH + legendH + 8;
+    var dpr = window.devicePixelRatio || 1;
+    c.width = Wc * dpr; c.height = Hc * dpr; c.style.maxWidth = Wc + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, Wc, Hc);
+    var css = getComputedStyle(document.documentElement);
+    var ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    var span = mx - mn;
+    var minCell = null, maxCell = null;
+    for (var r = 0; r < g.rows; r++) {
+      for (var col = 0; col < g.cols; col++) {
+        var x = col * (cell + gap), y = r * (cell + gap);
+        var v = g.matrix[r][col];
+        if (v == null) {
+          ctx.strokeStyle = css.getPropertyValue("--line").trim();
+          ctx.setLineDash([4, 3]); ctx.lineWidth = 1;
+          ctx.strokeRect(x + 0.5, y + 0.5, cell - 1, cell - 1); ctx.setLineDash([]);
+          continue;
+        }
+        var t = span > 0 ? (v - mn) / span : 0.5, col3 = ramp(t);
+        ctx.fillStyle = rgb(col3);
+        roundRect(ctx, x, y, cell, cell, 7); ctx.fill();
+        // value label, contrast by luminance
+        var lum = 0.2126 * col3[0] + 0.7152 * col3[1] + 0.0722 * col3[2];
+        ctx.fillStyle = lum > 150 ? "#1c2430" : "#ffffff";
+        ctx.font = "600 " + Math.max(11, Math.round(cell * 0.24)) + "px -apple-system, Segoe UI, Roboto, sans-serif";
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText(fmt(v, 0), x + cell / 2, y + cell / 2);
+        if (v === mn && !minCell) minCell = {x: x, y: y};
+        if (v === mx) maxCell = {x: x, y: y};
+      }
+    }
+    // ring the extremes
+    function ring(pos, colour, tag) {
+      if (!pos) return;
+      ctx.strokeStyle = colour; ctx.lineWidth = 3;
+      roundRect(ctx, pos.x + 1.5, pos.y + 1.5, cell - 3, cell - 3, 6); ctx.stroke();
+      ctx.fillStyle = colour; ctx.font = "600 10px -apple-system, Segoe UI, Roboto, sans-serif";
+      ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.fillText(tag, pos.x + 4, pos.y + 3);
+    }
+    ring(maxCell, css.getPropertyValue("--warn").trim(), "max");
+    ring(minCell, css.getPropertyValue("--bad").trim(), "min");
+    // legend gradient bar
+    var ly = gridH + 12, lw = Math.min(gridW, 240), lx = 0, lh = 10;
+    for (var i = 0; i < lw; i++) { ctx.fillStyle = rgb(ramp(i / (lw - 1))); ctx.fillRect(lx + i, ly, 1, lh); }
+    ctx.strokeStyle = css.getPropertyValue("--line").trim(); ctx.lineWidth = 1; ctx.strokeRect(lx + 0.5, ly + 0.5, lw - 1, lh - 1);
+    ctx.fillStyle = muted; ctx.font = "11px -apple-system, Segoe UI, Roboto, sans-serif";
+    ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.fillText(fmt(mn, 0) + " lux", lx, ly + lh + 3);
+    ctx.textAlign = "right"; ctx.fillText(fmt(mx, 0) + " lux", lx + lw, ly + lh + 3);
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function drawBox(vals) {
+    var c = $("box"), ctx = c.getContext("2d");
+    var Wc = 460, Hc = 300, dpr = window.devicePixelRatio || 1;
+    c.width = Wc * dpr; c.height = Hc * dpr; c.style.maxWidth = Wc + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, Wc, Hc);
+    var css = getComputedStyle(document.documentElement);
+    var ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    var line = css.getPropertyValue("--line").trim(), accent = css.getPropertyValue("--accent").trim();
+    var sorted = vals.slice().sort(function (a, b) { return a - b; });
+    var mn = sorted[0], mx = sorted[sorted.length - 1];
+    var q1 = quantile(sorted, 0.25), md = quantile(sorted, 0.5), q3 = quantile(sorted, 0.75);
+    var padL = 56, padR = 20, padT = 16, padB = 34;
+    var yMax = Math.ceil(mx * 1.12 / 50) * 50 || 50, yMin = 0;
+    function Y(v) { return padT + (1 - (v - yMin) / (yMax - yMin)) * (Hc - padT - padB); }
+    // axis + gridlines
+    ctx.strokeStyle = line; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, Hc - padB); ctx.lineTo(Wc - padR, Hc - padB); ctx.stroke();
+    ctx.fillStyle = muted; ctx.font = "12px -apple-system, Segoe UI, Roboto, sans-serif";
+    ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    var step = Math.max(50, Math.round(yMax / 5 / 50) * 50);
+    for (var v = 0; v <= yMax; v += step) {
+      ctx.strokeStyle = line; ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.moveTo(padL, Y(v)); ctx.lineTo(Wc - padR, Y(v)); ctx.stroke();
+      ctx.globalAlpha = 1; ctx.fillText(v, padL - 8, Y(v));
+    }
+    var cx = (padL + (Wc - padR)) / 2, bw = 92;
+    // whiskers
+    ctx.strokeStyle = ink; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(cx, Y(mx)); ctx.lineTo(cx, Y(q3));
+    ctx.moveTo(cx, Y(q1)); ctx.lineTo(cx, Y(mn));
+    ctx.moveTo(cx - 20, Y(mx)); ctx.lineTo(cx + 20, Y(mx));
+    ctx.moveTo(cx - 20, Y(mn)); ctx.lineTo(cx + 20, Y(mn));
+    ctx.stroke();
+    // box
+    ctx.fillStyle = accent; ctx.globalAlpha = 0.16;
+    ctx.fillRect(cx - bw / 2, Y(q3), bw, Y(q1) - Y(q3)); ctx.globalAlpha = 1;
+    ctx.strokeStyle = accent; ctx.lineWidth = 1.5; ctx.strokeRect(cx - bw / 2, Y(q3), bw, Y(q1) - Y(q3));
+    // median
+    ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(cx - bw / 2, Y(md)); ctx.lineTo(cx + bw / 2, Y(md)); ctx.stroke();
+    // jittered points (deterministic jitter so it is stable)
+    ctx.fillStyle = ink;
+    for (var i = 0; i < sorted.length; i++) {
+      var jitter = ((i * 2654435761 % 97) / 97 - 0.5) * (bw - 24);
+      ctx.globalAlpha = 0.55; ctx.beginPath();
+      ctx.arc(cx + jitter, Y(sorted[i]), 3, 0, 2 * Math.PI); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    // y label
+    ctx.save(); ctx.translate(15, padT + (Hc - padT - padB) / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillStyle = muted; ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.fillText("Illuminance (lux)", 0, 0); ctx.restore();
+  }
+
+  // ---- events ----
+  $("grid").addEventListener("input", recompute);
+  $("cols").addEventListener("change", buildGrid);
+  $("rows").addEventListener("change", buildGrid);
+  $("clear").addEventListener("click", function () {
+    var d = dims(); data = [];
+    for (var r = 0; r < d.rows; r++) { data[r] = []; for (var c = 0; c < d.cols; c++) data[r][c] = ""; }
+    buildGrid();
+  });
+  $("example").addEventListener("click", function () {
+    $("cols").value = 4; $("rows").value = 4;
+    data = EXAMPLE.map(function (row) { return row.map(String); });
+    buildGrid();
+  });
+
+  buildGrid();
+})();
+</script>
+</body>
+</html>

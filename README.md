@@ -8,10 +8,11 @@ Each tool does the routine arithmetic that used to eat tutorial time, so student
 
 | File | Tutorial | What it does |
 |------|----------|--------------|
+| `lighting.html` | Week 4 | Enter illuminance readings as a spatial grid; renders a heatmap of the working plane and computes the uniformity ratio (min ÷ avg), diversity (min ÷ max), and a box plot of the spread. In-class exploratory aid; the submitted figure stays the student's own build. |
 | `iaq.html` | Week 8 | Required outdoor airflow (ASHRAE 62.1 Ventilation Rate Procedure); actual ventilation from measured CO₂ (steady-state mass balance); ACH; occupancy scenario explorer with a CO₂-vs-occupancy chart. |
 | `acoustics.html` | Week 6 | Energy-averaging and combining sound levels (dB); Sabine equation both directions (absorption ↔ reverberation time); quick speech-intelligibility (STI) estimate from speech-to-noise ratio. |
 | `stats.html` | Week 10 / Assignment 2 | Descriptive statistics, paired-samples t-test, Wilcoxon signed-rank, Cohen's dz effect size, and a model Results sentence for the IMRaD write-up. |
-| `index.html` | — | Landing page linking the three tools. |
+| `index.html` | — | Landing page linking the tools. |
 
 ## Design constraints
 
@@ -28,6 +29,7 @@ This repo is published as a static site from the IEQLab GitHub organisation:
 
 Pages is configured under **Settings → Pages → Build and deployment → Deploy from a branch**, branch `main`, folder `/ (root)`. The tools are live at:
 
+- `https://ieqlab.github.io/tutorial-tools/lighting.html`
 - `https://ieqlab.github.io/tutorial-tools/iaq.html`
 - `https://ieqlab.github.io/tutorial-tools/acoustics.html`
 - `https://ieqlab.github.io/tutorial-tools/stats.html`
