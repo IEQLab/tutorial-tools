@@ -60,6 +60,18 @@
   summary { cursor: pointer; color: var(--accent); font-size: .9rem; }
   footer.page { color: var(--muted); font-size: .82rem; margin-top: 28px; border-top: 1px solid var(--line); padding-top: 14px; }
   .rangeval { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  table.sched { width: 100%; border-collapse: collapse; margin: 6px 0 10px; }
+  table.sched th { text-align: left; color: var(--muted); font-weight: 500; font-size: .78rem; padding: 4px 8px; }
+  table.sched td { padding: 3px 6px; }
+  table.sched input { padding: 6px 8px; font-size: .95rem; }
+  table.sched td:last-child { width: 34px; text-align: center; }
+  .btn-row { display: flex; gap: 8px; margin: 2px 0 4px; flex-wrap: wrap; }
+  .btn { background: var(--accent); color: var(--accent-ink); border: none; border-radius: 8px;
+    padding: 7px 12px; font-size: .88rem; cursor: pointer; }
+  .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+  .iconbtn { background: transparent; border: 1px solid var(--line); color: var(--muted);
+    border-radius: 6px; cursor: pointer; padding: 3px 9px; font-size: 1rem; line-height: 1; }
+  .iconbtn:hover { color: var(--bad); border-color: var(--bad); }
 </style>
 </head>
 <body>
@@ -148,9 +160,40 @@
     <p class="note">CO<sub>2</sub> in ppm is converted to a fraction internally (ppm &divide; 1,000,000). G defaults to 0.005 L/s for an adult at rest; adjust for activity or age.</p>
   </section>
 
-  <!-- C: Scenario explorer -->
+  <!-- C: Transient mass balance -->
   <section class="card">
-    <h2>3. Occupancy scenario explorer</h2>
+    <h2>3. CO<sub>2</sub> over time — accumulation &amp; decay</h2>
+    <p class="sub">Section 2 assumes the curve has already flattened. This runs the full transient mass balance, so you can watch CO<sub>2</sub> build up as a room fills and decay when people leave or a window opens — the same curve your sensor draws in Activity 1. Room volume, generation G and outdoor CO<sub>2</sub> are taken from section 2; you set who is in the room, and how it is ventilated, over time.</p>
+    <div class="grid">
+      <div>
+        <label for="tDur">Duration (min)</label>
+        <input id="tDur" type="number" step="5" value="60">
+      </div>
+      <div>
+        <label for="tC0">Starting CO<sub>2</sub>, C<sub>0</sub> (ppm)</label>
+        <input id="tC0" type="number" step="10" value="420">
+      </div>
+    </div>
+    <p class="note" style="margin-top:14px;">Occupancy schedule — each row sets the people count <em>N</em> and ventilation <em>Q</em> that apply <strong>from that time onward</strong>. Add a row to open a window (raise Q) or have the class leave (drop N to 0) partway through.</p>
+    <table class="sched" id="schedTable">
+      <thead>
+        <tr><th>From (min)</th><th>People, N</th><th>Ventilation Q (L/s)</th><th></th></tr>
+      </thead>
+      <tbody id="schedBody"></tbody>
+    </table>
+    <div class="btn-row">
+      <button type="button" class="btn ghost" id="schedAdd">+ Add change</button>
+      <button type="button" class="btn ghost" id="schedReset">Reset to section 2</button>
+    </div>
+    <div class="results" id="tResults"></div>
+    <canvas id="tChart" width="820" height="360" role="img" aria-label="Predicted CO2 concentration over time"></canvas>
+    <div class="formula">V &middot; dC/dt = N&middot;G + Q&middot;(Co &minus; C)   &rarr;   C(t) = Css + (C&#8320; &minus; Css)&middot;e<sup>&minus;(Q/V)t</sup>,   &tau; = V/Q</div>
+    <p class="note">The time constant &tau; is how long the room takes to cover 63% of any change — the same &tau; governs both the rise and the decay. After about 3&tau; the curve has effectively flattened, which is when the steady-state estimate in section 2 becomes valid.</p>
+  </section>
+
+  <!-- D: Scenario explorer -->
+  <section class="card">
+    <h2>4. Occupancy scenario explorer</h2>
     <p class="sub">Holding the ventilation rate (Q<sub>total</sub>) from section 2 fixed, see how steady-state CO<sub>2</sub> would shift as occupancy changes. The dashed line is the ASHRAE 1,000 ppm guideline.</p>
     <div class="grid">
       <div>
@@ -242,6 +285,7 @@
       if (parseFloat(q.max) < qtotal * 1.5) q.max = Math.ceil(qtotal * 2 / 10) * 10;
     }
     updateScenario();
+    recomputeTransient();
   }
 
   function ciFor(nPeople, qtot, g, co) {
@@ -262,6 +306,177 @@
         '<span style="color:' + (over ? 'var(--bad)' : 'var(--good)') + '">' + (isFinite(ci) ? fmt(ci, 0) + " ppm" : "—") + "</span>") +
       row("Against 1,000 ppm guideline", over ? "above" : "at or below");
     drawChart(scenQ, g, co, scenN);
+  }
+
+  // ---- Section 4: transient (accumulation & decay) ----
+  // Each row applies from its start time onward: {t: minutes, n: people, q: L/s}.
+  var schedule = [{ t: 0, n: 50, q: 470 }, { t: 30, n: 0, q: 470 }];
+
+  function renderSched() {
+    $("schedBody").innerHTML = schedule.map(function (s, i) {
+      return '<tr>' +
+        '<td><input type="number" step="1" min="0" value="' + s.t + '" data-i="' + i + '" data-f="t"></td>' +
+        '<td><input type="number" step="1" min="0" value="' + s.n + '" data-i="' + i + '" data-f="n"></td>' +
+        '<td><input type="number" step="10" min="0" value="' + s.q + '" data-i="' + i + '" data-f="q"></td>' +
+        '<td>' + (schedule.length > 1 ? '<button type="button" class="iconbtn" data-del="' + i + '" aria-label="remove row">&times;</button>' : '') + '</td>' +
+        '</tr>';
+    }).join("");
+  }
+
+  // active segment at time t: the latest row whose start time <= t
+  function segAt(sorted, t) {
+    var seg = sorted[0];
+    for (var i = 0; i < sorted.length; i++) { if (sorted[i].t <= t) seg = sorted[i]; }
+    return seg;
+  }
+
+  function simulateTransient() {
+    var g = num("g"), co = num("co");
+    var az = num("len") * num("wid"), height = num("height");
+    var V = az * height;                 // m³
+    var dur = num("tDur"); if (dur <= 0) dur = 60;
+    var C = num("tC0");
+    var steps = 400, dt = dur / steps;   // minutes per step
+    var dtS = dt * 60;                    // seconds per step
+    var sorted = schedule.slice().sort(function (a, b) { return a.t - b.t; });
+
+    var pts = [], peak = C, cross1000 = null, cross800 = null, prev = C;
+    for (var i = 0; i <= steps; i++) {
+      var t = i * dt;
+      pts.push({ t: t, c: C });
+      if (C > peak) peak = C;
+      // upward-crossing times (linear interpolation between samples)
+      if (cross800 === null && prev < 800 && C >= 800) cross800 = interpCross(pts, 800);
+      if (cross1000 === null && prev < 1000 && C >= 1000) cross1000 = interpCross(pts, 1000);
+      prev = C;
+      // advance one step under the currently active segment
+      var seg = segAt(sorted, t);
+      var Q = seg.q, N = seg.n;
+      if (V > 0 && Q > 0) {
+        var Css = co + (N * g / Q) * 1e6;
+        var k = Q / (V * 1000);           // per second
+        C = Css + (C - Css) * Math.exp(-k * dtS);
+      } else if (V > 0) {                 // Q = 0: unventilated linear build-up
+        C = C + (N * g / (V * 1000)) * 1e6 * dtS;
+      }
+    }
+    // steady-state target and τ for the final segment (what the curve is heading toward)
+    var last = segAt(sorted, dur);
+    var CssFinal = last.q > 0 ? co + (last.n * g / last.q) * 1e6 : Infinity;
+    var tau = last.q > 0 && V > 0 ? (1000 * V) / (60 * last.q) : Infinity; // minutes
+    return { pts: pts, peak: peak, cross1000: cross1000, cross800: cross800,
+             dur: dur, V: V, CssFinal: CssFinal, tau: tau, co: co };
+  }
+
+  function interpCross(pts, thr) {
+    var b = pts[pts.length - 1], a = pts[pts.length - 2];
+    if (!a || b.c === a.c) return b.t;
+    return a.t + (thr - a.c) / (b.c - a.c) * (b.t - a.t);
+  }
+
+  function recomputeTransient() {
+    var r = simulateTransient();
+    $("tResults").innerHTML =
+      row("Room volume (from section 2)", fmt(r.V, 1) + " m&sup3;") +
+      row("Time constant &tau; (final ventilation rate)", isFinite(r.tau) ? fmt(r.tau, 1) + " min" : "&infin; (no ventilation)") +
+      row("Peak CO&#8322; reached", fmt(r.peak, 0) + " ppm") +
+      row("Time to exceed 800 ppm", r.cross800 !== null ? fmt(r.cross800, 1) + " min" : "not reached") +
+      row("Time to exceed 1,000 ppm", r.cross1000 !== null ? fmt(r.cross1000, 1) + " min" : "not reached") +
+      row("Heading toward steady state", isFinite(r.CssFinal) ? fmt(r.CssFinal, 0) + " ppm" : "rising (unventilated)");
+    drawTChart(r);
+  }
+
+  function drawTChart(r) {
+    var c = $("tChart"), ctx = c.getContext("2d");
+    var W = c.width, H = c.height;
+    ctx.clearRect(0, 0, W, H);
+    var css = getComputedStyle(document.documentElement);
+    var ink = css.getPropertyValue("--ink").trim() || "#1c2430";
+    var muted = css.getPropertyValue("--muted").trim() || "#5a6675";
+    var line = css.getPropertyValue("--line").trim() || "#dfe4ea";
+    var accent = css.getPropertyValue("--accent").trim() || "#0e7c86";
+    var warn = css.getPropertyValue("--warn").trim() || "#b4690e";
+    var bad = css.getPropertyValue("--bad").trim() || "#b02a37";
+
+    var padL = 62, padR = 16, padT = 16, padB = 42;
+    var yMax = Math.max(1200, Math.ceil(r.peak / 200) * 200);
+    var yMin = Math.min(r.co, 400);
+    var dur = r.dur;
+
+    function X(t) { return padL + (t / dur) * (W - padL - padR); }
+    function Y(v) { return padT + (1 - (v - yMin) / (yMax - yMin)) * (H - padT - padB); }
+
+    // axes
+    ctx.strokeStyle = line; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, H - padB); ctx.lineTo(W - padR, H - padB); ctx.stroke();
+
+    // y gridlines + labels
+    ctx.fillStyle = muted; ctx.font = "12px -apple-system, Segoe UI, Roboto, sans-serif";
+    ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    for (var v = Math.ceil(yMin / 200) * 200; v <= yMax; v += 200) {
+      var y = Y(v);
+      ctx.strokeStyle = line; ctx.globalAlpha = 0.5;
+      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+      ctx.globalAlpha = 1; ctx.fillText(v, padL - 8, y);
+    }
+    // x labels
+    var xStep = dur <= 30 ? 5 : dur <= 90 ? 10 : 20;
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    for (var t = 0; t <= dur + 0.001; t += xStep) ctx.fillText(t, X(t), H - padB + 8);
+
+    // vertical lines where the schedule changes
+    var sorted = schedule.slice().sort(function (a, b) { return a.t - b.t; });
+    ctx.strokeStyle = muted; ctx.globalAlpha = 0.35; ctx.setLineDash([3, 4]); ctx.lineWidth = 1;
+    for (var s = 0; s < sorted.length; s++) {
+      if (sorted[s].t > 0 && sorted[s].t < dur) {
+        ctx.beginPath(); ctx.moveTo(X(sorted[s].t), padT); ctx.lineTo(X(sorted[s].t), H - padB); ctx.stroke();
+      }
+    }
+    ctx.setLineDash([]); ctx.globalAlpha = 1;
+
+    // steady-state target the curve heads toward
+    if (isFinite(r.CssFinal) && r.CssFinal <= yMax && r.CssFinal >= yMin) {
+      ctx.strokeStyle = accent; ctx.globalAlpha = 0.5; ctx.setLineDash([2, 4]); ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(padL, Y(r.CssFinal)); ctx.lineTo(W - padR, Y(r.CssFinal)); ctx.stroke();
+      ctx.setLineDash([]); ctx.globalAlpha = 1;
+      ctx.fillStyle = accent; ctx.textAlign = "right"; ctx.textBaseline = "bottom";
+      ctx.fillText("steady state ≈ " + fmt(r.CssFinal, 0) + " ppm", W - padR, Y(r.CssFinal) - 4);
+    }
+
+    // 800 ppm reference (Activity 1) and 1,000 ppm guideline
+    ctx.strokeStyle = warn; ctx.setLineDash([2, 4]); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, Y(800)); ctx.lineTo(W - padR, Y(800)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = warn; ctx.textAlign = "left"; ctx.textBaseline = "bottom";
+    ctx.fillText("800 ppm", padL + 6, Y(800) - 3);
+
+    ctx.strokeStyle = bad; ctx.setLineDash([6, 5]); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(padL, Y(1000)); ctx.lineTo(W - padR, Y(1000)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = bad; ctx.textAlign = "left"; ctx.textBaseline = "bottom";
+    ctx.fillText("1,000 ppm guideline", padL + 6, Y(1000) - 3);
+
+    // the C(t) curve
+    ctx.strokeStyle = accent; ctx.lineWidth = 2.5; ctx.beginPath();
+    for (var i = 0; i < r.pts.length; i++) {
+      var px = X(r.pts[i].t), py = Y(Math.min(r.pts[i].c, yMax));
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // marker where the curve crosses 1,000 ppm
+    if (r.cross1000 !== null && r.cross1000 <= dur) {
+      ctx.fillStyle = bad;
+      ctx.beginPath(); ctx.arc(X(r.cross1000), Y(1000), 4.5, 0, 2 * Math.PI); ctx.fill();
+    }
+
+    // axis titles
+    ctx.fillStyle = muted; ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+    ctx.fillText("Time (min)", padL + (W - padL - padR) / 2, H - 4);
+    ctx.save();
+    ctx.translate(14, padT + (H - padT - padB) / 2); ctx.rotate(-Math.PI / 2);
+    ctx.textBaseline = "top"; ctx.fillText("CO₂ (ppm)", 0, 0);
+    ctx.restore();
   }
 
   function drawChart(qtot, g, co, markN) {
@@ -340,7 +555,35 @@
     $(id).addEventListener("input", recompute);
   });
   ["scenN","scenQ"].forEach(function (id) { $(id).addEventListener("input", updateScenario); });
+  ["tDur","tC0"].forEach(function (id) { $(id).addEventListener("input", recomputeTransient); });
 
+  // schedule editing: typing updates the array in place (keeps focus); add/remove re-renders
+  $("schedBody").addEventListener("input", function (e) {
+    var el = e.target, i = el.getAttribute("data-i"), f = el.getAttribute("data-f");
+    if (i === null) return;
+    var v = parseFloat(el.value);
+    schedule[i][f] = isFinite(v) ? v : 0;
+    recomputeTransient();
+  });
+  $("schedBody").addEventListener("click", function (e) {
+    var d = e.target.getAttribute("data-del");
+    if (d === null) return;
+    schedule.splice(+d, 1);
+    renderSched(); recomputeTransient();
+  });
+  $("schedAdd").addEventListener("click", function () {
+    var last = schedule[schedule.length - 1];
+    schedule.push({ t: last.t + 10, n: last.n, q: last.q });
+    renderSched(); recomputeTransient();
+  });
+  $("schedReset").addEventListener("click", function () {
+    var q = Math.max(0, Math.round(qtotalActual));
+    var half = Math.round((num("tDur") || 60) / 2);
+    schedule = [{ t: 0, n: num("npeople"), q: q }, { t: half, n: 0, q: q }];
+    renderSched(); recomputeTransient();
+  });
+
+  renderSched();
   recompute();
 })();
 </script>
