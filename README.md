@@ -15,6 +15,7 @@ bpsd5030/
   week04-lighting.html
   week06-acoustics.html
   week08-iaq.html
+  week09-ratings.html
   week10-stats.html
 ```
 
@@ -29,6 +30,7 @@ To add a unit, create a `{unit}/` directory, drop its `weekNN-*.html` tools in, 
 | `bpsd5030/week04-lighting.html` | Week 4 | Enter illuminance readings as a spatial grid; renders a heatmap of the working plane and computes the uniformity ratio (min ÷ avg), diversity (min ÷ max), and a box plot of the spread. In-class exploratory aid; the submitted figure stays the student's own build. |
 | `bpsd5030/week06-acoustics.html` | Week 6 | Energy-averaging and combining sound levels (dB); Sabine equation both directions (absorption ↔ reverberation time); quick speech-intelligibility (STI) estimate from speech-to-noise ratio. |
 | `bpsd5030/week08-iaq.html` | Week 8 | Required outdoor airflow (ASHRAE 62.1 Ventilation Rate Procedure); actual ventilation from measured CO₂ (steady-state mass balance); ACH; occupancy scenario explorer with a CO₂-vs-occupancy chart. |
+| `bpsd5030/week09-ratings.html` | Week 9 | Two-act challenge on building rating systems. Act 1: take a building to a target NABERS IE star rating on a fixed budget via real upgrades or measurement tactics, with a recertification that collapses gamed ratings. Act 2: certify the same building under WELL by buying credits (real per-feature points from the WELL v2 scorecard), exposing how cheap policy credits score the same as expensive performance credits. Six built-in building profiles. |
 | `bpsd5030/week10-stats.html` | Week 10 / Assignment 2 | Descriptive statistics, paired-samples t-test, Wilcoxon signed-rank, Cohen's dz effect size, and a model Results sentence for the IMRaD write-up. |
 
 ## Design constraints
@@ -51,6 +53,7 @@ Pages is configured under **Settings → Pages → Build and deployment → Depl
 - `https://ieqlab.github.io/tutorial-tools/bpsd5030/week04-lighting.html`
 - `https://ieqlab.github.io/tutorial-tools/bpsd5030/week06-acoustics.html`
 - `https://ieqlab.github.io/tutorial-tools/bpsd5030/week08-iaq.html`
+- `https://ieqlab.github.io/tutorial-tools/bpsd5030/week09-ratings.html`
 - `https://ieqlab.github.io/tutorial-tools/bpsd5030/week10-stats.html`
 
 (GitHub Pages on the free org plan requires the repo to be **public**.)

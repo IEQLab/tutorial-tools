@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Game the Rating — BPSD5030</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --ink: #1c2430; --muted: #5a6675;
+    --line: #dfe4ea; --accent: #0e7c86; --accent-ink: #ffffff;
+    --good: #1a7f4b; --warn: #b4690e; --bad: #b02a37;
+    --field: #ffffff; --result-bg: #eef6f7;
+    --star: #d9a400; --track: #e7ecef; --real: #1a7f4b; --rating: #b4690e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #10151b; --card: #171e27; --ink: #e7ecf2; --muted: #9aa7b6;
+      --line: #2a3441; --accent: #38b2bd; --accent-ink: #06212a;
+      --good: #57c98a; --warn: #e0a955; --bad: #e2707a;
+      --field: #0f151c; --result-bg: #13232a;
+      --star: #e9c14a; --track: #22303a; --real: #57c98a; --rating: #e0a955;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 24px 18px 64px; }
+  header.page { margin-bottom: 8px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  .lede { color: var(--muted); margin: 0 0 20px; max-width: 66ch; }
+  .home { display: inline-block; color: var(--accent); text-decoration: none; font-size: .9rem; margin-bottom: 14px; }
+  .home:hover { text-decoration: underline; }
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 18px 18px 20px; margin: 16px 0;
+  }
+  .act-tag { display:inline-block; font-size:.72rem; letter-spacing:.05em; text-transform:uppercase;
+    color: var(--accent); border:1px solid var(--line); border-radius:999px; padding:2px 9px; margin-bottom:8px; }
+  h2 { font-size: 1.2rem; margin: 0 0 4px; }
+  h3 { font-size: 1rem; margin: 18px 0 8px; }
+  .sub { color: var(--muted); font-size: .92rem; margin: 0 0 14px; max-width: 68ch; }
+  label { display: block; font-size: .85rem; color: var(--muted); margin-bottom: 4px; }
+  select, input[type="number"] {
+    width: 100%; padding: 8px 10px; font-size: 1rem; color: var(--ink);
+    background: var(--field); border: 1px solid var(--line); border-radius: 8px;
+  }
+  select:focus, input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  input[type="range"] { width: 100%; accent-color: var(--accent); }
+  input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; }
+
+  /* profile strip */
+  .profile-blurb { color: var(--muted); font-size: .9rem; margin: 8px 0 0; }
+  .strip { display:flex; flex-wrap:wrap; gap:10px 22px; margin: 6px 0 4px; }
+  .strip .item { font-size:.9rem; }
+  .strip .item b { font-variant-numeric: tabular-nums; }
+
+  /* dimension table */
+  table.dims { width:100%; border-collapse: collapse; margin: 8px 0 6px; }
+  table.dims th { text-align:left; color:var(--muted); font-weight:500; font-size:.76rem;
+    text-transform:uppercase; letter-spacing:.03em; padding: 6px 8px; border-bottom:1px solid var(--line); }
+  table.dims td { padding: 10px 8px; border-bottom:1px solid var(--line); vertical-align: middle; }
+  table.dims td.dimname { font-weight:600; }
+  table.dims td.dimname small { display:block; font-weight:400; color:var(--muted); font-size:.78rem; }
+  .rangewrap { display:flex; align-items:center; gap:8px; }
+  .rangeval { min-width: 2.4em; text-align:right; font-variant-numeric: tabular-nums; font-weight:600; font-size:.9rem; }
+  .trick { display:flex; align-items:flex-start; gap:8px; }
+  .trick label { margin:0; color: var(--ink); font-size:.82rem; cursor:pointer; }
+  .trick label .cost { color: var(--muted); }
+
+  .globaltrick { display:flex; align-items:center; gap:8px; margin:4px 2px 2px; }
+  .globaltrick label { margin:0; color:var(--ink); font-size:.88rem; cursor:pointer; }
+
+  /* results block */
+  .results { margin-top: 16px; background: var(--result-bg); border-radius: 10px; padding: 14px 16px; }
+  .stars { font-size: 1.9rem; letter-spacing: 2px; line-height: 1; color: var(--star); }
+  .stars .empty { color: var(--track); }
+  .bignum { font-variant-numeric: tabular-nums; font-weight:700; }
+  .meter { height: 12px; border-radius: 999px; background: var(--track); overflow: hidden; margin: 4px 0 2px; }
+  .meter > span { display:block; height:100%; border-radius:999px; }
+  .meter.real > span { background: var(--real); }
+  .meter.rating > span { background: var(--rating); }
+  .meter.budget > span { background: var(--accent); }
+  .meterrow { margin: 10px 0; }
+  .meterrow .lab { display:flex; justify-content:space-between; font-size:.86rem; }
+  .meterrow .lab .k { color: var(--muted); }
+  .meterrow .lab .v { font-variant-numeric: tabular-nums; font-weight:600; }
+  .verdict { margin-top: 12px; padding: 12px 14px; border-radius: 10px; font-weight: 600; border: 1px solid var(--line); }
+  .verdict.good { color: var(--good); }
+  .verdict.bad  { color: var(--bad); }
+  .verdict.warn { color: var(--warn); }
+  .verdict small { display:block; font-weight:400; color:var(--muted); margin-top:4px; }
+
+  .btn { background: var(--accent); color: var(--accent-ink); border:none; border-radius:8px;
+    padding: 8px 14px; font-size:.9rem; cursor:pointer; }
+  .btn.ghost { background: transparent; color: var(--accent); border:1px solid var(--line); }
+  .btn-row { display:flex; gap:8px; flex-wrap:wrap; margin-top: 12px; }
+  .recert { margin-top: 12px; padding: 12px 14px; border-radius:10px; border:1px dashed var(--line);
+    background: var(--card); font-size:.92rem; }
+  .recert.hidden { display:none; }
+
+  /* WELL features */
+  .concept { margin: 12px 0 2px; font-size:.8rem; text-transform:uppercase; letter-spacing:.04em; color: var(--accent); }
+  .feat { display:flex; align-items:flex-start; gap:10px; padding: 7px 6px; border-bottom:1px solid var(--line); }
+  .feat label { margin:0; color:var(--ink); font-size:.9rem; cursor:pointer; flex:1; }
+  .feat .meta { color:var(--muted); font-size:.8rem; }
+  .feat .pts { font-weight:600; color:var(--ink); }
+  .dots { letter-spacing:1px; }
+  .dots.high { color: var(--good); }
+  .dots.med  { color: var(--warn); }
+  .dots.low  { color: var(--muted); }
+  .bandline { display:flex; gap:14px; flex-wrap:wrap; font-size:.84rem; color:var(--muted); margin: 6px 0 2px; }
+  .bandline b { color: var(--ink); }
+
+  .note { color: var(--muted); font-size: .84rem; }
+  details { margin-top: 12px; }
+  summary { cursor: pointer; color: var(--accent); font-size: .9rem; }
+  details .inner { margin-top:8px; font-size:.9rem; color: var(--ink); }
+  .formula { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:.84rem;
+    background: var(--result-bg); border-radius:8px; padding:10px 12px; margin:6px 0; overflow-x:auto; }
+  footer.page { color: var(--muted); font-size: .82rem; margin-top: 28px; border-top:1px solid var(--line); padding-top: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="home" href="index.html">&larr; BPSD5030 tutorial tools</a>
+  <header class="page">
+    <h1>Game the Rating</h1>
+    <p class="lede">You are the IEQ consultant. One building, two rating systems, a fixed budget. Hit the target, then look at how much of your rating was real improvement and how much was clever measurement. NABERS rates measured performance, so you game the <em>measurement</em>. WELL counts credits, so you game the <em>selection</em>. Both let the badge run ahead of what occupants actually feel.</p>
+  </header>
+
+  <!-- Shared: profile -->
+  <section class="card">
+    <label for="profile">Building profile (from your Assignment 1 list)</label>
+    <select id="profile"></select>
+    <p class="profile-blurb" id="profileBlurb"></p>
+    <div class="strip" id="profileStrip"></div>
+  </section>
+
+  <!-- ACT 1 -->
+  <section class="card">
+    <span class="act-tag">Act 1</span>
+    <h2>NABERS IE Star Challenge</h2>
+    <p class="sub">Five dimensions, each rated 1 to 6 stars from its measured performance; the overall star is their average (NABERS weights all five equally). Spend your budget on <strong>real upgrades</strong> (they lift what occupants experience and what the sensors read) or on cheaper <strong>measurement tactics</strong> (they lift only what the sensors read). Reach the target star without going over budget.</p>
+
+    <div class="strip">
+      <div class="item">Target rating: <b id="targetStar"></b></div>
+      <div class="item">Intervention budget: <b id="budgetTotal"></b> pts</div>
+    </div>
+
+    <table class="dims">
+      <thead>
+        <tr><th>Dimension</th><th style="width:38%">Real upgrade (raises true &amp; measured)</th><th style="width:34%">Measurement tactic (raises measured only)</th></tr>
+      </thead>
+      <tbody id="dimBody"></tbody>
+    </table>
+
+    <div class="globaltrick">
+      <input type="checkbox" id="dropDays">
+      <label for="dropDays">Drop the worst 3 days from every dataset <span class="cost" style="color:var(--muted)">(+6 measured on all five, cost 6)</span></label>
+    </div>
+
+    <div class="results" id="nabersResults"></div>
+
+    <div class="btn-row">
+      <button type="button" class="btn" id="recertBtn">Trigger a 3-year recertification</button>
+      <button type="button" class="btn ghost" id="resetNabers">Reset Act 1</button>
+    </div>
+    <div class="recert hidden" id="recertOut"></div>
+
+    <details>
+      <summary>The maths behind the star</summary>
+      <div class="inner">
+        <p>Each dimension carries a <em>true</em> score (0 to 100, what occupants experience) and a <em>measured</em> score (what the rating sees). A real upgrade adds to both. A measurement tactic adds only to the measured score, because it changes when, where, or how you sample, not the building.</p>
+        <div class="formula">measured = clamp(true + tactic_inflation, 0, 100)
+dimension star = clamp(1 + measured / 20, 1, 6)
+overall star = mean of the five dimension stars</div>
+        <p class="note">Real thresholds sit behind this (thermal = % time operative temperature inside the ASHRAE 55 band, roughly 75% for 4 stars and 85%+ for 5; IAQ = % time CO<sub>2</sub> at or below 1000 ppm; acoustics at or below 55 dB(A) open-plan; lighting 300 to 500 lux with glare control; layout by m<sup>2</sup>/person and satisfaction). The 0 to 100 scale is a teaching simplification of those bands, not the NABERS algorithm.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ACT 2 -->
+  <section class="card">
+    <span class="act-tag">Act 2</span>
+    <h2>WELL Credit Round</h2>
+    <p class="sub">Same building, a different logic. WELL v2 awards points for optional features across its concepts; hit a points threshold and you certify. Preconditions (particulate limits, a ventilation design, no indoor smoking, acoustic zoning, a mental-health commitment) are assumed met. Now buy optional credits with your effort budget to reach the target band. Watch which credits actually change the indoor environment and which just need a policy or a form.</p>
+
+    <div class="bandline" id="wellBands"></div>
+    <div class="strip">
+      <div class="item">Target: <b id="wellTarget"></b></div>
+      <div class="item">Effort budget: <b id="wellBudget"></b></div>
+    </div>
+
+    <div id="featList"></div>
+
+    <div class="results" id="wellResults"></div>
+    <div class="btn-row">
+      <button type="button" class="btn ghost" id="resetWell">Reset Act 2</button>
+    </div>
+
+    <details>
+      <summary>How the points and bands work here</summary>
+      <div class="inner">
+        <p>The real WELL v2 standard certifies at 40 (Bronze), 50 (Silver), 60 (Gold), and 80 (Platinum) points out of about 100. This round models a representative slice of the health-relevant concepts (Air, Light, Thermal, Sound, Mind) worth <b id="wellMax"></b> points, so the band lines are scaled to that slice by the same 40/50/60/80 percent proportions.</p>
+        <p>Point values are the real per-feature maximums from the WELL v2 scorecard (Q3 to Q4 2024). The effort costs and the occupant-benefit rating (three dots = high, two = partial, one = policy or awareness only) are teaching estimates, set to expose the gap between what scores points and what improves the space.</p>
+      </div>
+    </details>
+  </section>
+
+  <footer class="page">
+    A teaching aid for BPSD5030 Week 9. NABERS bands and dimensions follow the Week 9 lecture; WELL point values are from the public WELL v2 scorecard (Q3 to Q4 2024). The scoring is deliberately simplified to make the gaming logic visible in a tutorial. It is not the NABERS or WELL algorithm; do not use its numbers in an assignment.
+  </footer>
+</div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function clamp(x, lo, hi) { return Math.max(lo, Math.min(hi, x)); }
+  function round1(x) { return Math.round(x * 10) / 10; }
+  function starMarkup(v) {
+    var full = Math.round(v);           // nearest whole star for the glyphs
+    var s = "";
+    for (var i = 1; i <= 6; i++) s += (i <= full ? "★" : '<span class="empty">★</span>');
+    return s;
+  }
+
+  // ---------- shared data ----------
+  var UPGRADE_RATE = 0.5;   // budget points per +1 true score
+  var DIMS = [
+    { key: "thermal", label: "Thermal comfort", hint: "% time in ASHRAE 55 band",
+      tactic: { label: "Measure in a mild shoulder-season week", inflate: 12, cost: 5 } },
+    { key: "iaq", label: "Indoor air quality", hint: "% time CO₂ ≤ 1000 ppm",
+      tactic: { label: "Put the CO₂ sensor by the fresh-air intake", inflate: 12, cost: 4 } },
+    { key: "acoustic", label: "Acoustics", hint: "background dB(A)",
+      tactic: { label: "Take sound readings after hours", inflate: 12, cost: 4 } },
+    { key: "light", label: "Lighting", hint: "lux and glare",
+      tactic: { label: "Measure only at desks near the windows", inflate: 10, cost: 4 } },
+    { key: "layout", label: "Office layout", hint: "m²/person and satisfaction",
+      tactic: { label: "Survey occupants just after the new fit-out", inflate: 10, cost: 5 } }
+  ];
+  var DROP_INFLATE = 6, DROP_COST = 6;
+
+  var PROFILES = {
+    A: { name: "A. Heritage Retrofit", target: 4.0, budget: 40,
+      blurb: "1935 government office, refurbished 2005. Poor acoustics from hard surfaces and high ceilings, uneven heating, complaints about temperature swings and stale air.",
+      base: { thermal: 45, iaq: 50, acoustic: 35, light: 60, layout: 55 } },
+    B: { name: "B. Premium Tower Fit-out", target: 5.0, budget: 40,
+      blurb: "Law firm in a 2018 NABERS 5-star base building, mostly private offices. Client wants a high IE rating with minimal disruption; never rated before.",
+      base: { thermal: 76, iaq: 78, acoustic: 70, light: 80, layout: 82 } },
+    C: { name: "C. Mixed-Mode Coworking Hub", target: 4.0, budget: 40,
+      blurb: "1950s warehouse conversion, renovated 2016. Split cooling with ceiling fans and openable windows; air quality swings with occupancy, acoustics variable, noise complaints.",
+      base: { thermal: 55, iaq: 45, acoustic: 40, light: 60, layout: 58 } },
+    D: { name: "D. Budget Retrofit, Big Expectations", target: 4.0, budget: 40,
+      blurb: "1992 public-service building, open-plan. Poor thermal comfort and CO₂; the owner wants a 4-star IE rating to support a lease extension. Informal surveys show poor satisfaction.",
+      base: { thermal: 40, iaq: 38, acoustic: 55, light: 55, layout: 50 } },
+    E: { name: "E. Research Facility", target: 4.5, budget: 40,
+      blurb: "2007 university labs, well maintained but over-ventilated in places. Poor acoustics in dry-lab write-up areas, limited privacy. Liked by researchers, disliked by admin staff.",
+      base: { thermal: 70, iaq: 85, acoustic: 40, light: 70, layout: 45 } },
+    F: { name: "F. Award-Winning Green Building", target: 6.0, budget: 45,
+      blurb: "2019 flagship with a hybrid facade and BMS. Excellent physical metrics, but occasional complaints about drafts and glare; owner wants a 6-star rating.",
+      base: { thermal: 78, iaq: 88, acoustic: 80, light: 74, layout: 85 } }
+  };
+
+  // ---------- state ----------
+  var prof = "D";
+  var realUp = {}, tactic = {}, dropDays = false;
+  function resetNabersState() {
+    DIMS.forEach(function (d) { realUp[d.key] = 0; tactic[d.key] = false; });
+    dropDays = false;
+  }
+
+  // ---------- NABERS build + compute ----------
+  function buildDimRows() {
+    $("dimBody").innerHTML = DIMS.map(function (d) {
+      return '<tr>' +
+        '<td class="dimname">' + d.label + '<small>' + d.hint + '</small></td>' +
+        '<td><div class="rangewrap">' +
+          '<input type="range" min="0" max="40" step="1" id="up_' + d.key + '" value="0">' +
+          '<span class="rangeval" id="upv_' + d.key + '">+0</span>' +
+        '</div></td>' +
+        '<td><div class="trick">' +
+          '<input type="checkbox" id="tr_' + d.key + '">' +
+          '<label for="tr_' + d.key + '">' + d.tactic.label +
+            ' <span class="cost">(+' + d.tactic.inflate + ' measured, cost ' + d.tactic.cost + ')</span></label>' +
+        '</div></td>' +
+      '</tr>';
+    }).join("");
+    DIMS.forEach(function (d) {
+      $("up_" + d.key).addEventListener("input", function () {
+        realUp[d.key] = parseInt(this.value, 10) || 0;
+        $("upv_" + d.key).textContent = "+" + realUp[d.key];
+        computeNabers();
+      });
+      $("tr_" + d.key).addEventListener("change", function () {
+        tactic[d.key] = this.checked; computeNabers();
+      });
+    });
+  }
+
+  function nabersScores() {
+    var base = PROFILES[prof].base;
+    var trueS = {}, meas = {}, baseStar = 0, trueStar = 0, measStar = 0;
+    DIMS.forEach(function (d) {
+      var t = clamp(base[d.key] + realUp[d.key], 0, 100);
+      var m = clamp(t + (tactic[d.key] ? d.tactic.inflate : 0) + (dropDays ? DROP_INFLATE : 0), 0, 100);
+      trueS[d.key] = t; meas[d.key] = m;
+      baseStar += (1 + base[d.key] / 20);
+      trueStar += (1 + t / 20);
+      measStar += (1 + m / 20);
+    });
+    var n = DIMS.length;
+    return {
+      trueS: trueS, meas: meas,
+      base: baseStar / n, trueStar: trueStar / n, measStar: measStar / n
+    };
+  }
+
+  function nabersSpent() {
+    var s = 0;
+    DIMS.forEach(function (d) {
+      s += realUp[d.key] * UPGRADE_RATE;
+      if (tactic[d.key]) s += d.tactic.cost;
+    });
+    if (dropDays) s += DROP_COST;
+    return s;
+  }
+
+  function meterRow(cls, k, v, frac) {
+    return '<div class="meterrow"><div class="lab"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>' +
+      '<div class="meter ' + cls + '"><span style="width:' + clamp(frac * 100, 0, 100).toFixed(0) + '%"></span></div></div>';
+  }
+
+  function computeNabers() {
+    var P = PROFILES[prof];
+    var s = nabersScores();
+    var spent = nabersSpent();
+    var target = P.target;
+    var ratingGain = s.measStar - s.base;
+    var realGain = s.trueStar - s.base;
+    var overBudget = spent > P.budget + 1e-9;
+    var hit = s.measStar >= target - 0.049;
+
+    var GAIN_MAX = 2.5; // for meter scaling (stars of improvement)
+    var html = "";
+    html += '<div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">' +
+      '<div class="stars">' + starMarkup(s.measStar) + '</div>' +
+      '<div class="bignum" style="font-size:1.4rem">' + round1(s.measStar) + ' stars</div>' +
+      '<div class="note">target ' + round1(target) + ', baseline ' + round1(s.base) + '</div></div>';
+
+    html += meterRow("budget", "Budget spent", Math.round(spent) + " / " + P.budget + " pts", spent / P.budget);
+    html += meterRow("rating", "Rating gained (measured stars)", "+" + round1(ratingGain), ratingGain / GAIN_MAX);
+    html += meterRow("real", "Real occupant improvement (true stars)", "+" + round1(realGain), realGain / GAIN_MAX);
+
+    var v = "", cls = "";
+    if (overBudget) {
+      cls = "bad"; v = "Over budget by " + Math.round(spent - P.budget) + " points.";
+      v += '<small>Trim a real upgrade or drop a tactic. Real upgrades cost the most, which is exactly why gaming the measurement is tempting.</small>';
+    } else if (!hit) {
+      cls = "warn"; v = "Not at target yet: " + round1(s.measStar) + " of " + round1(target) + " stars.";
+      v += '<small>Keep spending, or reach for the cheaper measurement tactics if the budget is tight.</small>';
+    } else if (ratingGain > 0.2 && realGain < 0.34 * ratingGain) {
+      cls = "bad"; v = "Target hit, but you gamed it.";
+      v += '<small>The rating climbed ' + round1(ratingGain) + ' stars while occupants gained only ' + round1(realGain) + '. Almost all of that badge is measurement, not comfort. See what a recertification does to it.</small>';
+    } else if (realGain > 0.85 * ratingGain) {
+      cls = "good"; v = "Target hit, and honestly.";
+      v += '<small>Nearly all of the rating is real improvement (' + round1(realGain) + ' of ' + round1(ratingGain) + ' stars). This rating should survive a recertification.</small>';
+    } else {
+      cls = "warn"; v = "Target hit, part real and part gamed.";
+      v += '<small>Real improvement is ' + round1(realGain) + ' stars of the ' + round1(ratingGain) + ' you gained. The measurement tactics are doing some of the work.</small>';
+    }
+    html += '<div class="verdict ' + cls + '">' + v + '</div>';
+    $("nabersResults").innerHTML = html;
+
+    // hide any stale recert reveal when inputs change
+    $("recertOut").classList.add("hidden");
+  }
+
+  function showRecert() {
+    var P = PROFILES[prof];
+    var s = nabersScores();
+    // honest recert: measured collapses to the true score (no sampling tricks survive)
+    var honest = s.trueStar;
+    var drop = s.measStar - honest;
+    var stillPass = honest >= P.target - 0.049;
+    var el = $("recertOut");
+    var msg = "<b>Three years on, an independent assessor recertifies with clean, full-period sampling.</b><br>" +
+      "Your rated " + round1(s.measStar) + " stars settles to <b>" + round1(honest) + " stars</b> once the sampling tricks are gone";
+    if (drop >= 0.05) {
+      msg += ", a drop of " + round1(drop) + ". " +
+        (stillPass ? "It still clears the target, because enough of the work was real."
+                   : "It now falls short of the " + round1(P.target) + "-star target. The gamed rating did not hold.");
+    } else {
+      msg += ". Nothing to lose here: the rating was real, so it holds.";
+    }
+    el.innerHTML = msg;
+    el.classList.remove("hidden");
+  }
+
+  // ---------- WELL data ----------
+  var BEN = { high: 3, med: 1.5, low: 0.3 };
+  var FEATURES = [
+    { concept: "Air", code: "A06", name: "Increase outdoor air supply", pts: 2, cost: 12, ben: "high" },
+    { concept: "Air", code: "A12", name: "Implement particle filtration", pts: 1, cost: 8, ben: "high" },
+    { concept: "Air", code: "A08", name: "Install indoor air monitors", pts: 1, cost: 3, ben: "low" },
+    { concept: "Light", code: "L03", name: "Circadian lighting for day-active people", pts: 3, cost: 13, ben: "high" },
+    { concept: "Light", code: "L04", name: "Manage glare from electric lighting", pts: 2, cost: 7, ben: "med" },
+    { concept: "Light", code: "L09", name: "Enhance occupant lighting control", pts: 2, cost: 6, ben: "med" },
+    { concept: "Thermal", code: "T03", name: "Provide thermostat / zone control", pts: 2, cost: 9, ben: "high" },
+    { concept: "Thermal", code: "T02", name: "Survey for thermal comfort", pts: 3, cost: 4, ben: "med" },
+    { concept: "Thermal", code: "T04", name: "Allow a flexible dress code", pts: 1, cost: 1, ben: "low" },
+    { concept: "Sound", code: "S02", name: "Limit background noise levels", pts: 3, cost: 13, ben: "high" },
+    { concept: "Sound", code: "S04", name: "Achieve reverberation-time thresholds", pts: 2, cost: 9, ben: "high" },
+    { concept: "Sound", code: "S06", name: "Provide minimum background (masking) sound", pts: 1, cost: 3, ben: "low" },
+    { concept: "Mind", code: "M05", name: "Develop a stress-management plan", pts: 2, cost: 2, ben: "low" },
+    { concept: "Mind", code: "M10", name: "Provide tobacco-cessation resources", pts: 2, cost: 1, ben: "low" },
+    { concept: "Mind", code: "M07", name: "Provide a restorative space", pts: 1, cost: 4, ben: "med" },
+    { concept: "Mind", code: "M04", name: "Offer mental-health education", pts: 1, cost: 1, ben: "low" },
+    { concept: "Mind", code: "M08", name: "Provide restorative programming", pts: 1, cost: 1, ben: "low" }
+  ];
+  var WELL_MAX = FEATURES.reduce(function (a, f) { return a + f.pts; }, 0);
+  var WELL_BUDGET = 45;
+  var WELL_BANDS = [
+    { name: "Platinum", pts: Math.round(WELL_MAX * 0.80) },
+    { name: "Gold",     pts: Math.round(WELL_MAX * 0.60) },
+    { name: "Silver",   pts: Math.round(WELL_MAX * 0.50) },
+    { name: "Bronze",   pts: Math.round(WELL_MAX * 0.40) }
+  ];
+  var WELL_TARGET = "Bronze";
+  var wellSel = {};
+
+  function dots(ben) {
+    var n = ben === "high" ? 3 : ben === "med" ? 2 : 1;
+    var s = "";
+    for (var i = 0; i < 3; i++) s += (i < n ? "●" : "○");
+    return '<span class="dots ' + ben + '">' + s + '</span>';
+  }
+
+  function buildWell() {
+    $("wellMax").textContent = WELL_MAX;
+    $("wellBudget").textContent = WELL_BUDGET + " pts";
+    var tb = WELL_BANDS.filter(function (b) { return b.name === WELL_TARGET; })[0];
+    $("wellTarget").textContent = WELL_TARGET + " (" + tb.pts + " points)";
+    $("wellBands").innerHTML = WELL_BANDS.slice().reverse().map(function (b) {
+      return '<span>' + b.name + ' <b>' + b.pts + '</b></span>';
+    }).join("");
+
+    var concepts = [], byC = {};
+    FEATURES.forEach(function (f, i) {
+      if (!byC[f.concept]) { byC[f.concept] = []; concepts.push(f.concept); }
+      byC[f.concept].push({ f: f, i: i });
+    });
+    var html = "";
+    concepts.forEach(function (c) {
+      html += '<div class="concept">' + c + '</div>';
+      byC[c].forEach(function (o) {
+        var f = o.f, i = o.i;
+        html += '<div class="feat">' +
+          '<input type="checkbox" id="wf_' + i + '">' +
+          '<label for="wf_' + i + '">' + f.name +
+            ' <span class="meta">(' + f.code + ')</span></label>' +
+          '<span class="pts">' + f.pts + ' pt' + (f.pts > 1 ? "s" : "") + '</span>' +
+          '<span class="meta">cost ' + f.cost + '</span>' +
+          dots(f.ben) +
+        '</div>';
+      });
+    });
+    $("featList").innerHTML = html;
+    FEATURES.forEach(function (f, i) {
+      $("wf_" + i).addEventListener("change", function () { wellSel[i] = this.checked; computeWell(); });
+    });
+  }
+
+  function computeWell() {
+    var pts = 0, effort = 0, ben = 0;
+    FEATURES.forEach(function (f, i) {
+      if (wellSel[i]) { pts += f.pts; effort += f.cost; ben += BEN[f.ben]; }
+    });
+    var band = "Not certified";
+    for (var b = 0; b < WELL_BANDS.length; b++) {
+      if (pts >= WELL_BANDS[b].pts) { band = WELL_BANDS[b].name; break; }
+    }
+    var targetPts = WELL_BANDS.filter(function (x) { return x.name === WELL_TARGET; })[0].pts;
+    var overBudget = effort > WELL_BUDGET + 1e-9;
+    var benPerPt = pts > 0 ? ben / pts : 0;   // real benefit per certification point
+    var BPP_MAX = 1.2;                          // meter scaling (a top-benefit credit is ~1.5/pt)
+
+    var html = "";
+    html += '<div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">' +
+      '<div class="bignum" style="font-size:1.4rem">' + pts + ' points</div>' +
+      '<div class="note">band: <b style="color:var(--ink)">' + band + '</b> (target ' + WELL_TARGET + ', ' + targetPts + ')</div></div>';
+    html += meterRow("budget", "Effort spent", effort + " / " + WELL_BUDGET, effort / WELL_BUDGET);
+    html += meterRow("real", "Real benefit per point", (pts > 0 ? round1(benPerPt) : "—") + " (index " + round1(ben) + ")", benPerPt / BPP_MAX);
+
+    var v = "", cls = "";
+    var certified = pts >= targetPts;
+    if (overBudget) {
+      cls = "bad"; v = "Over the effort budget by " + round1(effort - WELL_BUDGET) + ".";
+      v += '<small>The high-benefit credits (three dots) are the expensive ones. That is the whole tension: real quality costs effort, a certificate does not have to.</small>';
+    } else if (!certified) {
+      cls = "warn"; v = "Not certified yet: " + pts + " of " + targetPts + " points for " + WELL_TARGET + ".";
+      v += '<small>You can close the gap with cheap policy and documentation credits, or with real performance credits. Notice which is cheaper per point.</small>';
+    } else if (benPerPt < 0.5) {
+      cls = "bad"; v = WELL_TARGET + " reached, by cherry-picking.";
+      v += '<small>You hit the band on cheap credits (a dress code, policies, a monitor) at only ' + round1(benPerPt) + ' benefit per point. The certificate says WELL; the air, light, and acoustics barely moved. The same badge, honestly earned, would have cost several times the effort.</small>';
+    } else if (benPerPt > 0.75) {
+      cls = "good"; v = WELL_TARGET + " reached, and it means something.";
+      v += '<small>Your points come mostly from credits that genuinely change the space (' + round1(benPerPt) + ' benefit per point). This is the expensive, honest route, and it cost you ' + effort + ' effort.</small>';
+    } else {
+      cls = "warn"; v = WELL_TARGET + " reached, a mix of real and cheap credits.";
+      v += '<small>Benefit per point is ' + round1(benPerPt) + '. Some of your points improved the environment; some were paperwork.</small>';
+    }
+    html += '<div class="verdict ' + cls + '">' + v + '</div>';
+    $("wellResults").innerHTML = html;
+  }
+
+  // ---------- profile wiring ----------
+  function buildProfileSelect() {
+    $("profile").innerHTML = Object.keys(PROFILES).map(function (k) {
+      return '<option value="' + k + '">' + PROFILES[k].name + '</option>';
+    }).join("");
+    $("profile").value = prof;
+  }
+  function renderProfile() {
+    var P = PROFILES[prof];
+    $("profileBlurb").textContent = P.blurb;
+    $("profileStrip").innerHTML = DIMS.map(function (d) {
+      return '<div class="item">' + d.label + ': <b>' + P.base[d.key] + '</b>/100</div>';
+    }).join("") + '<div class="item">baseline rating: <b>' + round1(
+      DIMS.reduce(function (a, d) { return a + (1 + P.base[d.key] / 20); }, 0) / DIMS.length) + '</b> stars</div>';
+    $("targetStar").textContent = round1(P.target) + " stars";
+    $("budgetTotal").textContent = P.budget;
+  }
+
+  function applyNabersInputs() {
+    DIMS.forEach(function (d) {
+      $("up_" + d.key).value = realUp[d.key];
+      $("upv_" + d.key).textContent = "+" + realUp[d.key];
+      $("tr_" + d.key).checked = tactic[d.key];
+    });
+    $("dropDays").checked = dropDays;
+  }
+  function resetWellInputs() {
+    FEATURES.forEach(function (f, i) { wellSel[i] = false; var el = $("wf_" + i); if (el) el.checked = false; });
+  }
+
+  // ---------- listeners ----------
+  $("profile").addEventListener("change", function () {
+    prof = this.value;
+    resetNabersState(); applyNabersInputs();
+    renderProfile(); computeNabers();
+    $("recertOut").classList.add("hidden");
+  });
+  $("dropDays").addEventListener("change", function () { dropDays = this.checked; computeNabers(); });
+  $("recertBtn").addEventListener("click", showRecert);
+  $("resetNabers").addEventListener("click", function () {
+    resetNabersState(); applyNabersInputs(); computeNabers();
+    $("recertOut").classList.add("hidden");
+  });
+  $("resetWell").addEventListener("click", function () { resetWellInputs(); computeWell(); });
+
+  // ---------- init ----------
+  resetNabersState();
+  buildProfileSelect();
+  buildDimRows();
+  buildWell();
+  renderProfile();
+  computeNabers();
+  computeWell();
+})();
+</script>
+</body>
+</html>
