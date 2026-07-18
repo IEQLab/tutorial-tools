@@ -75,8 +75,8 @@
     <h2>1. Your measurement grid</h2>
     <p class="sub">Set the grid to match how you walked the space (e.g. 4 columns across the desk, 4 rows front-to-back), then type each reading in lux into the cell at that position. Leave a cell blank where you did not take a reading; blanks are ignored in the maths and shown empty on the map.</p>
     <div class="dims">
-      <div class="fld"><label for="cols">Columns (across)</label><input id="cols" class="dim" type="number" min="2" max="10" step="1" value="4"></div>
-      <div class="fld"><label for="rows">Rows (deep)</label><input id="rows" class="dim" type="number" min="2" max="10" step="1" value="4"></div>
+      <div class="fld"><label for="cols">Columns (across)</label><input id="cols" class="dim" type="number" min="2" max="8" step="1" value="4"></div>
+      <div class="fld"><label for="rows">Rows (deep)</label><input id="rows" class="dim" type="number" min="2" max="8" step="1" value="4"></div>
     </div>
     <div class="btns">
       <button class="primary" id="example">Load worked example</button>
@@ -125,18 +125,26 @@
   var $ = function (id) { return document.getElementById(id); };
   function fmt(x, d) { if (!isFinite(x)) return "—"; return x.toLocaleString(undefined, {minimumFractionDigits: d, maximumFractionDigits: d}); }
 
-  // top row nearest a window; light drops away toward the back and to one side
-  var EXAMPLE = [
-    [520, 480, 300, 210],
-    [500, 460, 290, 200],
-    [470, 430, 270, 190],
-    [440, 400, 250, 180]
-  ];
+  // Worked example: top row nearest a window; light drops away toward the back
+  // (down the rows) and to one side (across the columns). Generated to fit the
+  // current grid so the example works at any size, not just 4×4.
+  function makeExample(rows, cols) {
+    var peak = 520, ex = [];
+    for (var r = 0; r < rows; r++) {
+      ex[r] = [];
+      for (var c = 0; c < cols; c++) {
+        var colF = cols > 1 ? 1 - 0.62 * (c / (cols - 1)) : 1; // steep fall across
+        var rowF = rows > 1 ? 1 - 0.16 * (r / (rows - 1)) : 1; // gentle fall back
+        ex[r][c] = String(Math.round(peak * colF * rowF / 10) * 10);
+      }
+    }
+    return ex;
+  }
 
   // ---- state ----
   var data = [];   // 2D array of strings (cell raw values), sized rows x cols
   function dims() { return { cols: clampDim($("cols").value), rows: clampDim($("rows").value) }; }
-  function clampDim(v) { v = parseInt(v, 10); if (!isFinite(v)) v = 4; return Math.max(2, Math.min(10, v)); }
+  function clampDim(v) { v = parseInt(v, 10); if (!isFinite(v)) v = 4; return Math.max(2, Math.min(8, v)); }
 
   function buildGrid() {
     var d = dims();
@@ -385,8 +393,8 @@
     buildGrid();
   });
   $("example").addEventListener("click", function () {
-    $("cols").value = 4; $("rows").value = 4;
-    data = EXAMPLE.map(function (row) { return row.map(String); });
+    var d = dims();
+    data = makeExample(d.rows, d.cols);
     buildGrid();
   });
 
