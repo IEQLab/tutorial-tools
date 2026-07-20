@@ -29,18 +29,41 @@
   .wrap { max-width: 880px; margin: 0 auto; padding: 24px 18px 64px; }
   header.page { margin-bottom: 8px; }
   h1 { font-size: 1.5rem; margin: 0 0 4px; }
-  .lede { color: var(--muted); margin: 0 0 20px; max-width: 66ch; }
+  .lede { color: var(--muted); margin: 0 0 18px; max-width: 66ch; }
   .home { display: inline-block; color: var(--accent); text-decoration: none; font-size: .9rem; margin-bottom: 14px; }
   .home:hover { text-decoration: underline; }
+
+  /* ---- ordered tabs ---- */
+  .tabs { display: flex; gap: 6px; margin: 4px 0 18px; flex-wrap: wrap; }
+  .tab { border: 1px solid var(--line); background: var(--field); color: var(--muted);
+    border-radius: 999px; padding: 7px 15px 7px 8px; font-size: .9rem; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px; font-family: inherit; }
+  .tab:hover { border-color: var(--accent); color: var(--ink); }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .tab .n { display: inline-flex; align-items: center; justify-content: center;
+    width: 21px; height: 21px; border-radius: 50%; background: var(--line); color: var(--muted);
+    font-size: .78rem; font-weight: 700; flex: none; }
+  .tab.active .n { background: var(--accent-ink); color: var(--accent); }
+
   section.card {
     background: var(--card); border: 1px solid var(--line); border-radius: 12px;
-    padding: 18px 18px 20px; margin: 16px 0;
+    padding: 18px 18px 20px; margin: 0;
   }
-  .act-tag { display:inline-block; font-size:.72rem; letter-spacing:.05em; text-transform:uppercase;
-    color: var(--accent); border:1px solid var(--line); border-radius:999px; padding:2px 9px; margin-bottom:8px; }
+  .card[hidden] { display: none; }
   h2 { font-size: 1.2rem; margin: 0 0 4px; }
   h3 { font-size: 1rem; margin: 18px 0 8px; }
   .sub { color: var(--muted); font-size: .92rem; margin: 0 0 14px; max-width: 68ch; }
+
+  /* ---- per-tab primer ("the idea behind the number") ---- */
+  .primer { background: var(--result-bg); border-left: 3px solid var(--accent);
+    border-radius: 8px; padding: 12px 15px; margin: 0 0 18px; }
+  .primer .what { font-weight: 600; margin: 0 0 5px; }
+  .primer p { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.5; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; align-items: end; }
+  .grid > div { display: flex; flex-direction: column; }
+  .grid > div > input, .grid > div > select { margin-top: auto; }
   label { display: block; font-size: .85rem; color: var(--muted); margin-bottom: 4px; }
   select, input[type="number"] {
     width: 100%; padding: 8px 10px; font-size: 1rem; color: var(--ink);
@@ -93,7 +116,7 @@
   .verdict small { display:block; font-weight:400; color:var(--muted); margin-top:4px; }
 
   .btn { background: var(--accent); color: var(--accent-ink); border:none; border-radius:8px;
-    padding: 8px 14px; font-size:.9rem; cursor:pointer; }
+    padding: 8px 14px; font-size:.9rem; cursor:pointer; font-family: inherit; }
   .btn.ghost { background: transparent; color: var(--accent); border:1px solid var(--line); }
   .btn-row { display:flex; gap:8px; flex-wrap:wrap; margin-top: 12px; }
   .recert { margin-top: 12px; padding: 12px 14px; border-radius:10px; border:1px dashed var(--line);
@@ -114,12 +137,40 @@
   .bandline b { color: var(--ink); }
 
   .note { color: var(--muted); font-size: .84rem; }
-  details { margin-top: 12px; }
-  summary { cursor: pointer; color: var(--accent); font-size: .9rem; }
-  details .inner { margin-top:8px; font-size:.9rem; color: var(--ink); }
   .formula { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:.84rem;
     background: var(--result-bg); border-radius:8px; padding:10px 12px; margin:6px 0; overflow-x:auto; }
-  footer.page { color: var(--muted); font-size: .82rem; margin-top: 28px; border-top:1px solid var(--line); padding-top: 14px; }
+
+  /* ---- "the maths behind it" panel ---- */
+  details.maths { margin-top: 16px; border-left: 3px solid var(--accent);
+    background: var(--result-bg); border-radius: 8px; padding: 4px 15px; }
+  details.maths[open] { padding-bottom: 12px; }
+  details.maths > summary { cursor: pointer; color: var(--accent); font-size: .9rem;
+    font-weight: 600; padding: 9px 0; list-style: none; }
+  details.maths > summary::-webkit-details-marker { display: none; }
+  details.maths > summary::before { content: "▸ "; }
+  details.maths[open] > summary::before { content: "▾ "; }
+  details.maths .deriv { color: var(--muted); font-size: .88rem; margin: 8px 0 0; }
+
+  /* ---- Back / Next ---- */
+  .tabnav { display: flex; justify-content: space-between; margin-top: 20px; gap: 8px; }
+  .tabnav .btn[disabled] { opacity: .35; cursor: default; }
+
+  /* ---- accessible info popover (replaces native title=) ---- */
+  .info-wrap { position: relative; display: inline-block; vertical-align: middle; }
+  .info-tip { display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px; margin-left: 4px; border-radius: 50%; border: none; padding: 0;
+    background: var(--line); color: var(--muted); font-size: .68rem; font-weight: 700;
+    font-family: inherit; font-style: normal; line-height: 1; cursor: pointer; user-select: none; }
+  .info-tip:hover, .info-tip[aria-expanded="true"] { background: var(--accent); color: var(--accent-ink); }
+  .info-tip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .popover { position: absolute; z-index: 30; left: 0; bottom: calc(100% + 8px);
+    width: max-content; max-width: 250px; background: var(--card); color: var(--ink);
+    border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px;
+    font-size: .82rem; font-weight: 400; line-height: 1.45; text-align: left;
+    box-shadow: 0 6px 22px rgba(0,0,0,.18); }
+  .popover[hidden] { display: none; }
+
+  footer.page { color: var(--muted); font-size: .82rem; margin-top: 24px; border-top:1px solid var(--line); padding-top: 14px; }
 </style>
 </head>
 <body>
@@ -127,20 +178,28 @@
   <a class="home" href="index.html">&larr; BPSD5030 tutorial tools</a>
   <header class="page">
     <h1>Game the Rating</h1>
-    <p class="lede">You are the IEQ consultant. One building, two rating systems, a fixed budget. Hit the target, then look at how much of your rating was real improvement and how much was clever measurement. NABERS rates measured performance, so you game the <em>measurement</em>. WELL counts credits, so you game the <em>selection</em>. Both let the badge run ahead of what occupants actually feel.</p>
+    <p class="lede">One building, two rating systems, a fixed budget: hit the target, then see how much of your badge was real improvement and how much was clever measurement.</p>
   </header>
 
-  <!-- Shared: profile -->
-  <section class="card">
+  <!-- ===== Tabs (ordered stepper) ===== -->
+  <div class="tabs" role="tablist" aria-label="Game the Rating acts">
+    <button class="tab active" role="tab" id="tab-1" aria-controls="panel-1" aria-selected="true" tabindex="0" data-idx="0"><span class="n">1</span><span>Act 1 &middot; NABERS IE</span></button>
+    <button class="tab" role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false" tabindex="-1" data-idx="1"><span class="n">2</span><span>Act 2 &middot; WELL</span></button>
+  </div>
+
+  <!-- ===== Tab 1: Act 1 — NABERS IE ===== -->
+  <section class="card" role="tabpanel" id="panel-1" aria-labelledby="tab-1" tabindex="0">
+    <div class="primer">
+      <p class="what">A NABERS IE star rates measured performance — five dimensions scored equally, then averaged into one star.</p>
+      <p>NABERS weights all five dimensions equally, so the overall star is just their average. You can raise a dimension two ways: a real upgrade that lifts what occupants actually experience, or a measurement tactic that changes when, where, or how you sample so only the reading moves. Because NABERS re-rates every three years with clean, full-period sampling, a rating built on tactics collapses at recertification while one built on real work survives.</p>
+    </div>
+
+    <!-- Shared: building profile (drives the NABERS baseline) -->
     <label for="profile">Building profile (from your Assignment 1 list)</label>
     <select id="profile"></select>
     <p class="profile-blurb" id="profileBlurb"></p>
     <div class="strip" id="profileStrip"></div>
-  </section>
 
-  <!-- ACT 1 -->
-  <section class="card">
-    <span class="act-tag">Act 1</span>
     <h2>NABERS IE Star Challenge</h2>
     <p class="sub">Five dimensions, each rated 1 to 6 stars from its measured performance; the overall star is their average (NABERS weights all five equally). Spend your budget on <strong>real upgrades</strong> (they lift what occupants experience and what the sensors read) or on cheaper <strong>measurement tactics</strong> (they lift only what the sensors read). Reach the target star without going over budget.</p>
 
@@ -169,21 +228,28 @@
     </div>
     <div class="recert hidden" id="recertOut"></div>
 
-    <details>
+    <details class="maths">
       <summary>The maths behind the star</summary>
-      <div class="inner">
-        <p>Each dimension carries a <em>true</em> score (0 to 100, what occupants experience) and a <em>measured</em> score (what the rating sees). A real upgrade adds to both. A measurement tactic adds only to the measured score, because it changes when, where, or how you sample, not the building.</p>
-        <div class="formula">measured = clamp(true + tactic_inflation, 0, 100)
+      <p class="deriv">Each dimension carries a <em>true</em> score (0 to 100, what occupants experience) and a <em>measured</em> score (what the rating sees). A real upgrade adds to both. A measurement tactic adds only to the measured score, because it changes when, where, or how you sample, not the building.</p>
+      <div class="formula">measured = clamp(true + tactic_inflation, 0, 100)
 dimension star = clamp(1 + measured / 20, 1, 6)
 overall star = mean of the five dimension stars</div>
-        <p class="note">Real thresholds sit behind this (thermal = % time operative temperature inside the ASHRAE 55 band, roughly 75% for 4 stars and 85%+ for 5; IAQ = % time CO<sub>2</sub> at or below 1000 ppm; acoustics at or below 55 dB(A) open-plan; lighting 300 to 500 lux with glare control; layout by m<sup>2</sup>/person and satisfaction). The 0 to 100 scale is a teaching simplification of those bands, not the NABERS algorithm.</p>
-      </div>
+      <p class="deriv">Real thresholds sit behind this (thermal = % time operative temperature inside the ASHRAE 55 band, roughly 75% for 4 stars and 85%+ for 5; IAQ = % time CO<sub>2</sub> at or below 1000 ppm; acoustics at or below 55 dB(A) open-plan; lighting 300 to 500 lux with glare control; layout by m<sup>2</sup>/person and satisfaction). The 0 to 100 scale is a teaching simplification of those bands, not the NABERS algorithm.</p>
     </details>
+
+    <div class="tabnav">
+      <button type="button" class="btn ghost" data-nav="prev" disabled>&larr; Back</button>
+      <button type="button" class="btn" data-nav="next">Next: Act 2 &middot; WELL &rarr;</button>
+    </div>
   </section>
 
-  <!-- ACT 2 -->
-  <section class="card">
-    <span class="act-tag">Act 2</span>
+  <!-- ===== Tab 2: Act 2 — WELL ===== -->
+  <section class="card" role="tabpanel" id="panel-2" aria-labelledby="tab-2" tabindex="0" hidden>
+    <div class="primer">
+      <p class="what">WELL certifies by counting credits, not by measuring performance — so the badge depends on which credits you buy.</p>
+      <p>WELL awards points for optional features and certifies once you pass a points threshold (Bronze, Silver, Gold, Platinum). A cheap policy credit — a dress code, a stress-management plan, an air monitor — can be worth the same points as an expensive performance credit like more outdoor air or reverberation control. So two routes reach the same band at very different cost and very different real benefit, and the certificate can run well ahead of what occupants feel. (Same building as Act 1.)</p>
+    </div>
+
     <h2>WELL Credit Round</h2>
     <p class="sub">Same building, a different logic. WELL v2 awards points for optional features across its concepts; hit a points threshold and you certify. Preconditions (particulate limits, a ventilation design, no indoor smoking, acoustic zoning, a mental-health commitment) are assumed met. Now buy optional credits with your effort budget to reach the target band. Watch which credits actually change the indoor environment and which just need a policy or a form.</p>
 
@@ -200,13 +266,16 @@ overall star = mean of the five dimension stars</div>
       <button type="button" class="btn ghost" id="resetWell">Reset Act 2</button>
     </div>
 
-    <details>
+    <details class="maths">
       <summary>How the points and bands work here</summary>
-      <div class="inner">
-        <p>The real WELL v2 standard certifies at 40 (Bronze), 50 (Silver), 60 (Gold), and 80 (Platinum) points out of about 100. This round models a representative slice of the health-relevant concepts (Air, Light, Thermal, Sound, Mind) worth <b id="wellMax"></b> points, so the band lines are scaled to that slice by the same 40/50/60/80 percent proportions.</p>
-        <p>Point values are the real per-feature maximums from the WELL v2 scorecard (Q3 to Q4 2024). The effort costs and the occupant-benefit rating (three dots = high, two = partial, one = policy or awareness only) are teaching estimates, set to expose the gap between what scores points and what improves the space.</p>
-      </div>
+      <p class="deriv">The real WELL v2 standard certifies at 40 (Bronze), 50 (Silver), 60 (Gold), and 80 (Platinum) points out of about 100. This round models a representative slice of the health-relevant concepts (Air, Light, Thermal, Sound, Mind) worth <b id="wellMax"></b> points, so the band lines are scaled to that slice by the same 40/50/60/80 percent proportions.</p>
+      <p class="deriv">Point values are the real per-feature maximums from the WELL v2 scorecard (Q3 to Q4 2024). The effort costs and the occupant-benefit rating (three dots = high, two = partial, one = policy or awareness only) are teaching estimates, set to expose the gap between what scores points and what improves the space.</p>
     </details>
+
+    <div class="tabnav">
+      <button type="button" class="btn ghost" data-nav="prev">&larr; Back</button>
+      <button type="button" class="btn" data-nav="next" disabled>Done</button>
+    </div>
   </section>
 
   <footer class="page">
@@ -225,6 +294,64 @@ overall star = mean of the five dimension stars</div>
     for (var i = 1; i <= 6; i++) s += (i <= full ? "★" : '<span class="empty">★</span>');
     return s;
   }
+
+  // ---------- Tabs (ordered stepper) ----------
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  var panels = [$("panel-1"), $("panel-2")];
+  var current = 0;
+
+  function activate(idx, focusTab) {
+    if (idx < 0 || idx >= panels.length) return;
+    current = idx;
+    tabs.forEach(function (t, i) {
+      var on = i === idx;
+      t.classList.toggle("active", on);
+      t.setAttribute("aria-selected", on ? "true" : "false");
+      t.tabIndex = on ? 0 : -1;
+      panels[i].hidden = !on;
+    });
+    if (focusTab) tabs[idx].focus();
+  }
+
+  tabs.forEach(function (t) {
+    t.addEventListener("click", function () { activate(+t.getAttribute("data-idx")); });
+    t.addEventListener("keydown", function (e) {
+      var i = +t.getAttribute("data-idx");
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); activate(Math.min(i + 1, tabs.length - 1), true); }
+      else if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); activate(Math.max(i - 1, 0), true); }
+      else if (e.key === "Home") { e.preventDefault(); activate(0, true); }
+      else if (e.key === "End") { e.preventDefault(); activate(tabs.length - 1, true); }
+    });
+  });
+
+  // Back / Next buttons inside each panel
+  document.querySelectorAll('[data-nav]').forEach(function (b) {
+    b.addEventListener("click", function () {
+      if (b.disabled) return;
+      activate(current + (b.getAttribute("data-nav") === "next" ? 1 : -1), false);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  });
+
+  // ---------- Accessible info popovers (replace native title=) ----------
+  (function () {
+    var openPop = null;
+    function close() { if (openPop) { openPop.pop.hidden = true; openPop.btn.setAttribute("aria-expanded", "false"); openPop = null; } }
+    document.querySelectorAll(".info-tip").forEach(function (btn) {
+      var pop = btn.parentNode.querySelector(".popover");
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var isOpen = openPop && openPop.btn === btn;
+        close();
+        if (!isOpen) { pop.hidden = false; btn.setAttribute("aria-expanded", "true"); openPop = { btn: btn, pop: pop }; }
+      });
+      // hover convenience on pointer devices
+      btn.parentNode.addEventListener("mouseenter", function () { if (matchMedia("(hover: hover)").matches) { pop.hidden = false; btn.setAttribute("aria-expanded", "true"); } });
+      btn.parentNode.addEventListener("mouseleave", function () { if (matchMedia("(hover: hover)").matches && (!openPop || openPop.btn !== btn)) { pop.hidden = true; btn.setAttribute("aria-expanded", "false"); } });
+    });
+    document.addEventListener("click", close);
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+  })();
 
   // ---------- shared data ----------
   var UPGRADE_RATE = 0.5;   // budget points per +1 true score

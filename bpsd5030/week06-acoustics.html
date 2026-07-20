@@ -27,14 +27,17 @@
   .lede { color: var(--muted); margin: 0 0 20px; max-width: 68ch; }
   .home { display: inline-block; color: var(--accent); text-decoration: none; font-size: .9rem; margin-bottom: 14px; }
   .home:hover { text-decoration: underline; }
-  section.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin: 16px 0; }
+  section.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px 18px 20px; margin: 0; }
+  .card[hidden] { display: none; }
   h2 { font-size: 1.15rem; margin: 0 0 4px; }
   h3 { font-size: 1rem; margin: 18px 0 6px; }
   .sub { color: var(--muted); font-size: .92rem; margin: 0 0 14px; }
   label { display: block; font-size: .85rem; color: var(--muted); margin-bottom: 4px; }
   input, select { width: 100%; padding: 8px 10px; font-size: 1rem; color: var(--ink); background: var(--field); border: 1px solid var(--line); border-radius: 8px; }
   input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; align-items: end; }
+  .grid > div { display: flex; flex-direction: column; }
+  .grid > div > input, .grid > div > select { margin-top: auto; }
   .results { margin-top: 14px; background: var(--result-bg); border-radius: 10px; padding: 4px 14px; }
   .row { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); }
   .row:last-child { border-bottom: 0; }
@@ -61,9 +64,64 @@
   .bandgrid .rowlabel { font-size: .82rem; color: var(--muted); align-self: center; padding-right: 6px; }
   .bandgrid input { padding: 6px 4px; text-align: center; font-size: .9rem; }
   .scrollx { overflow-x: auto; }
-  .tabs { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
-  .tab { border: 1px solid var(--line); background: var(--field); color: var(--muted); border-radius: 999px; padding: 6px 14px; }
+  /* ---- ordered tabs (top-level) ---- */
+  .tabs { display: flex; gap: 6px; margin: 4px 0 18px; flex-wrap: wrap; }
+  .tab { border: 1px solid var(--line); background: var(--field); color: var(--muted);
+    border-radius: 999px; padding: 7px 15px 7px 8px; font-size: .9rem; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px; font-family: inherit; }
+  .tab:hover { border-color: var(--accent); color: var(--ink); }
   .tab.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .tab .n { display: inline-flex; align-items: center; justify-content: center;
+    width: 21px; height: 21px; border-radius: 50%; background: var(--line); color: var(--muted);
+    font-size: .78rem; font-weight: 700; flex: none; }
+  .tab.active .n { background: var(--accent-ink); color: var(--accent); }
+
+  /* ---- inner material-table pills (nested inside the Material data tab) ---- */
+  .subtabs { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+  .subtab { border: 1px solid var(--line); background: var(--field); color: var(--muted);
+    border-radius: 999px; padding: 6px 14px; cursor: pointer; font: inherit; font-size: .9rem; }
+  .subtab.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+
+  /* ---- per-tab primer ("the idea behind the number") ---- */
+  .primer { background: var(--result-bg); border-left: 3px solid var(--accent);
+    border-radius: 8px; padding: 12px 15px; margin: 0 0 18px; }
+  .primer .what { font-weight: 600; margin: 0 0 5px; }
+  .primer p { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.5; }
+
+  /* ---- "the maths behind it" panel ---- */
+  details.maths { margin-top: 16px; border-left: 3px solid var(--accent);
+    background: var(--result-bg); border-radius: 8px; padding: 4px 15px; }
+  details.maths[open] { padding-bottom: 12px; }
+  details.maths > summary { cursor: pointer; color: var(--accent); font-size: .9rem;
+    font-weight: 600; padding: 9px 0; list-style: none; }
+  details.maths > summary::-webkit-details-marker { display: none; }
+  details.maths > summary::before { content: "▸ "; }
+  details.maths[open] > summary::before { content: "▾ "; }
+  details.maths .deriv { color: var(--muted); font-size: .88rem; margin: 8px 0 0; }
+
+  /* ---- Back / Next ---- */
+  .tabnav { display: flex; justify-content: space-between; margin-top: 20px; gap: 8px; }
+  .btn { background: var(--accent); color: var(--accent-ink); border: none; border-radius: 8px;
+    padding: 7px 12px; font-size: .88rem; cursor: pointer; font-family: inherit; }
+  .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+  .tabnav .btn[disabled] { opacity: .35; cursor: default; }
+
+  /* ---- accessible info popover (replaces native title=) ---- */
+  .info-wrap { position: relative; display: inline-block; vertical-align: middle; }
+  .info-tip { display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px; margin-left: 4px; border-radius: 50%; border: none; padding: 0;
+    background: var(--line); color: var(--muted); font-size: .68rem; font-weight: 700;
+    font-family: inherit; font-style: normal; line-height: 1; cursor: pointer; user-select: none; }
+  .info-tip:hover, .info-tip[aria-expanded="true"] { background: var(--accent); color: var(--accent-ink); }
+  .info-tip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .popover { position: absolute; z-index: 30; left: 0; bottom: calc(100% + 8px);
+    width: max-content; max-width: 250px; background: var(--card); color: var(--ink);
+    border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px;
+    font-size: .82rem; font-weight: 400; line-height: 1.45; text-align: left;
+    box-shadow: 0 6px 22px rgba(0,0,0,.18); }
+  .popover[hidden] { display: none; }
+
   .surf-row { display: grid; grid-template-columns: 1fr 90px 34px; gap: 8px; margin-bottom: 8px; align-items: center; }
   .toc { columns: 2; column-gap: 24px; font-size: .9rem; margin: 0 0 8px; padding: 0; list-style: none; }
   .toc a { color: var(--accent); text-decoration: none; }
@@ -76,23 +134,28 @@
 <div class="wrap">
   <a class="home" href="index.html">&larr; BPSD5030 tutorial tools</a>
   <h1>Room Acoustics Calculator</h1>
-  <p class="lede">The routine acoustic calculations for the Week 6 tutorial, in one place: averaging and combining decibels, the Sabine relationship, building a room's absorption from its surfaces, the full octave-band Speech Transmission Index, and the material data tables. It does the arithmetic; benchmarking against AS/NZS 2107 and the design interpretation are yours.</p>
-  <ul class="toc">
-    <li><a href="#s-db">1. Average / combine sound levels</a></li>
-    <li><a href="#s-sabine">2. Sabine: absorption &amp; reverberation</a></li>
-    <li><a href="#s-room">3. Build room absorption from surfaces</a></li>
-    <li><a href="#s-sti">4. Speech intelligibility (STI)</a></li>
-    <li><a href="#s-data">5. Material data tables</a></li>
-  </ul>
+  <p class="lede">Combine decibels, work the Sabine relationship, build a room's absorption, estimate speech intelligibility, and browse the material data &mdash; the routine Week 6 acoustics arithmetic in one place, so your time goes to measurement and interpretation.</p>
 
-  <section class="card" id="s-db">
-    <h2>1. Average or combine sound levels (dB)</h2>
-    <p class="sub">Decibels are logarithmic, so you cannot take a plain arithmetic mean. Enter your levels (dB), separated by commas or spaces.</p>
+  <!-- ===== Tabs ===== -->
+  <div class="tabs" role="tablist" aria-label="Room acoustics tools">
+    <button class="tab active" role="tab" id="tab-1" aria-controls="s-db" aria-selected="true" tabindex="0" data-idx="0"><span class="n">1</span><span>Combine levels</span></button>
+    <button class="tab" role="tab" id="tab-2" aria-controls="s-sabine" aria-selected="false" tabindex="-1" data-idx="1"><span class="n">2</span><span>Reverberation</span></button>
+    <button class="tab" role="tab" id="tab-3" aria-controls="s-room" aria-selected="false" tabindex="-1" data-idx="2"><span class="n">3</span><span>Room absorption</span></button>
+    <button class="tab" role="tab" id="tab-4" aria-controls="s-sti" aria-selected="false" tabindex="-1" data-idx="3"><span class="n">4</span><span>Speech (STI)</span></button>
+    <button class="tab" role="tab" id="tab-5" aria-controls="s-data" aria-selected="false" tabindex="-1" data-idx="4"><span class="n">5</span><span>Material data</span></button>
+  </div>
+
+  <!-- ===== Tab 1: Combine levels ===== -->
+  <section class="card" role="tabpanel" id="s-db" aria-labelledby="tab-1" tabindex="0">
+    <div class="primer">
+      <p class="what">Decibels measure sound energy on a logarithmic scale, so you cannot average or add them with plain arithmetic.</p>
+      <p>LAeq is the equivalent continuous level &mdash; the single steady level carrying the same energy as a fluctuating signal &mdash; and the "A" weighting discounts very low and very high frequencies to track how the ear hears, so a dBA figure is close to perceived loudness. Because the scale is logarithmic, two equal levels combine to just 3 dB above one of them, while a source 10 dB quieter adds almost nothing. Enter your levels separated by commas or spaces, then energy-average repeated readings of one source or combine independent sources into a total.</p>
+    </div>
     <label for="levels">Levels (dB)</label>
     <input id="levels" type="text" value="60, 63, 66">
     <div class="grid" style="margin-top:12px">
       <div>
-        <label for="mode">Operation</label>
+        <label for="mode">Operation<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About the operation choice">i</button><span class="popover" role="tooltip" hidden>Energy average summarises repeated LAeq or octave-band readings of the same source. Combine adds independent sources together into a total level.</span></span></label>
         <select id="mode">
           <option value="avg">Energy average (Leq of several readings)</option>
           <option value="sum">Combine sources (total level)</option>
@@ -100,29 +163,66 @@
       </div>
     </div>
     <div class="results" id="dbResults"></div>
-    <div class="formula">Average: L = 10 &middot; log&#8321;&#8320;( (1/n) &middot; &Sigma; 10^(Li/10) )   ·   Combine: L = 10 &middot; log&#8321;&#8320;( &Sigma; 10^(Li/10) )</div>
-    <p class="note">Use the energy average to summarise repeated LAeq or octave-band readings of the same source. Use combine when adding independent sources together.</p>
+    <details class="maths">
+      <summary>The maths behind combining decibels</summary>
+      <div class="formula">Average: L = 10 &middot; log&#8321;&#8320;( (1/n) &middot; &Sigma; 10^(Li/10) )   ·   Combine: L = 10 &middot; log&#8321;&#8320;( &Sigma; 10^(Li/10) )</div>
+      <p class="deriv">The calculator converts each level back to sound energy (10^(Li/10)), averages or sums the energies, then returns to decibels. Because the scale is logarithmic the answer is always pulled toward the louder reading rather than the arithmetic midpoint &mdash; doubling the energy is only +3 dB &mdash; which is why averaging dB values directly would mislead.</p>
+      <p class="deriv">LAeq differs from the statistical levels a meter may also show: LA90 (exceeded 90% of the time) tracks the steady background floor, while LA10 (exceeded only 10% of the time) captures the louder intermittent peaks; LAeq sits between them.</p>
+    </details>
+    <div class="tabnav">
+      <button type="button" class="btn ghost" data-nav="prev" disabled>&larr; Back</button>
+      <button type="button" class="btn" data-nav="next">Next: Reverberation &rarr;</button>
+    </div>
   </section>
 
-  <section class="card" id="s-sabine">
-    <h2>2. Sabine: absorption and reverberation time</h2>
-    <p class="sub">The Sabine equation links room volume (V), total absorption (A, in m&sup2; sabine), and reverberation time (T, in seconds). Enter volume plus one of T or A; the other is computed.</p>
+  <!-- ===== Tab 2: Reverberation (Sabine) ===== -->
+  <section class="card" role="tabpanel" id="s-sabine" aria-labelledby="tab-2" tabindex="0" hidden>
+    <div class="primer">
+      <p class="what">Reverberation time (RT60) is how long a sound takes to decay by 60 dB after the source stops &mdash; the "tail" you hear in a hard, empty room.</p>
+      <p>It is the single most telling descriptor of a room's acoustic character, and the Sabine equation ties it to the room's size and its total sound absorption: A = 0.16&middot;V/T. Absorption and reverberation are inversely related &mdash; roughly double the absorbing area and the reverberation time halves. Enter the volume plus one of T or A and the tool returns the other.</p>
+    </div>
     <div class="grid">
       <div><label for="vol">Room volume, V (m&sup3;)</label><input id="vol" type="number" step="1" value="200"></div>
       <div><label for="t60">Reverberation time, T (s)</label><input id="t60" type="number" step="0.05" value="0.8"></div>
-      <div><label for="absorp">Absorption, A (m&sup2; sabine)</label><input id="absorp" type="number" step="1" placeholder="computed from V and T"></div>
+      <div><label for="absorp">Absorption, A (m&sup2; sabine)<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About sabine absorption">i</button><span class="popover" role="tooltip" hidden>A "m&sup2; sabine" is the area of a perfect absorber (an open window) that would soak up the same sound energy as everything in the room combined.</span></span></label><input id="absorp" type="number" step="1" placeholder="computed from V and T"></div>
     </div>
     <div class="btns">
       <button id="calcA" class="btn-primary">V and T &rarr; A</button>
       <button id="calcT" class="btn-ghost">V and A &rarr; T</button>
     </div>
     <div class="results" id="sabResults"></div>
-    <div class="formula">A = 0.16 &middot; V / T   ·   T = 0.16 &middot; V / A</div>
+    <details class="maths">
+      <summary>The maths behind Sabine, and benchmarking against AS/NZS&nbsp;2107</summary>
+      <div class="formula">A = 0.16 &middot; V / T   ·   T = 0.16 &middot; V / A</div>
+      <p class="deriv">With V the room volume in m&sup3; and T the average RT60 at 500&nbsp;Hz and 1000&nbsp;Hz. The 0.16 constant (&asymp; 24&middot;ln(10)/c) carries the speed of sound c, which is why it is specific to metric units. Sabine assumes a diffuse, well-mixed sound field, so it is only approximate in very live or very dead rooms, or where the absorption is bunched on one surface rather than spread evenly around.</p>
+      <p class="deriv">Measurements become design evidence once judged against a benchmark. AS/NZS&nbsp;2107:2016 gives recommended design sound levels and reverberation times per interior type &mdash; find the closest category, then check that your energy-averaged LAeq and your mid-frequency RT60 (the 500&nbsp;Hz and 1&nbsp;kHz average) sit within range. These are indicative figures for orientation; the standard gives satisfactory-to-maximum ranges that vary with room size, so consult AS/NZS&nbsp;2107:2016 for design work.</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th class="name">Space type</th><th>LAeq (dBA)</th><th>Mid-freq RT60 (s)</th></tr></thead>
+          <tbody>
+            <tr><td class="name">Lecture theatre</td><td>35&ndash;40</td><td>0.6&ndash;1.0</td></tr>
+            <tr><td class="name">Teaching space / classroom</td><td>35&ndash;45</td><td>0.4&ndash;0.6</td></tr>
+            <tr><td class="name">Private office</td><td>35&ndash;40</td><td>0.4&ndash;0.6</td></tr>
+            <tr><td class="name">Open-plan office</td><td>40&ndash;45</td><td>0.4&ndash;0.6</td></tr>
+            <tr><td class="name">Meeting / conference room</td><td>30&ndash;40</td><td>0.6&ndash;0.8</td></tr>
+            <tr><td class="name">Library (quiet study)</td><td>40&ndash;45</td><td>0.4&ndash;0.6</td></tr>
+            <tr><td class="name">Corridor / lobby / foyer</td><td>45&ndash;50</td><td>n/a</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+    <div class="tabnav">
+      <button type="button" class="btn ghost" data-nav="prev">&larr; Back</button>
+      <button type="button" class="btn" data-nav="next">Next: Room absorption &rarr;</button>
+    </div>
   </section>
 
-  <section class="card" id="s-room">
-    <h2>3. Build a room's absorption from its surfaces</h2>
-    <p class="sub">Add each major surface (ceiling, walls, floor, glazing, furniture, people), pick a material from the data table, and give its area in m&sup2;. The tool sums the octave-band absorption A = &Sigma;(S&middot;&alpha;) and predicts the reverberation time per band from your room volume, so you can see which surfaces drive the acoustics and compare with your measured RT60.</p>
+  <!-- ===== Tab 3: Room absorption ===== -->
+  <section class="card" role="tabpanel" id="s-room" aria-labelledby="tab-3" tabindex="0" hidden>
+    <div class="primer">
+      <p class="what">Build a room's total absorption surface by surface, to see where the acoustics come from.</p>
+      <p>A room reverberates the way it does because of its size, its surfaces, and its occupancy &mdash; people are strong absorbers. Add each major surface (ceiling, walls, floor, glazing, furniture, seating), pick its material, and enter its area in m&sup2;; the tool sums the octave-band absorption A = &Sigma;(S&middot;&alpha;) and predicts the reverberation time per band. Compare that against the RT60 you measured: where they diverge, the difference is usually people, furniture, or geometry the generic table cannot capture.</p>
+    </div>
     <div class="grid" style="max-width:320px">
       <div><label for="roomVol">Room volume, V (m&sup3;)</label><input id="roomVol" type="number" step="1" value="200"></div>
     </div>
@@ -134,34 +234,44 @@
     </div>
     <div class="scrollx"><div id="roomResults"></div></div>
     <div class="grid" style="max-width:420px; margin-top:12px">
-      <div><label for="measA">Your measured A (optional, m&sup2; sabine)</label><input id="measA" type="number" step="1" placeholder="from Sabine on measured RT60"></div>
+      <div><label for="measA">Your measured A (optional, m&sup2; sabine)<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About measured A">i</button><span class="popover" role="tooltip" hidden>The absorption you get from running Sabine (Tab 2) on your measured mid-frequency RT60. Entering it lets the builder show how far its surface-by-surface estimate diverges from the real room.</span></span></label><input id="measA" type="number" step="1" placeholder="from Sabine on measured RT60"></div>
     </div>
     <div class="btns">
-      <button id="sendSabine" class="btn-primary btn-sm">Send mid-freq A &rarr; Sabine (section 2)</button>
+      <button id="sendSabine" class="btn-primary btn-sm">Send mid-freq A &rarr; Reverberation (Tab 2)</button>
     </div>
-    <p class="note">Absorption coefficients are per m&sup2; of surface. Seating/audience values are per m&sup2; of floor area they occupy. Predicted RT uses T = 0.16&middot;V / A in each band; it will differ from measurement because the table is generic and does not model geometry.</p>
+    <details class="maths">
+      <summary>The maths behind surface absorption</summary>
+      <div class="formula">A = &Sigma;(S&middot;&alpha;)   ·   Predicted RT60 = 0.16 &middot; V / A  (per band)</div>
+      <p class="deriv">A = &Sigma;(S&middot;&alpha;) adds up each surface's area S (m&sup2;) times its absorption coefficient &alpha; &mdash; the fraction of incident sound energy the surface soaks up rather than reflects (0 = perfectly reflective, 1 = a fully open window). &alpha; is strongly frequency-dependent: soft, porous materials like carpet and acoustic tile absorb the highs well but little bass, whereas low frequencies are usually tamed by panel or membrane absorbers. That is why the tool works band by band, and why a room can end up bright or boomy rather than uniformly live or dead.</p>
+      <p class="deriv">Absorption coefficients are per m&sup2; of surface; seating/audience values are per m&sup2; of floor area they occupy. Predicted RT uses T = 0.16&middot;V/A in each band and will differ from measurement because the table is generic and does not model geometry.</p>
+    </details>
+    <div class="tabnav">
+      <button type="button" class="btn ghost" data-nav="prev">&larr; Back</button>
+      <button type="button" class="btn" data-nav="next">Next: Speech (STI) &rarr;</button>
+    </div>
   </section>
 
-  <section class="card" id="s-sti">
-    <h2>4. Speech intelligibility (STI)</h2>
-    <p class="sub">Two routes, matching the tutorial. A one-line quick read from the speech-to-noise ratio, and the full octave-band Speech Transmission Index (IEC&nbsp;60268-16) ported from the class STI spreadsheet.</p>
+  <!-- ===== Tab 4: Speech (STI) ===== -->
+  <section class="card" role="tabpanel" id="s-sti" aria-labelledby="tab-4" tabindex="0" hidden>
+    <div class="primer">
+      <p class="what">The Speech Transmission Index scores how well the detail of speech survives its passage across a room, on a scale from 0 (unintelligible) to 1 (excellent).</p>
+      <p>It rolls the two things that wreck intelligibility &mdash; background noise and reverberation &mdash; into a single number. Two routes are offered here, matching the tutorial: a one-line quick read from the speech-to-noise ratio for a first feel in the room, and the full octave-band calculation (IEC&nbsp;60268-16) ported from the class STI workbook. Use the qualitative bands to interpret the score.</p>
+    </div>
 
     <h3>Quick estimate (speech-to-noise)</h3>
-    <p class="sub">A rough STI from the speech-to-noise ratio &mdash; useful for a first read in the room.</p>
     <div class="grid">
       <div><label for="sp">Speech level at listener (dBA)</label><input id="sp" type="number" step="1" value="60"></div>
       <div><label for="ns">Background noise level (dBA)</label><input id="ns" type="number" step="1" value="45"></div>
     </div>
     <div class="results" id="stiResults"></div>
-    <div class="formula">SNR = Lspeech &minus; Lnoise   ·   STI &asymp; (SNR + 15) / 30   (clamped 0–1)</div>
     <div class="flag">Indicative only. This SNR shortcut ignores reverberation and per-band effects. Use the full octave-band method below for anything you report.</div>
 
     <h3>Full octave-band STI (IEC 60268-16)</h3>
-    <p class="sub">Enter room volume, talker-to-listener distance, and the octave-band reverberation time and background noise. This reproduces the class STI spreadsheet (statistical room-acoustics method, with auditory masking).</p>
+    <p class="note">Enter room volume, talker-to-listener distance, and the octave-band reverberation time and background noise. If you could not measure RT at 125&nbsp;Hz or 8&nbsp;kHz, substitute the 250&nbsp;Hz and 4&nbsp;kHz values respectively and note that you did so.</p>
     <div class="grid" style="margin-bottom:6px">
       <div><label for="stiVol">Room volume, V (m&sup3;)</label><input id="stiVol" type="number" step="1" value="1000"></div>
-      <div><label for="stiDist">Talker–listener distance (m)</label><input id="stiDist" type="number" step="0.1" value="1"></div>
-      <div><label for="stiGain">Voice</label>
+      <div><label for="stiDist">Talker&ndash;listener distance (m)</label><input id="stiDist" type="number" step="0.1" value="1"></div>
+      <div><label for="stiGain">Voice<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About voice effort">i</button><span class="popover" role="tooltip" hidden>Vocal effort added to the standard talker spectrum: conversational (0 dB), raised for a larger room (+6 dB), or a projected stage/loud voice (+12 dB).</span></span></label>
         <select id="stiGain">
           <option value="0">Conversational (0 dB)</option>
           <option value="6">Raised (+6 dB)</option>
@@ -174,15 +284,27 @@
     </div>
     <div class="btns"><button id="calcSTI" class="btn-primary">Calculate STI</button></div>
     <div class="results" id="stiFullResults"></div>
-    <p class="note">If you could not measure RT at 125&nbsp;Hz or 8&nbsp;kHz, substitute the 250&nbsp;Hz and 4&nbsp;kHz values respectively and note that you did so. Qualitative bands used here (as in the spreadsheet): &lt;0.20 none · 0.20–0.40 poor · 0.40–0.60 fair · 0.60–0.80 good · &gt;0.80 excellent.</p>
+    <details class="maths">
+      <summary>The maths behind the STI</summary>
+      <div class="formula">Quick: SNR = Lspeech &minus; Lnoise   ·   STI &asymp; (SNR + 15) / 30   (clamped 0&ndash;1)</div>
+      <p class="deriv">The quick estimate maps the A-weighted speech-to-noise ratio straight onto the STI scale &mdash; fast, but it sees neither reverberation nor the per-band structure of noise. The full method reproduces the class STI workbook: a statistical room-acoustics model (IEC&nbsp;60268-16, with auditory masking) that computes the modulation transfer index in each octave band from the room volume, talker distance, reverberation time and background-noise spectrum, then weights the bands into one index.</p>
+      <p class="deriv">Qualitative bands used here (as in the spreadsheet): &lt;0.20 none &middot; 0.20&ndash;0.40 poor &middot; 0.40&ndash;0.60 fair &middot; 0.60&ndash;0.80 good &middot; &gt;0.80 excellent.</p>
+    </details>
+    <div class="tabnav">
+      <button type="button" class="btn ghost" data-nav="prev">&larr; Back</button>
+      <button type="button" class="btn" data-nav="next">Next: Material data &rarr;</button>
+    </div>
   </section>
 
-  <section class="card" id="s-data">
-    <h2>5. Material data tables</h2>
-    <p class="sub">Octave-band absorption coefficients and sound reduction indices for common generic materials and constructions. Indicative historical data for rough calculations only &mdash; not for Building-Control submissions.</p>
-    <div class="tabs">
-      <button class="tab active" data-tab="abs">Absorption coefficients</button>
-      <button class="tab" data-tab="sri">Sound reduction indices</button>
+  <!-- ===== Tab 5: Material data ===== -->
+  <section class="card" role="tabpanel" id="s-data" aria-labelledby="tab-5" tabindex="0" hidden>
+    <div class="primer">
+      <p class="what">The octave-band data behind the calculators: absorption coefficients for finishes and sound reduction indices for constructions.</p>
+      <p>Read a row across the octave bands (63&nbsp;Hz&ndash;8&nbsp;kHz) to see how a material behaves with frequency &mdash; a carpet soaks up highs but little bass, a masonry wall does the reverse. Switch between the two tables with the pills, and search or filter by category to find a material. On any absorption row, click <strong>+</strong> to push that material straight into the room-absorption builder in the Room absorption tab.</p>
+    </div>
+    <div class="subtabs">
+      <button class="subtab active" data-tab="abs">Absorption coefficients</button>
+      <button class="subtab" data-tab="sri">Sound reduction indices</button>
     </div>
     <div class="grid" style="grid-template-columns: 2fr 1fr; margin-bottom:6px">
       <div><label for="matSearch">Search material</label><input id="matSearch" type="text" placeholder="e.g. carpet, glazing, plasterboard"></div>
@@ -190,7 +312,15 @@
     </div>
     <p class="note" id="matCount"></p>
     <div class="tablewrap" style="max-height:460px; overflow-y:auto"><table id="matTable"></table></div>
-    <p class="note" id="matHint">Tip: click <strong>+</strong> on an absorption row to add it to the room-absorption builder in section 3.</p>
+    <p class="note" id="matHint">Tip: click <strong>+</strong> on an absorption row to add it to the room-absorption builder in the Room absorption tab.</p>
+    <details class="maths">
+      <summary>How to read these tables</summary>
+      <p class="deriv">Absorption coefficient &alpha; is the fraction of incident sound energy a surface soaks up (0 = perfectly reflective, 1 = a fully open window); it feeds A = &Sigma;(S&middot;&alpha;) in the Room absorption tab. Sound reduction index R (dB) is how much airborne sound a construction blocks per octave band, with Rw a single-number rating. All values are indicative generic data (BB93 / Adrian James), for rough calculations only &mdash; not for Building-Control submissions.</p>
+    </details>
+    <div class="tabnav">
+      <button type="button" class="btn ghost" data-nav="prev">&larr; Back</button>
+      <button type="button" class="btn" data-nav="next" disabled>Done</button>
+    </div>
   </section>
 
   <footer class="page">
@@ -209,6 +339,63 @@ var MAT = {"ab":[["MASONRY WALLS","Rough concrete","",null,0.02,0.03,0.03,0.03,0
   function row(k, v) { return '<div class="row"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>'; }
   var BANDS8 = [63,125,250,500,1000,2000,4000,8000];
   var BANDS7 = [125,250,500,1000,2000,4000,8000];
+
+  // ---------- Tabs (free navigation) ----------
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  var panels = [$("s-db"), $("s-sabine"), $("s-room"), $("s-sti"), $("s-data")];
+  var current = 0;
+
+  function activate(idx, focusTab) {
+    if (idx < 0 || idx >= panels.length) return;
+    current = idx;
+    tabs.forEach(function (t, i) {
+      var on = i === idx;
+      t.classList.toggle("active", on);
+      t.setAttribute("aria-selected", on ? "true" : "false");
+      t.tabIndex = on ? 0 : -1;
+      panels[i].hidden = !on;
+    });
+    if (focusTab) tabs[idx].focus();
+  }
+
+  tabs.forEach(function (t) {
+    t.addEventListener("click", function () { activate(+t.getAttribute("data-idx")); });
+    t.addEventListener("keydown", function (e) {
+      var i = +t.getAttribute("data-idx");
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); activate(Math.min(i + 1, tabs.length - 1), true); }
+      else if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); activate(Math.max(i - 1, 0), true); }
+      else if (e.key === "Home") { e.preventDefault(); activate(0, true); }
+      else if (e.key === "End") { e.preventDefault(); activate(tabs.length - 1, true); }
+    });
+  });
+
+  // Back / Next buttons inside each panel
+  document.querySelectorAll('[data-nav]').forEach(function (b) {
+    b.addEventListener("click", function () {
+      if (b.disabled) return;
+      activate(current + (b.getAttribute("data-nav") === "next" ? 1 : -1), false);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  });
+
+  // ---------- Accessible info popovers (replace native title=) ----------
+  (function () {
+    var openPop = null;
+    function close() { if (openPop) { openPop.pop.hidden = true; openPop.btn.setAttribute("aria-expanded", "false"); openPop = null; } }
+    document.querySelectorAll(".info-tip").forEach(function (btn) {
+      var pop = btn.parentNode.querySelector(".popover");
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var isOpen = openPop && openPop.btn === btn;
+        close();
+        if (!isOpen) { pop.hidden = false; btn.setAttribute("aria-expanded", "true"); openPop = { btn: btn, pop: pop }; }
+      });
+      btn.parentNode.addEventListener("mouseenter", function () { if (matchMedia("(hover: hover)").matches) { pop.hidden = false; btn.setAttribute("aria-expanded", "true"); } });
+      btn.parentNode.addEventListener("mouseleave", function () { if (matchMedia("(hover: hover)").matches && (!openPop || openPop.btn !== btn)) { pop.hidden = true; btn.setAttribute("aria-expanded", "false"); } });
+    });
+    document.addEventListener("click", close);
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+  })();
 
   // ---------- 1. dB average / combine ----------
   function dbCalc() {
@@ -269,7 +456,7 @@ var MAT = {"ab":[["MASONRY WALLS","Rough concrete","",null,0.02,0.03,0.03,0.03,0
       div.innerHTML =
         '<select data-role="mat">' + MATOPTS + '</select>' +
         '<input data-role="area" type="number" step="0.1" placeholder="area m²" value="' + (s.area || "") + '">' +
-        '<button class="btn-ghost btn-sm" data-role="del" title="remove">✕</button>';
+        '<button class="btn-ghost btn-sm" data-role="del" aria-label="remove surface">✕</button>';
       var sel = div.querySelector('[data-role=mat]');
       sel.value = s.mat == null ? "" : String(s.mat);
       sel.addEventListener("change", function () { s.mat = this.value === "" ? null : parseInt(this.value, 10); roomCalc(); });
@@ -448,14 +635,15 @@ var MAT = {"ab":[["MASONRY WALLS","Rough concrete","",null,0.02,0.03,0.03,0.03,0
         n++;
         body += '<tr><td class="name">' + m[1] + '<div class="cat">' + m[0] + '</div></td><td>' + (m[2] || '') + '</td>';
         for (var b = 0; b < 8; b++) body += '<td>' + (m[3 + b] == null ? '·' : fmt(m[3 + b], 2)) + '</td>';
-        body += '<td><button class="btn-primary btn-sm" data-add="' + i + '" title="add to room builder">+</button></td></tr>';
+        body += '<td><button class="btn-primary btn-sm" data-add="' + i + '" aria-label="add to room builder">+</button></td></tr>';
       });
       t.innerHTML = head + '<tbody>' + body + '</tbody>';
       $("matCount").textContent = n + " materials · absorption coefficient α per octave band";
       Array.prototype.forEach.call(t.querySelectorAll('[data-add]'), function (btn) {
         btn.addEventListener("click", function () {
           addSurface(parseInt(this.getAttribute("data-add"), 10), undefined);
-          document.getElementById("s-room").scrollIntoView({ behavior: "smooth" });
+          activate(2, false);
+          window.scrollTo({ top: 0, behavior: "smooth" });
         });
       });
       $("matHint").style.display = "";
@@ -496,7 +684,8 @@ var MAT = {"ab":[["MASONRY WALLS","Rough concrete","",null,0.02,0.03,0.03,0.03,0
       $("absorp").value = fmt(midA, 1);
       if (isFinite(v)) $("vol").value = fmt(v, 0);
       calcT();
-      document.getElementById("s-sabine").scrollIntoView({ behavior: "smooth" });
+      activate(1, false);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   });
 
@@ -505,9 +694,9 @@ var MAT = {"ab":[["MASONRY WALLS","Rough concrete","",null,0.02,0.03,0.03,0.03,0
 
   $("matSearch").addEventListener("input", renderMat);
   $("matCat").addEventListener("change", renderMat);
-  Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (tab) {
+  Array.prototype.forEach.call(document.querySelectorAll(".subtab"), function (tab) {
     tab.addEventListener("click", function () {
-      document.querySelectorAll(".tab").forEach(function (t) { t.classList.remove("active"); });
+      document.querySelectorAll(".subtab").forEach(function (t) { t.classList.remove("active"); });
       this.classList.add("active");
       matTab = this.getAttribute("data-tab");
       $("matSearch").value = "";

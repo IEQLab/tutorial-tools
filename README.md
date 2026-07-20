@@ -45,6 +45,14 @@ To add a unit, create a `{unit}/` directory, drop its `weekNN-*.html` tools in, 
 - **No dependencies, no build step.** Open any file in a browser.
 - **Light/dark aware and responsive.**
 
+## Layout convention
+
+To keep cognitive load manageable for students meeting these calculations for the first time, every tool follows one shared, tabbed layout. `bpsd5030/week08-iaq.html` is the reference implementation — copy its CSS/JS blocks and markup structure when building or updating a tool.
+
+- **One thing at a time, in tabs.** Each distinct piece of functionality lives on its own tab (`role="tablist"`/`tab`/`tabpanel`, numbered pills, keyboard-navigable with arrow/Home/End keys and a Back/Next row). Tools whose steps build on each other use the tabs as an **ordered stepper** (IAQ, stats, ratings); the HVAC selector keeps its existing wizard logic, restyled to the same numbered-pill look. Tools with independent calculators use **free-navigation tabs** (acoustics, lighting).
+- **A primer per tab.** Each tab opens with a short `.primer` — a one-line statement of purpose plus 2–3 sentences on "the idea behind the number." Written to stand alone (companion to, not dependent on, the tutorial), with no hard links back to Canvas.
+- **Progressive disclosure.** The always-visible surface is kept calm — primer, inputs, live results/verdict, chart. Formulas, derivations, and standards notes move into collapsible `details.maths` ("the maths behind it") panels. Short glosses use an accessible info-popover (a real `<button>` with `aria-expanded`, working on click, keyboard, and touch) rather than native `title=` tooltips.
+
 ## Hosting (GitHub Pages)
 
 This repo is published as a static site from the IEQLab GitHub organisation:

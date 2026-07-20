@@ -38,15 +38,21 @@
   h1 { font-size: 1.5rem; margin: 0 0 4px; }
   .lede { color: var(--muted); margin: 0 0 18px; max-width: 70ch; }
 
-  /* stepper */
-  .stepper { display: flex; flex-wrap: wrap; gap: 6px 10px; margin: 4px 0 18px; }
-  .stepper .st { display: flex; align-items: center; gap: 6px; font-size: .8rem; color: var(--muted); }
-  .stepper .st .n { display: inline-flex; align-items: center; justify-content: center;
-    width: 20px; height: 20px; border-radius: 999px; border: 1px solid var(--line);
-    font-size: .72rem; font-variant-numeric: tabular-nums; }
-  .stepper .st.active { color: var(--ink); font-weight: 600; }
-  .stepper .st.active .n { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-  .stepper .st.done .n { border-color: var(--accent); color: var(--accent); }
+  /* stepper — numbered ordered tabs (visual style copied verbatim from the approved reference) */
+  .stepper { display: flex; gap: 6px; margin: 4px 0 18px; flex-wrap: wrap; }
+  .tab { border: 1px solid var(--line); background: var(--field); color: var(--muted);
+    border-radius: 999px; padding: 7px 15px 7px 8px; font-size: .9rem; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px; font-family: inherit; }
+  .tab:hover { border-color: var(--accent); color: var(--ink); }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .tab .n { display: inline-flex; align-items: center; justify-content: center;
+    width: 21px; height: 21px; border-radius: 50%; background: var(--line); color: var(--muted);
+    font-size: .78rem; font-weight: 700; flex: none; }
+  .tab.active .n { background: var(--accent-ink); color: var(--accent); }
+  /* completed steps: muted text but a progress-marked badge */
+  .tab.done { color: var(--ink); }
+  .tab.done .n { background: var(--result-bg); color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
 
   section.card {
     background: var(--card); border: 1px solid var(--line); border-radius: 12px;
@@ -144,6 +150,38 @@
   .note { color: var(--muted); font-size: .84rem; }
   footer.page { color: var(--muted); font-size: .82rem; margin-top: 28px; border-top: 1px solid var(--line); padding-top: 14px; }
   footer.page a { color: var(--accent); }
+
+  /* ---- per-step primer ("the idea behind the choice") ---- */
+  .primer { background: var(--result-bg); border-left: 3px solid var(--accent);
+    border-radius: 8px; padding: 12px 15px; margin: 0 0 18px; }
+  .primer .what { font-weight: 600; margin: 0 0 5px; }
+  .primer p { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.5; }
+
+  /* ---- "the maths behind it" panel ---- */
+  details.maths { margin-top: 16px; border-left: 3px solid var(--accent);
+    background: var(--result-bg); border-radius: 8px; padding: 4px 15px; }
+  details.maths[open] { padding-bottom: 12px; }
+  details.maths > summary { cursor: pointer; color: var(--accent); font-size: .9rem;
+    font-weight: 600; padding: 9px 0; list-style: none; }
+  details.maths > summary::-webkit-details-marker { display: none; }
+  details.maths > summary::before { content: "▸ "; }
+  details.maths[open] > summary::before { content: "▾ "; }
+  details.maths .deriv { color: var(--muted); font-size: .88rem; margin: 8px 0 0; }
+
+  /* ---- accessible info popover (replaces native title=) ---- */
+  .info-wrap { position: relative; display: inline-block; vertical-align: middle; }
+  .info-tip { display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px; margin-left: 4px; border-radius: 50%; border: none; padding: 0;
+    background: var(--line); color: var(--muted); font-size: .68rem; font-weight: 700;
+    font-family: inherit; font-style: normal; line-height: 1; cursor: pointer; user-select: none; }
+  .info-tip:hover, .info-tip[aria-expanded="true"] { background: var(--accent); color: var(--accent-ink); }
+  .info-tip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .popover { position: absolute; z-index: 30; left: 0; bottom: calc(100% + 8px);
+    width: max-content; max-width: 250px; background: var(--card); color: var(--ink);
+    border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px;
+    font-size: .82rem; font-weight: 400; line-height: 1.45; text-align: left;
+    box-shadow: 0 6px 22px rgba(0,0,0,.18); }
+  .popover[hidden] { display: none; }
 </style>
 </head>
 <body>
@@ -161,6 +199,11 @@
     <section class="card step active" data-step="0">
       <h2>1. Your building</h2>
       <p class="sub">Describe the building you are carrying through Assignments 1 and 2. This sets the context the later choices are judged against. Nothing here is a load calculation: your loads come from DesignBuilder.</p>
+
+      <div class="primer">
+        <p class="what">Set the context every later choice is judged against.</p>
+        <p>Program, climate zone and scale do not size anything, but they steer which HVAC families make sense: a hot-humid tower and a cool-temperate office pull toward very different systems. Fill these in so the fit prompts in the later steps reflect your actual building. The peak loads themselves stay with your DesignBuilder model.</p>
+      </div>
 
       <div class="fieldrow">
         <div>
@@ -185,7 +228,7 @@
 
       <div class="fieldrow">
         <div>
-          <label for="zone">NCC climate zone (from your building's location)</label>
+          <label for="zone">NCC climate zone (from your building's location)<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About NCC climate zones">i</button><span class="popover" role="tooltip" hidden>Australia's National Construction Code splits the country into eight climate zones, from hot-humid tropical (1) to alpine (8). It sets the climate context the system is judged against — it does not size anything; your loads come from DesignBuilder.</span></span></label>
           <select id="zone"></select>
           <p class="hint" id="zoneHint"></p>
         </div>
@@ -216,13 +259,18 @@
       <h2>2. Fresh air</h2>
       <p class="sub">How the building brings in outdoor air is the first structural decision. It separates buildings that mix fresh air and conditioning in one air stream from those that supply fresh air on its own and condition the space some other way.</p>
 
+      <div class="primer">
+        <p class="what">How outdoor air reaches the space — the first structural fork.</p>
+        <p>Ventilation can ride along in the same air stream that heats and cools (an all-air system), or arrive on its own through a dedicated outdoor-air unit while a separate system conditions the space. This one choice splits the whole taxonomy: "mixed with conditioning" leads to VAV or CAV, while DOAS leads to a water or refrigerant terminal system in the next steps.</p>
+      </div>
+
       <h3>Can the building rely on opening windows?</h3>
       <div class="choices" id="operableChoices">
         <div class="choice"><input type="radio" name="operable" id="op_sealed" value="sealed" checked><label for="op_sealed">Sealed / fully mechanical<small>Deep plan, noise, or air quality rule out openable windows</small></label></div>
         <div class="choice"><input type="radio" name="operable" id="op_mixed" value="mixed"><label for="op_mixed">Mixed-mode<small>Openable windows for part of the year, mechanical the rest</small></label></div>
       </div>
 
-      <h3>How is outdoor air delivered?</h3>
+      <h3>How is outdoor air delivered?<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About all-air versus DOAS">i</button><span class="popover" role="tooltip" hidden>All-air systems carry ventilation and heating/cooling together in one duct network. A dedicated outdoor-air system (DOAS) supplies only fresh air, leaving a separate water or refrigerant system to condition the space.</span></span></h3>
       <div class="choices" id="oaChoices">
         <div class="choice"><input type="radio" name="oa" id="oa_mixed" value="mixed-air" checked><label for="oa_mixed">Mixed with conditioning<small>One central air system supplies fresh + heated/cooled air (all-air)</small></label></div>
         <div class="choice"><input type="radio" name="oa" id="oa_doas" value="doas"><label for="oa_doas">Dedicated outdoor air (DOAS)<small>A separate unit handles fresh air; a second system does the heating/cooling</small></label></div>
@@ -237,8 +285,13 @@
 
     <!-- STEP 3: conditioning -->
     <section class="card step" data-step="2">
-      <h2>3. Heating and cooling</h2>
+      <h2>3. Heating and cooling<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About sensible and latent load">i</button><span class="popover" role="tooltip" hidden>Sensible load is the heat you feel as temperature; latent load is the moisture the system must remove. In humid zones the latent load can rival the sensible one, which is why dehumidification drives some system choices.</span></span></h2>
       <p class="sub">What does the building actually need active plant for? In most Australian commercial climates the answer is both, but a mild-marine or a warm-humid site can shift the balance. Your DesignBuilder peak loads are the evidence for this.</p>
+
+      <div class="primer">
+        <p class="what">What the building actually needs active plant to do.</p>
+        <p>Most Australian commercial climates need both heating and cooling, but a warm-humid or mild-marine site can tip the balance toward one side. This decides how hard each half of the plant works and where the carbon sits. Your DesignBuilder peak loads are the evidence — this step is the framing, not the number.</p>
+      </div>
 
       <div class="choices" id="condChoices">
         <div class="choice"><input type="radio" name="cond" id="c_both" value="both" checked><label for="c_both">Heating and cooling<small>Active plant needed for both across the year</small></label></div>
@@ -257,6 +310,12 @@
     <section class="card step" data-step="3">
       <h2>4. System architecture</h2>
       <p class="sub">Pick the system family for your building. Every option below is used in the Australian commercial sector. The fit badge reflects your climate, program, and fresh-air choice, but it is a prompt, not a verdict: a well-argued case can override it. Read the trade-offs, then choose the one you will justify.</p>
+
+      <div class="primer">
+        <p class="what">Pick the system family you will justify.</p>
+        <p>The options differ mainly in what medium carries the conditioning — all-air, air-plus-water, or refrigerant — and so in what occupies the building. The fit badge weighs your climate, program and fresh-air choice to surface likely candidates, but it ranks rather than decides. Read the pros and cons and choose the case you can defend.</p>
+      </div>
+
       <div class="sysgrid" id="sysGrid"></div>
 
       <div class="nav">
@@ -270,6 +329,11 @@
       <h2>5. Plant and heat source</h2>
       <p class="sub">The plant behind your terminals is where most of the carbon decision sits. What makes the cooling, what makes the heat, and which refrigerant runs through it all shape the operational emissions you will discuss in Assignment 2.</p>
 
+      <div class="primer">
+        <p class="what">Choose the plant that makes the heating, cooling and carbon.</p>
+        <p>Behind the terminals sits the plant, and this is where most of the operational-carbon decision lives: what makes the cooling (a chiller or direct expansion), what makes the heat (heat pump, gas or resistance), and which refrigerant runs through it. Electrifying the heat source and avoiding a high-GWP refrigerant are the two biggest levers you have.</p>
+      </div>
+
       <div id="plantFields"></div>
 
       <div class="nav">
@@ -282,6 +346,11 @@
     <section class="card step" data-step="5">
       <h2>6. Your system</h2>
       <p class="sub" id="resultLede"></p>
+
+      <div class="primer">
+        <p class="what">Read your system as a diagram, then build the low-carbon argument.</p>
+        <p>The schematic draws your choices as a labelled concept diagram, and the notes below explain each part from fresh air through to the plant. The carbon section then ranks the levers that would lower its emissions. It is a reasoning scaffold: it does not size plant or declare a winner — that judgement, and the loads, stay yours.</p>
+      </div>
 
       <div class="schematic" id="schematic"></div>
       <div class="legend" id="legend"></div>
@@ -313,7 +382,7 @@
         <span></span>
       </div>
 
-      <details>
+      <details class="maths">
         <summary>What this tool does and does not do</summary>
         <div class="inner">
           <p>It maps your choices onto a named system, draws it, and explains the parts and the carbon story. It is a reasoning scaffold for the concept design in Assignment 2.</p>
@@ -474,12 +543,14 @@
   var step = 0;
   var STEPS = ["Building", "Fresh air", "Heating & cooling", "System", "Plant", "Result"];
 
-  // ---------- stepper ----------
+  // ---------- stepper (numbered ordered tabs) ----------
   function renderStepper() {
     $("stepper").innerHTML = STEPS.map(function (s, i) {
-      var cls = "st" + (i === step ? " active" : "") + (i < step ? " done" : "");
+      var cls = "tab" + (i === step ? " active" : "") + (i < step ? " done" : "");
       var mark = i < step ? "✓" : (i + 1);
-      return '<span class="' + cls + '"><span class="n">' + mark + '</span>' + s + '</span>';
+      return '<button type="button" class="' + cls + '" data-stepgo="' + i + '"' +
+        (i === step ? ' aria-current="step"' : '') +
+        '><span class="n">' + mark + '</span><span>' + s + '</span></button>';
     }).join("");
   }
   function show(i) {
@@ -1029,6 +1100,49 @@
   $("buildCarry").addEventListener("click", buildCarry);
   $("printBtn").addEventListener("click", function () { window.print(); });
   $("restart").addEventListener("click", function () { show(0); });
+
+  // stepper pills jump between steps using the existing show() controller
+  $("stepper").addEventListener("click", function (e) {
+    var b = e.target.closest ? e.target.closest("[data-stepgo]") : null;
+    if (b) show(+b.getAttribute("data-stepgo"));
+  });
+
+  // ---------- accessible info popovers (replace native title=) ----------
+  // document-level delegation so popovers in dynamically rendered steps also work
+  (function () {
+    var openPop = null;
+    function hasHover() { return matchMedia("(hover: hover)").matches; }
+    function close() {
+      if (openPop) { openPop.pop.hidden = true; openPop.btn.setAttribute("aria-expanded", "false"); openPop = null; }
+    }
+    document.addEventListener("click", function (e) {
+      var btn = e.target.closest ? e.target.closest(".info-tip") : null;
+      if (btn) {
+        e.stopPropagation();
+        var pop = btn.parentNode.querySelector(".popover");
+        var isOpen = openPop && openPop.btn === btn;
+        close();
+        if (!isOpen && pop) { pop.hidden = false; btn.setAttribute("aria-expanded", "true"); openPop = { btn: btn, pop: pop }; }
+      } else {
+        close();
+      }
+    });
+    // hover convenience on pointer devices (mouseover/out bubble, unlike mouseenter)
+    document.addEventListener("mouseover", function (e) {
+      if (!hasHover() || !e.target.closest) return;
+      var wrap = e.target.closest(".info-wrap"); if (!wrap) return;
+      var btn = wrap.querySelector(".info-tip"), pop = wrap.querySelector(".popover");
+      if (pop) { pop.hidden = false; btn.setAttribute("aria-expanded", "true"); }
+    });
+    document.addEventListener("mouseout", function (e) {
+      if (!hasHover() || !e.target.closest) return;
+      var wrap = e.target.closest(".info-wrap"); if (!wrap) return;
+      if (wrap.contains(e.relatedTarget)) return; // still inside the wrap
+      var btn = wrap.querySelector(".info-tip"), pop = wrap.querySelector(".popover");
+      if ((!openPop || openPop.btn !== btn) && pop) { pop.hidden = true; btn.setAttribute("aria-expanded", "false"); }
+    });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+  })();
 
   // ---------- init ----------
   buildZoneSelect();

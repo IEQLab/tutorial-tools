@@ -26,13 +26,42 @@
     font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
   .wrap { max-width: 860px; margin: 0 auto; padding: 24px 18px 64px; }
   h1 { font-size: 1.5rem; margin: 0 0 4px; }
-  .lede { color: var(--muted); margin: 0 0 20px; max-width: 64ch; }
+  .lede { color: var(--muted); margin: 0 0 18px; max-width: 62ch; }
   .home { display: inline-block; color: var(--accent); text-decoration: none; font-size: .9rem; margin-bottom: 14px; }
   .home:hover { text-decoration: underline; }
-  section.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin: 16px 0; }
+
+  /* ---- ordered tabs ---- */
+  .tabs { display: flex; gap: 6px; margin: 4px 0 18px; flex-wrap: wrap; }
+  .tab { border: 1px solid var(--line); background: var(--field); color: var(--muted);
+    border-radius: 999px; padding: 7px 15px 7px 8px; font-size: .9rem; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px; font-family: inherit; }
+  .tab:hover { border-color: var(--accent); color: var(--ink); }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .tab .n { display: inline-flex; align-items: center; justify-content: center;
+    width: 21px; height: 21px; border-radius: 50%; background: var(--line); color: var(--muted);
+    font-size: .78rem; font-weight: 700; flex: none; }
+  .tab.active .n { background: var(--accent-ink); color: var(--accent); }
+
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 18px 18px 20px; margin: 0;
+  }
+  .card[hidden] { display: none; }
   h2 { font-size: 1.15rem; margin: 0 0 4px; }
   h3 { font-size: 1rem; margin: 16px 0 4px; }
   .sub { color: var(--muted); font-size: .92rem; margin: 0 0 14px; }
+
+  /* ---- per-tab primer ("the idea behind the number") ---- */
+  .primer { background: var(--result-bg); border-left: 3px solid var(--accent);
+    border-radius: 8px; padding: 12px 15px; margin: 0 0 18px; }
+  .primer .what { font-weight: 600; margin: 0 0 5px; }
+  .primer p { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.5; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; align-items: end; }
+  .grid > div { display: flex; flex-direction: column; }
+  .grid > div > input, .grid > div > select { margin-top: auto; }
+
   label { display: block; font-size: .85rem; color: var(--muted); margin: 8px 0 4px; }
   input[type=text] { width: 100%; padding: 8px 10px; font-size: 1rem; color: var(--ink); background: var(--field); border: 1px solid var(--line); border-radius: 8px; }
   textarea { width: 100%; min-height: 150px; padding: 10px; font: .95rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -58,11 +87,18 @@
   .modelprose { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; margin: 8px 0; color: var(--ink); }
   .modelprose.bad { border-left-color: var(--bad); }
   .modelprose ul { margin: 4px 0; padding-left: 18px; }
-  footer.page { color: var(--muted); font-size: .82rem; margin-top: 28px; border-top: 1px solid var(--line); padding-top: 14px; }
-  /* "The maths behind it" panels, matching the tutorial house style but theme-aware */
-  details.maths { margin: 12px 0; border-left: 3px solid var(--accent); background: var(--result-bg); padding: 10px 16px; border-radius: 6px; }
-  details.maths > summary { cursor: pointer; color: var(--accent); font-weight: 600; font-size: .92rem; }
-  details.maths > summary::marker { color: var(--accent); }
+  footer.page { color: var(--muted); font-size: .82rem; margin-top: 24px; border-top: 1px solid var(--line); padding-top: 14px; }
+
+  /* ---- "the maths behind it" panel ---- */
+  details.maths { margin-top: 16px; border-left: 3px solid var(--accent);
+    background: var(--result-bg); border-radius: 8px; padding: 4px 15px; }
+  details.maths[open] { padding-bottom: 12px; }
+  details.maths > summary { cursor: pointer; color: var(--accent); font-size: .9rem;
+    font-weight: 600; padding: 9px 0; list-style: none; }
+  details.maths > summary::-webkit-details-marker { display: none; }
+  details.maths > summary::before { content: "▸ "; }
+  details.maths[open] > summary::before { content: "▾ "; }
+  details.maths .deriv { color: var(--muted); font-size: .88rem; margin: 8px 0 0; }
   details.maths .body { margin-top: 8px; font-size: .92rem; }
   details.maths .body p { margin: 6px 0; }
   details.maths code, .modelprose code, .sub code { font: .85em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -70,19 +106,59 @@
   .work { font: .9rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin: 6px 0; overflow-x: auto; }
   .work .step { display: block; padding: 2px 0; }
   ul.checklist { list-style: none; padding-left: 0; margin: 8px 0; }
-  ul.checklist li { padding: 5px 0 5px 26px; position: relative; border-bottom: 1px solid var(--line); }
+  ul.checklist li { border-bottom: 1px solid var(--line); }
   ul.checklist li:last-child { border-bottom: 0; }
-  ul.checklist li::before { content: "\2610"; position: absolute; left: 0; top: 5px; color: var(--accent); font-size: 1.1rem; }
+  ul.checklist label { display: flex; gap: 11px; align-items: flex-start; padding: 9px 2px; cursor: pointer; }
+  ul.checklist input[type=checkbox] { width: 18px; height: 18px; margin: 2px 0 0; flex: none; accent-color: var(--accent); cursor: pointer; }
+  ul.checklist input:checked + span { color: var(--muted); text-decoration: line-through; }
+  .checkprogress { margin-top: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* ---- Back / Next ---- */
+  .tabnav { display: flex; justify-content: space-between; margin-top: 20px; gap: 8px; }
+  .btn { background: var(--accent); color: var(--accent-ink); border: none; border-radius: 8px;
+    padding: 7px 12px; font-size: .88rem; cursor: pointer; font-family: inherit; }
+  .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+  .tabnav .btn[disabled] { opacity: .35; cursor: default; }
+
+  /* ---- accessible info popover (replaces native title=) ---- */
+  .info-wrap { position: relative; display: inline-block; vertical-align: middle; }
+  .info-tip { display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px; margin-left: 4px; border-radius: 50%; border: none; padding: 0;
+    background: var(--line); color: var(--muted); font-size: .68rem; font-weight: 700;
+    font-family: inherit; font-style: normal; line-height: 1; cursor: pointer; user-select: none; }
+  .info-tip:hover, .info-tip[aria-expanded="true"] { background: var(--accent); color: var(--accent-ink); }
+  .info-tip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .popover { position: absolute; z-index: 30; left: 0; bottom: calc(100% + 8px);
+    width: max-content; max-width: 250px; background: var(--card); color: var(--ink);
+    border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px;
+    font-size: .82rem; font-weight: 400; line-height: 1.45; text-align: left;
+    box-shadow: 0 6px 22px rgba(0,0,0,.18); }
+  .popover[hidden] { display: none; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <a class="home" href="index.html">&larr; BPSD5030 tutorial tools</a>
   <h1>Paired-Data Analysis Helper</h1>
-  <p class="lede">Your Assignment 2 analysis companion. Paste your two conditions (one participant per row) and this describes the data, runs one appropriate test, shows the working, and models how to report it in IMRaD prose. It follows the four steps of the Week 10 analysis workshop end to end. It does the arithmetic; the words, the figure choices, and the judgement of whether the test suits your design stay yours.</p>
+  <p class="lede">Your Assignment 2 analysis companion: paste two paired conditions and it describes the data, runs one appropriate test, shows the working, and models the write-up — one step at a time.</p>
 
-  <section class="card">
-    <h2>Step 1. Name your design first</h2>
+  <!-- ===== Tabs ===== -->
+  <div class="tabs" role="tablist" aria-label="Paired-data analysis steps">
+    <button class="tab active" role="tab" id="tab-1" aria-controls="panel-1" aria-selected="true" tabindex="0" data-idx="0"><span class="n">1</span><span>Design</span></button>
+    <button class="tab" role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false" tabindex="-1" data-idx="1"><span class="n">2</span><span>Data</span></button>
+    <button class="tab" role="tab" id="tab-3" aria-controls="panel-3" aria-selected="false" tabindex="-1" data-idx="2"><span class="n">3</span><span>Descriptives</span></button>
+    <button class="tab" role="tab" id="tab-4" aria-controls="panel-4" aria-selected="false" tabindex="-1" data-idx="3"><span class="n">4</span><span>Test</span></button>
+    <button class="tab" role="tab" id="tab-5" aria-controls="panel-5" aria-selected="false" tabindex="-1" data-idx="4"><span class="n">5</span><span>Write-up</span></button>
+    <button class="tab" role="tab" id="tab-6" aria-controls="panel-6" aria-selected="false" tabindex="-1" data-idx="5"><span class="n">6</span><span>Checklist</span></button>
+  </div>
+
+  <!-- ===== Tab 1: Design ===== -->
+  <section class="card" role="tabpanel" id="panel-1" aria-labelledby="tab-1" tabindex="0">
+    <div class="primer">
+      <p class="what">Name the comparison before you touch the numbers.</p>
+      <p>The independent variable is what you deliberately changed (say noise: quiet vs noisy); the dependent variable is what you measured (say problems answered correctly). Just as decisive is whether the same people appear in both conditions — a paired, within-subjects design — or whether two different groups are compared, because that single choice fixes which test is correct.</p>
+    </div>
+    <h2>Name your design first</h2>
     <p class="sub">Before you paste anything, write down what you are comparing. This decides which test is correct, so it comes before the numbers.</p>
     <ul style="margin:0; padding-left:18px;">
       <li><strong>Research question</strong> — the one difference you are testing (e.g. "Does background noise lower math-task scores at a fixed temperature?").</li>
@@ -99,16 +175,25 @@
         <p><em>Paired: every row is one person, and the two columns are the same people under two conditions, so you analyse each person's <code>A − B</code> difference. Independent: the two groups are different people, so there are no per-row differences to take and you compare the two group means directly. Counterbalancing condition order (some people quiet-first, some noisy-first) keeps a paired design valid; it does not make two separate groups paired.</em></p>
       </div>
     </details>
+    <div class="tabnav">
+      <button type="button" class="btn ghost" data-nav="prev" disabled>&larr; Back</button>
+      <button type="button" class="btn" data-nav="next">Next: Data &rarr;</button>
+    </div>
   </section>
 
-  <section class="card">
-    <h2>Step 2. Your data</h2>
-    <p class="sub">Two columns, one row per participant (paired / within-subjects). Separate values with a space, tab, or comma. A text header row is ignored.</p>
+  <!-- ===== Tab 2: Data ===== -->
+  <section class="card" role="tabpanel" id="panel-2" aria-labelledby="tab-2" tabindex="0" hidden>
+    <div class="primer">
+      <p class="what">One row per participant, one column per condition.</p>
+      <p>Paired data is tidy when each row is a single person measured in both conditions, so their two scores sit side by side and each person's A − B difference can be taken. Keep the columns in a consistent order and separate the two values with a space, tab, or comma; a text header row is detected and ignored.</p>
+    </div>
+    <h2>Your data</h2>
+    <p class="sub">Two columns, one row per participant (paired / within-subjects).</p>
     <div class="two">
       <div><label for="labA">Condition A label</label><input id="labA" type="text" value="Quiet"></div>
       <div><label for="labB">Condition B label</label><input id="labB" type="text" value="Noisy"></div>
     </div>
-    <label for="data">Data (A &nbsp; B)</label>
+    <label for="data">Data (A &nbsp; B)<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About the data format">i</button><span class="popover" role="tooltip" hidden>One row per participant, two values per row. Separate them with a space, tab, or comma. A text header row such as "Quiet Noisy" is detected and ignored.</span></span></label>
     <textarea id="data" spellcheck="false"></textarea>
     <div class="btns">
       <button class="primary" id="run">Analyse</button>
@@ -116,79 +201,128 @@
       <button id="clear">Clear</button>
     </div>
     <div id="parseMsg" class="note"></div>
+    <div class="tabnav">
+      <button type="button" class="btn ghost" data-nav="prev">&larr; Back</button>
+      <button type="button" class="btn" data-nav="next">Next: Descriptives &rarr;</button>
+    </div>
   </section>
 
-  <div id="output" class="results" hidden>
-    <section class="card">
-      <h2>Step 3. Describe before you test</h2>
+  <!-- ===== Tab 3: Descriptives ===== -->
+  <section class="card" role="tabpanel" id="panel-3" aria-labelledby="tab-3" tabindex="0" hidden>
+    <div class="primer">
+      <p class="what">Describe the data before you test it.</p>
+      <p>The mean is the typical score in a condition; the standard deviation is how much scores scatter around that mean. Report both — a gap between two means means little until you know whether scores already vary by one point or by ten. Look hard at the figure before running any test.</p>
+    </div>
+    <h2>Describe before you test</h2>
+    <p class="note" data-ph>Paste your two conditions on the Data step and choose Analyse — the descriptive statistics and figure appear here.</p>
+    <div class="results" data-res hidden>
       <table id="descTable"></table>
       <canvas id="chart" width="460" height="320" role="img" aria-label="Mean of each condition with standard-deviation error bars"></canvas>
       <p class="note" id="figcap"></p>
-      <details class="maths">
-        <summary>The maths behind the mean and SD</summary>
-        <div class="body">
-          <p><em>The mean is the typical score: add the values and divide by <code>n</code>. The standard deviation is how far scores sit from that mean on average: <code>SD = sqrt( sum of (value − mean)² / (n − 1) )</code>. The <code>n − 1</code> (not <code>n</code>) is the sample correction. Report the mean <em>and</em> the SD for each condition, never the mean alone: a 3-point gap means little until you know whether scores already vary by 1 point or by 10.</em></p>
-        </div>
-      </details>
-    </section>
+    </div>
+    <details class="maths">
+      <summary>The maths behind the mean and SD</summary>
+      <div class="body">
+        <p><em>The mean is the typical score: add the values and divide by <code>n</code>. The standard deviation is how far scores sit from that mean on average: <code>SD = sqrt( sum of (value − mean)² / (n − 1) )</code>. The <code>n − 1</code> (not <code>n</code>) is the sample correction. Report the mean <em>and</em> the SD for each condition, never the mean alone: a 3-point gap means little until you know whether scores already vary by 1 point or by 10.</em></p>
+      </div>
+    </details>
+    <div class="tabnav">
+      <button type="button" class="btn ghost" data-nav="prev">&larr; Back</button>
+      <button type="button" class="btn" data-nav="next">Next: Test &rarr;</button>
+    </div>
+  </section>
 
-    <section class="card">
-      <h2>Step 4. Test one difference</h2>
-      <p class="sub">A <strong>paired-samples t-test</strong> is the default for paired numeric data. If your data are ordinal or clearly skewed (e.g. Likert comfort ratings), use the <strong>Wilcoxon signed-rank</strong> result instead.</p>
+  <!-- ===== Tab 4: Test ===== -->
+  <section class="card" role="tabpanel" id="panel-4" aria-labelledby="tab-4" tabindex="0" hidden>
+    <div class="primer">
+      <p class="what">One defensible test on one clear comparison.</p>
+      <p>A paired t-test asks whether the average difference is larger than the scatter in those differences would lead you to expect by chance; the Wilcoxon signed-rank is its rank-based counterpart for ordinal or skewed data such as Likert ratings. A p-value only says how surprising the gap would be if the conditions truly had no effect — it does not say how big the effect is. Cohen's d<sub>z</sub> reports that size, so always give both.</p>
+    </div>
+    <h2>Test one difference</h2>
+    <p class="sub">A <strong>paired-samples t-test</strong> is the default for paired numeric data. If your data are ordinal or clearly skewed (e.g. Likert comfort ratings), use the <strong>Wilcoxon signed-rank</strong><span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About the Wilcoxon signed-rank test">i</button><span class="popover" role="tooltip" hidden>Use the Wilcoxon result when the outcome is ordinal (like a 1–5 Likert rating) or clearly skewed, where the t-test's assumptions do not hold. It compares the ranks of the differences rather than their sizes.</span></span> result instead.</p>
+    <p class="note" data-ph>Paste your two conditions on the Data step and choose Analyse — the test statistics and working appear here.</p>
+    <div data-res hidden>
       <div id="testResults"></div>
       <details class="maths">
         <summary>The maths behind the paired t-test (on your numbers)</summary>
         <div class="body" id="tWork"></div>
       </details>
-      <details class="maths">
-        <summary>Prefer a spreadsheet, R, Python, or AI?</summary>
-        <div class="body">
-          <p><em>Any of these gives the same paired result, so use whichever you know:</em></p>
-          <p><em><strong>Excel:</strong> <code>=T.TEST(A_range, B_range, 2, 1)</code> returns the two-tailed paired p-value (the <code>2</code> = two tails, the <code>1</code> = paired). The Data Analysis add-in's "t-Test: Paired Two Sample for Means" gives the full table.</em></p>
-          <p><em><strong>R:</strong> <code>t.test(A, B, paired = TRUE)</code> &nbsp;·&nbsp; ordinal/skewed: <code>wilcox.test(A, B, paired = TRUE)</code></em></p>
-          <p><em><strong>Python:</strong> <code>scipy.stats.ttest_rel(A, B)</code> &nbsp;·&nbsp; ordinal/skewed: <code>scipy.stats.wilcoxon(A, B)</code></em></p>
-          <p><em><strong>AI-assisted:</strong> you can ask an AI tool to run it, but then check the output yourself: is it a paired test, are the columns in the right order, is the p-value in a plausible range? Under the unit's Lane 2 AI stance any tool can run the test, but you own the result, not the tool.</em></p>
-        </div>
-      </details>
-    </section>
+    </div>
+    <details class="maths">
+      <summary>Prefer a spreadsheet, R, Python, or AI?</summary>
+      <div class="body">
+        <p><em>Any of these gives the same paired result, so use whichever you know:</em></p>
+        <p><em><strong>Excel:</strong> <code>=T.TEST(A_range, B_range, 2, 1)</code> returns the two-tailed paired p-value (the <code>2</code> = two tails, the <code>1</code> = paired). The Data Analysis add-in's "t-Test: Paired Two Sample for Means" gives the full table.</em></p>
+        <p><em><strong>R:</strong> <code>t.test(A, B, paired = TRUE)</code> &nbsp;·&nbsp; ordinal/skewed: <code>wilcox.test(A, B, paired = TRUE)</code></em></p>
+        <p><em><strong>Python:</strong> <code>scipy.stats.ttest_rel(A, B)</code> &nbsp;·&nbsp; ordinal/skewed: <code>scipy.stats.wilcoxon(A, B)</code></em></p>
+        <p><em><strong>AI-assisted:</strong> you can ask an AI tool to run it, but then check the output yourself: is it a paired test, are the columns in the right order, is the p-value in a plausible range? Under the unit's Lane 2 AI stance any tool can run the test, but you own the result, not the tool.</em></p>
+      </div>
+    </details>
+    <div class="tabnav">
+      <button type="button" class="btn ghost" data-nav="prev">&larr; Back</button>
+      <button type="button" class="btn" data-nav="next">Next: Write-up &rarr;</button>
+    </div>
+  </section>
 
-    <section class="card">
-      <h2>Step 5. Report it (IMRaD style)</h2>
-      <p class="sub">A model Results sentence built from your numbers. Edit it into your own words; do not paste verbatim.</p>
+  <!-- ===== Tab 5: Write-up ===== -->
+  <section class="card" role="tabpanel" id="panel-5" aria-labelledby="tab-5" tabindex="0" hidden>
+    <div class="primer">
+      <p class="what">Turn the numbers into paper-ready prose.</p>
+      <p>IMRaD Results state what you found in a sentence or two — the direction of the difference, its size, and the test statistic — and point to your figure. Methods describe your protocol so another researcher could reproduce it: prose that names the conditions, sample, instruments and the test, not a bullet list of ingredients.</p>
+    </div>
+    <h2>Report it (IMRaD style)</h2>
+    <p class="sub">A model Results sentence built from your numbers. Edit it into your own words; do not paste verbatim.</p>
+    <p class="note" data-ph>Run the analysis on the Data step to generate a model Results sentence from your numbers.</p>
+    <div data-res hidden>
       <div class="modelprose" id="modelProse"></div>
+    </div>
 
-      <h3>Write the Methods too, as replicable prose</h3>
-      <p class="sub">The tool cannot write your Methods, because they describe <em>your</em> experiment. Here is the shape a High Distinction Methods paragraph takes, on the worked-example scenario. Notice it lets another researcher reproduce the study.</p>
-      <div class="modelprose">
-        Eight participants each completed a 4-minute arithmetic task twice at a fixed air temperature of 22&deg;C, once under a quiet background (~30 dBA) and once under a noisy background (~54 dBA), with condition order counterbalanced. The score was the number of problems answered correctly. Because each participant completed both conditions, differences between conditions were assessed with a paired-samples t-test (&alpha; = 0.05). Analysis was carried out in [tool], and outputs were checked by hand against the condition means.
-      </div>
-      <p class="sub">The same facts as an AI-style bullet list are <strong>not</strong> what to submit:</p>
-      <div class="modelprose bad">
-        <ul>
-          <li>8 participants</li>
-          <li>Math task, 4 min</li>
-          <li>Two conditions: quiet, noisy</li>
-          <li>Temperature: 22&deg;C</li>
-          <li>Paired t-test used</li>
-          <li>Significance level 0.05</li>
-        </ul>
-      </div>
-      <p class="note">Both hold the same facts. The bullets list ingredients; the prose lets someone reproduce your study, which is the whole point of a Methods section. It states the order was counterbalanced, defines the score, justifies <em>why</em> a paired test (each participant did both conditions), and names the tool. A2's Methods criterion rewards the prose version.</p>
-    </section>
-
-    <section class="card">
-      <h2>Before you submit A2</h2>
-      <ul class="checklist">
-        <li>Research question and IV/DV stated clearly, and the right variable labelled as which.</li>
-        <li>Means <strong>and</strong> SDs (or equivalent spread) reported for each condition, not means alone.</li>
-        <li>At least one figure with labelled axes, units, a legend where needed, and a caption that says what to notice.</li>
-        <li>One appropriate inferential test, correctly matched to your design (paired t-test or Wilcoxon for paired data; an independent-samples test if you compared different people).</li>
-        <li>The <strong>size</strong> of the effect reported alongside the p-value, in plain units.</li>
-        <li>Methods written as replicable prose, not a bullet list.</li>
-        <li>If you used AI at any step, acknowledged it (see the A2 brief) and validated its output yourself.</li>
+    <h3>Write the Methods too, as replicable prose</h3>
+    <p class="sub">The tool cannot write your Methods, because they describe <em>your</em> experiment. Here is the shape a High Distinction Methods paragraph takes, on the worked-example scenario. Notice it lets another researcher reproduce the study.</p>
+    <div class="modelprose">
+      Eight participants each completed a 4-minute arithmetic task twice at a fixed air temperature of 22&deg;C, once under a quiet background (~30 dBA) and once under a noisy background (~54 dBA), with condition order counterbalanced. The score was the number of problems answered correctly. Because each participant completed both conditions, differences between conditions were assessed with a paired-samples t-test (&alpha; = 0.05). Analysis was carried out in [tool], and outputs were checked by hand against the condition means.
+    </div>
+    <p class="sub">The same facts as an AI-style bullet list are <strong>not</strong> what to submit:</p>
+    <div class="modelprose bad">
+      <ul>
+        <li>8 participants</li>
+        <li>Math task, 4 min</li>
+        <li>Two conditions: quiet, noisy</li>
+        <li>Temperature: 22&deg;C</li>
+        <li>Paired t-test used</li>
+        <li>Significance level 0.05</li>
       </ul>
-    </section>
-  </div>
+    </div>
+    <p class="note">Both hold the same facts. The bullets list ingredients; the prose lets someone reproduce your study, which is the whole point of a Methods section. It states the order was counterbalanced, defines the score, justifies <em>why</em> a paired test (each participant did both conditions), and names the tool. A2's Methods criterion rewards the prose version.</p>
+    <div class="tabnav">
+      <button type="button" class="btn ghost" data-nav="prev">&larr; Back</button>
+      <button type="button" class="btn" data-nav="next">Next: Checklist &rarr;</button>
+    </div>
+  </section>
+
+  <!-- ===== Tab 6: Checklist ===== -->
+  <section class="card" role="tabpanel" id="panel-6" aria-labelledby="tab-6" tabindex="0" hidden>
+    <div class="primer">
+      <p class="what">Check it holds together before you submit.</p>
+      <p>A strong submission names its design, reports means with their spread, shows one well-labelled figure, runs one test matched to the design, gives the effect size beside the p-value, and writes Methods as reproducible prose. Acknowledge and validate any AI you used along the way.</p>
+    </div>
+    <h2>Before you submit A2</h2>
+    <p class="sub">Tick each item as you confirm it. Nothing is saved &mdash; it resets on reload.</p>
+    <ul class="checklist" id="a2check">
+      <li><label><input type="checkbox"><span>Research question and IV/DV stated clearly, and the right variable labelled as which.</span></label></li>
+      <li><label><input type="checkbox"><span>Means <strong>and</strong> SDs (or equivalent spread) reported for each condition, not means alone.</span></label></li>
+      <li><label><input type="checkbox"><span>At least one figure with labelled axes, units, a legend where needed, and a caption that says what to notice.</span></label></li>
+      <li><label><input type="checkbox"><span>One appropriate inferential test, correctly matched to your design (paired t-test or Wilcoxon for paired data; an independent-samples test if you compared different people).</span></label></li>
+      <li><label><input type="checkbox"><span>The <strong>size</strong> of the effect reported alongside the p-value, in plain units.</span></label></li>
+      <li><label><input type="checkbox"><span>Methods written as replicable prose, not a bullet list.</span></label></li>
+      <li><label><input type="checkbox"><span>If you used AI at any step, acknowledged it (see the A2 brief) and validated its output yourself.</span></label></li>
+    </ul>
+    <p class="checkprogress note" id="checkProgress"></p>
+    <div class="tabnav">
+      <button type="button" class="btn ghost" data-nav="prev">&larr; Back</button>
+      <button type="button" class="btn" data-nav="next" disabled>Done</button>
+    </div>
+  </section>
 
   <footer class="page">
     Paired t-test p-value from Student's t distribution (regularised incomplete beta). Wilcoxon p-value from the
@@ -202,6 +336,74 @@
   var $ = function (id) { return document.getElementById(id); };
   function fmt(x, d) { if (!isFinite(x)) return "—"; return x.toLocaleString(undefined, {minimumFractionDigits: d, maximumFractionDigits: d}); }
   function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+  var lastChart = null; // {means, sds, labels} — kept so the chart tab can redraw when revealed
+
+  // ---------- Tabs (ordered stepper) ----------
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  var panels = [$("panel-1"), $("panel-2"), $("panel-3"), $("panel-4"), $("panel-5"), $("panel-6")];
+  var current = 0;
+
+  function activate(idx, focusTab) {
+    if (idx < 0 || idx >= panels.length) return;
+    current = idx;
+    tabs.forEach(function (t, i) {
+      var on = i === idx;
+      t.classList.toggle("active", on);
+      t.setAttribute("aria-selected", on ? "true" : "false");
+      t.tabIndex = on ? 0 : -1;
+      panels[i].hidden = !on;
+    });
+    if (focusTab) tabs[idx].focus();
+    // belt-and-braces: redraw the now-visible tab's canvas
+    if (idx === 2 && lastChart) drawChart(lastChart.means, lastChart.sds, lastChart.labels);
+  }
+
+  tabs.forEach(function (t) {
+    t.addEventListener("click", function () { activate(+t.getAttribute("data-idx")); });
+    t.addEventListener("keydown", function (e) {
+      var i = +t.getAttribute("data-idx");
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); activate(Math.min(i + 1, tabs.length - 1), true); }
+      else if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); activate(Math.max(i - 1, 0), true); }
+      else if (e.key === "Home") { e.preventDefault(); activate(0, true); }
+      else if (e.key === "End") { e.preventDefault(); activate(tabs.length - 1, true); }
+    });
+  });
+
+  // Back / Next buttons inside each panel
+  document.querySelectorAll('[data-nav]').forEach(function (b) {
+    b.addEventListener("click", function () {
+      if (b.disabled) return;
+      activate(current + (b.getAttribute("data-nav") === "next" ? 1 : -1), false);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  });
+
+  // ---------- Accessible info popovers (replace native title=) ----------
+  (function () {
+    var openPop = null;
+    function close() { if (openPop) { openPop.pop.hidden = true; openPop.btn.setAttribute("aria-expanded", "false"); openPop = null; } }
+    document.querySelectorAll(".info-tip").forEach(function (btn) {
+      var pop = btn.parentNode.querySelector(".popover");
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var isOpen = openPop && openPop.btn === btn;
+        close();
+        if (!isOpen) { pop.hidden = false; btn.setAttribute("aria-expanded", "true"); openPop = { btn: btn, pop: pop }; }
+      });
+      // hover convenience on pointer devices
+      btn.parentNode.addEventListener("mouseenter", function () { if (matchMedia("(hover: hover)").matches) { pop.hidden = false; btn.setAttribute("aria-expanded", "true"); } });
+      btn.parentNode.addEventListener("mouseleave", function () { if (matchMedia("(hover: hover)").matches && (!openPop || openPop.btn !== btn)) { pop.hidden = true; btn.setAttribute("aria-expanded", "false"); } });
+    });
+    document.addEventListener("click", close);
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+  })();
+
+  // reveal / hide the analysis-dependent content across the result tabs
+  function setAnalysed(on) {
+    document.querySelectorAll('[data-ph]').forEach(function (el) { el.hidden = on; });
+    document.querySelectorAll('[data-res]').forEach(function (el) { el.hidden = !on; });
+  }
 
   var EXAMPLE = "Quiet Noisy\n24 21\n19 18\n27 22\n22 20\n25 21\n18 17\n23 19\n26 23";
 
@@ -311,7 +513,7 @@
 
   function analyse() {
     var pr = parse();
-    if (!pr.ok) { $("parseMsg").innerHTML = '<span class="err">' + pr.msg + '</span>'; $("output").hidden = true; return; }
+    if (!pr.ok) { $("parseMsg").innerHTML = '<span class="err">' + pr.msg + '</span>'; setAnalysed(false); return; }
     var A = pr.A, B = pr.B, n = A.length;
     var labA = $("labA").value || "A", labB = $("labB").value || "B";
     $("parseMsg").textContent = n + " paired rows read" + (pr.skipped ? " (" + pr.skipped + " non-numeric row(s) skipped)" : "") + ".";
@@ -354,10 +556,12 @@
       (isFinite(pct) ? ", a difference of about " + fmt(Math.abs(mA - mB), 1) + " points (" + fmt(Math.abs(pct), 0) + "%)" : "") + ".";
 
     // figure
-    drawChart([mA, mB], [sA, sB], [labA, labB]);
+    lastChart = { means: [mA, mB], sds: [sA, sB], labels: [labA, labB] };
+    drawChart(lastChart.means, lastChart.sds, lastChart.labels);
     $("figcap").innerHTML = "Figure 1. Mean of each condition (n = " + n + "). Error bars show &plusmn;1 SD. A good caption tells the reader what to notice; rewrite this for your paper.";
 
-    $("output").hidden = false;
+    setAnalysed(true);
+    activate(2, false); // reveal the Descriptives tab with the fresh results
   }
 
   function tWorking(diffs, mD, sD, se, t, df, p, labA, labB) {
@@ -425,7 +629,27 @@
 
   $("run").addEventListener("click", analyse);
   $("example").addEventListener("click", function () { $("data").value = EXAMPLE; analyse(); });
-  $("clear").addEventListener("click", function () { $("data").value = ""; $("output").hidden = true; $("parseMsg").textContent = ""; });
+  $("clear").addEventListener("click", function () {
+    $("data").value = ""; $("parseMsg").textContent = "";
+    lastChart = null; setAnalysed(false);
+    activate(1, false);
+  });
+})();
+</script>
+<script>
+(function () {
+  var box = document.getElementById("a2check");
+  if (!box) return;
+  var prog = document.getElementById("checkProgress");
+  var boxes = Array.prototype.slice.call(box.querySelectorAll('input[type=checkbox]'));
+  function update() {
+    var n = boxes.filter(function (b) { return b.checked; }).length;
+    var done = n === boxes.length;
+    prog.textContent = n + " of " + boxes.length + " confirmed" + (done ? " — ready to submit ✓" : "");
+    prog.style.color = done ? "var(--good)" : "var(--muted)";
+  }
+  box.addEventListener("change", update);
+  update();
 })();
 </script>
 </body>
