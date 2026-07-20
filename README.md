@@ -33,6 +33,12 @@ To add a unit, create a `{unit}/` directory, drop its `weekNN-*.html` tools in, 
 | `bpsd5030/week09-ratings.html` | Week 9 | Two-act challenge on building rating systems. Act 1: take a building to a target NABERS IE star rating on a fixed budget via real upgrades or measurement tactics, with a recertification that collapses gamed ratings. Act 2: certify the same building under WELL by buying credits (real per-feature points from the WELL v2 scorecard), exposing how cheap policy credits score the same as expensive performance credits. Six built-in building profiles. |
 | `bpsd5030/week10-stats.html` | Week 10 / Assignment 2 | Full A2 analysis companion. Names the design (with a paired-vs-independent warning), computes descriptive statistics, paired-samples t-test, Wilcoxon signed-rank, and Cohen's dz effect size with the working shown on the student's own data, then models the Results sentence and Methods paragraph and carries a pre-submission checklist. Absorbs the former standalone A2 worked-example handout. |
 
+### BPSD6030 — Building Systems
+
+| File | Tutorial | What it does |
+|------|----------|--------------|
+| `bpsd6030/week05-hvac-selector.html` | Week 5 / Assignment 2 | Stepped HVAC system selector for the Australian commercial sector. The student walks their building (program, NCC climate zone, size, floors) through fresh-air, heating/cooling, system, and plant choices across the all-air (VAV, CAV), air-plus-water (DOAS + chilled beam / fan-coil / radiant), refrigerant (VRF, split/packaged DX), and evaporative families. Draws the selection as a parametric colour-coded schematic, explains each part in plain language, and generates a ranked decarbonisation pathway (electrification, refrigerant GWP, heat recovery, clean supply) with a justification box to carry into Assignment 2. Deliberately does not size plant or estimate loads — DesignBuilder stays the load authority. Adapts the openly published MIT SDL HVAC System Selector (Irani, Reinhard & Reinhart, 2023, CC BY) to Australian systems, metric units, and a carbon focus. |
+
 ## Design constraints
 
 - **Fully self-contained.** Each HTML file inlines its own CSS and vanilla JavaScript. No external scripts, fonts, stylesheets, or network requests. This keeps them fast, private, offline-capable, and embeddable under a strict Content-Security-Policy (e.g. inside Canvas).
@@ -55,6 +61,8 @@ Pages is configured under **Settings → Pages → Build and deployment → Depl
 - `https://ieqlab.github.io/tutorial-tools/bpsd5030/week08-iaq.html`
 - `https://ieqlab.github.io/tutorial-tools/bpsd5030/week09-ratings.html`
 - `https://ieqlab.github.io/tutorial-tools/bpsd5030/week10-stats.html`
+- `https://ieqlab.github.io/tutorial-tools/bpsd6030/` (BPSD6030 tools)
+- `https://ieqlab.github.io/tutorial-tools/bpsd6030/week05-hvac-selector.html`
 
 (GitHub Pages on the free org plan requires the repo to be **public**.)
 

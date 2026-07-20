@@ -1,0 +1,1042 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Choose an HVAC System — BPSD6030</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --ink: #1c2430; --muted: #5a6675;
+    --line: #dfe4ea; --accent: #0e7c86; --accent-ink: #ffffff;
+    --good: #1a7f4b; --warn: #b4690e; --bad: #b02a37;
+    --field: #ffffff; --result-bg: #eef6f7; --chip: #eef2f5;
+    /* schematic legend */
+    --heat: #c0392b; --cool: #2472c8; --elec: #d9a400; --gas: #d35400;
+    --water: #0e7c86; --air: #8a97a6; --refrig: #7b4bc9;
+    --plant: #cfd8e0; --plant-ink: #33414f; --floor: #f1f4f7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #10151b; --card: #171e27; --ink: #e7ecf2; --muted: #9aa7b6;
+      --line: #2a3441; --accent: #38b2bd; --accent-ink: #06212a;
+      --good: #57c98a; --warn: #e0a955; --bad: #e2707a;
+      --field: #0f151c; --result-bg: #13232a; --chip: #1c2733;
+      --heat: #e2707a; --cool: #6ba7e6; --elec: #e9c14a; --gas: #e08a4e;
+      --water: #38b2bd; --air: #7d8b9b; --refrig: #a583e0;
+      --plant: #2b3947; --plant-ink: #c4d0dc; --floor: #131c25;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 24px 18px 64px; }
+  a.home { display: inline-block; color: var(--accent); text-decoration: none; font-size: .9rem; margin-bottom: 14px; }
+  a.home:hover { text-decoration: underline; }
+  header.page { margin-bottom: 8px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  .lede { color: var(--muted); margin: 0 0 18px; max-width: 70ch; }
+
+  /* stepper */
+  .stepper { display: flex; flex-wrap: wrap; gap: 6px 10px; margin: 4px 0 18px; }
+  .stepper .st { display: flex; align-items: center; gap: 6px; font-size: .8rem; color: var(--muted); }
+  .stepper .st .n { display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; border-radius: 999px; border: 1px solid var(--line);
+    font-size: .72rem; font-variant-numeric: tabular-nums; }
+  .stepper .st.active { color: var(--ink); font-weight: 600; }
+  .stepper .st.active .n { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .stepper .st.done .n { border-color: var(--accent); color: var(--accent); }
+
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 18px 18px 20px; margin: 16px 0;
+  }
+  .step { display: none; }
+  .step.active { display: block; }
+  h2 { font-size: 1.2rem; margin: 0 0 4px; }
+  h3 { font-size: 1rem; margin: 18px 0 8px; }
+  .sub { color: var(--muted); font-size: .92rem; margin: 0 0 14px; max-width: 72ch; }
+
+  label { display: block; font-size: .85rem; color: var(--muted); margin-bottom: 4px; }
+  .fieldrow { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; margin-bottom: 6px; }
+  @media (max-width: 620px) { .fieldrow { grid-template-columns: 1fr; } }
+  select, input[type="number"], input[type="text"], textarea {
+    width: 100%; padding: 8px 10px; font-size: 1rem; color: var(--ink);
+    background: var(--field); border: 1px solid var(--line); border-radius: 8px; font-family: inherit;
+  }
+  select:focus, input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .hint { color: var(--muted); font-size: .82rem; margin: 4px 0 0; }
+
+  /* radio / choice groups */
+  .choices { display: flex; flex-wrap: wrap; gap: 8px; margin: 2px 0 4px; }
+  .choice { flex: 1 1 auto; min-width: 130px; }
+  .choice input { position: absolute; opacity: 0; pointer-events: none; }
+  .choice label { display: block; margin: 0; padding: 9px 12px; border: 1px solid var(--line);
+    border-radius: 9px; cursor: pointer; color: var(--ink); font-size: .9rem; background: var(--field); }
+  .choice label small { display: block; color: var(--muted); font-size: .78rem; font-weight: 400; margin-top: 2px; }
+  .choice input:checked + label { border-color: var(--accent); background: var(--result-bg); box-shadow: inset 0 0 0 1px var(--accent); }
+  .choice input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  /* system option cards */
+  .sysgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 620px) { .sysgrid { grid-template-columns: 1fr; } }
+  .sys { position: relative; }
+  .sys input { position: absolute; opacity: 0; pointer-events: none; }
+  .sys label { display: block; margin: 0; padding: 12px 14px; border: 1px solid var(--line);
+    border-radius: 10px; cursor: pointer; background: var(--field); height: 100%; }
+  .sys input:checked + label { border-color: var(--accent); background: var(--result-bg); box-shadow: inset 0 0 0 1px var(--accent); }
+  .sys input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .sys .name { font-weight: 600; font-size: .96rem; color: var(--ink); }
+  .sys .fam { display: block; font-size: .74rem; text-transform: uppercase; letter-spacing: .04em; color: var(--accent); margin-bottom: 3px; }
+  .sys .blurb { color: var(--muted); font-size: .84rem; margin: 4px 0 0; }
+  .fit { display: inline-block; font-size: .74rem; border-radius: 999px; padding: 1px 8px; margin-top: 8px; border: 1px solid var(--line); }
+  .fit.good { color: var(--good); } .fit.warn { color: var(--warn); } .fit.bad { color: var(--bad); }
+  .proscons { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 14px; margin-top: 8px; font-size: .82rem; }
+  .proscons .p { color: var(--good); } .proscons .c { color: var(--warn); }
+  .proscons ul { margin: 2px 0 0; padding-left: 16px; } .proscons li { margin: 1px 0; }
+
+  /* nav */
+  .nav { display: flex; justify-content: space-between; gap: 8px; margin-top: 18px; }
+  .btn { background: var(--accent); color: var(--accent-ink); border: none; border-radius: 8px;
+    padding: 9px 16px; font-size: .92rem; cursor: pointer; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+
+  /* schematic */
+  .schematic { background: var(--result-bg); border-radius: 10px; padding: 12px; margin: 4px 0 8px; overflow-x: auto; }
+  .schematic svg { display: block; width: 100%; height: auto; min-width: 560px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 8px 2px 0; font-size: .8rem; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .legend i { width: 16px; height: 3px; border-radius: 2px; display: inline-block; }
+  .swatch { width: 11px; height: 11px; border-radius: 2px; }
+
+  .explain { margin-top: 10px; }
+  .explain p { margin: 8px 0; }
+  .explain .part { display: flex; gap: 8px; align-items: baseline; margin: 6px 0; font-size: .92rem; }
+  .explain .part .dot { width: 10px; height: 10px; border-radius: 3px; flex: 0 0 auto; margin-top: 5px; }
+
+  /* decarbonisation */
+  .badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 12px; }
+  .badge { font-size: .82rem; border-radius: 999px; padding: 3px 11px; border: 1px solid var(--line); background: var(--chip); }
+  .badge.good { color: var(--good); } .badge.warn { color: var(--warn); } .badge.bad { color: var(--bad); }
+  .lever { border: 1px solid var(--line); border-radius: 10px; padding: 11px 13px; margin: 8px 0; background: var(--field); }
+  .lever .top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .lever .lname { font-weight: 600; font-size: .95rem; }
+  .lever .imp { font-size: .74rem; border-radius: 999px; padding: 1px 8px; border: 1px solid var(--line); white-space: nowrap; }
+  .lever .imp.high { color: var(--good); } .lever .imp.med { color: var(--warn); } .lever .imp.low { color: var(--muted); }
+  .lever p { margin: 5px 0 0; color: var(--muted); font-size: .87rem; }
+
+  .results { margin-top: 8px; background: var(--result-bg); border-radius: 10px; padding: 14px 16px; }
+  .summary-box { font-size: .92rem; }
+  .summary-box .row { display: flex; gap: 8px; padding: 3px 0; border-bottom: 1px dashed var(--line); }
+  .summary-box .row:last-child { border-bottom: none; }
+  .summary-box .k { color: var(--muted); flex: 0 0 42%; }
+  .summary-box .v { font-weight: 600; }
+  textarea { min-height: 92px; resize: vertical; }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .carry { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .8rem;
+    white-space: pre-wrap; background: var(--result-bg); border-radius: 8px; padding: 10px 12px; margin-top: 8px; }
+
+  details { margin-top: 12px; }
+  summary { cursor: pointer; color: var(--accent); font-size: .9rem; }
+  details .inner { margin-top: 8px; font-size: .9rem; }
+  .note { color: var(--muted); font-size: .84rem; }
+  footer.page { color: var(--muted); font-size: .82rem; margin-top: 28px; border-top: 1px solid var(--line); padding-top: 14px; }
+  footer.page a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="home" href="index.html">&larr; BPSD6030 tutorial tools</a>
+  <header class="page">
+    <h1>Choose an HVAC System</h1>
+    <p class="lede">Walk your building through the choices that fix an HVAC concept: how it gets fresh air, how it heats and cools, and what plant sits behind that. The tool draws the resulting system as a schematic and explains each part, then helps you reason about its carbon and a low-carbon pathway. It does not pick a winner or a size for you: that judgement, and the loads from your DesignBuilder model, stay yours. Use it to structure the argument you will make in Assignment 2 and defend in Week 11.</p>
+  </header>
+
+  <nav class="stepper" id="stepper" aria-label="Steps"></nav>
+
+  <form id="wiz" autocomplete="off">
+    <!-- STEP 1: context -->
+    <section class="card step active" data-step="0">
+      <h2>1. Your building</h2>
+      <p class="sub">Describe the building you are carrying through Assignments 1 and 2. This sets the context the later choices are judged against. Nothing here is a load calculation: your loads come from DesignBuilder.</p>
+
+      <div class="fieldrow">
+        <div>
+          <label for="mode">New design or existing building?</label>
+          <select id="mode">
+            <option value="new">New design</option>
+            <option value="existing">Existing building</option>
+          </select>
+        </div>
+        <div>
+          <label for="program">Primary building program</label>
+          <select id="program">
+            <option value="office">Office / commercial</option>
+            <option value="retail">Retail</option>
+            <option value="mixed">Mixed use</option>
+            <option value="education">Education</option>
+            <option value="hotel">Hotel / residential tower</option>
+            <option value="healthcare">Healthcare / lab</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="fieldrow">
+        <div>
+          <label for="zone">NCC climate zone (from your building's location)</label>
+          <select id="zone"></select>
+          <p class="hint" id="zoneHint"></p>
+        </div>
+        <div>
+          <label for="floors">Number of floors</label>
+          <input type="number" id="floors" min="1" max="60" step="1" value="6">
+          <p class="hint">A minimum of 3 for Assignment 1.</p>
+        </div>
+      </div>
+
+      <div class="fieldrow">
+        <div>
+          <label for="gfa">Gross floor area (m²)</label>
+          <input type="number" id="gfa" min="100" max="200000" step="100" value="12000">
+          <p class="hint">Sets the scale (small tenancy vs whole tower), not the load.</p>
+        </div>
+        <div></div>
+      </div>
+
+      <div class="nav">
+        <span></span>
+        <button type="button" class="btn" data-go="1">Next: fresh air</button>
+      </div>
+    </section>
+
+    <!-- STEP 2: ventilation -->
+    <section class="card step" data-step="1">
+      <h2>2. Fresh air</h2>
+      <p class="sub">How the building brings in outdoor air is the first structural decision. It separates buildings that mix fresh air and conditioning in one air stream from those that supply fresh air on its own and condition the space some other way.</p>
+
+      <h3>Can the building rely on opening windows?</h3>
+      <div class="choices" id="operableChoices">
+        <div class="choice"><input type="radio" name="operable" id="op_sealed" value="sealed" checked><label for="op_sealed">Sealed / fully mechanical<small>Deep plan, noise, or air quality rule out openable windows</small></label></div>
+        <div class="choice"><input type="radio" name="operable" id="op_mixed" value="mixed"><label for="op_mixed">Mixed-mode<small>Openable windows for part of the year, mechanical the rest</small></label></div>
+      </div>
+
+      <h3>How is outdoor air delivered?</h3>
+      <div class="choices" id="oaChoices">
+        <div class="choice"><input type="radio" name="oa" id="oa_mixed" value="mixed-air" checked><label for="oa_mixed">Mixed with conditioning<small>One central air system supplies fresh + heated/cooled air (all-air)</small></label></div>
+        <div class="choice"><input type="radio" name="oa" id="oa_doas" value="doas"><label for="oa_doas">Dedicated outdoor air (DOAS)<small>A separate unit handles fresh air; a second system does the heating/cooling</small></label></div>
+      </div>
+      <p class="hint" id="oaNote"></p>
+
+      <div class="nav">
+        <button type="button" class="btn ghost" data-go="0">Back</button>
+        <button type="button" class="btn" data-go="2">Next: heating &amp; cooling</button>
+      </div>
+    </section>
+
+    <!-- STEP 3: conditioning -->
+    <section class="card step" data-step="2">
+      <h2>3. Heating and cooling</h2>
+      <p class="sub">What does the building actually need active plant for? In most Australian commercial climates the answer is both, but a mild-marine or a warm-humid site can shift the balance. Your DesignBuilder peak loads are the evidence for this.</p>
+
+      <div class="choices" id="condChoices">
+        <div class="choice"><input type="radio" name="cond" id="c_both" value="both" checked><label for="c_both">Heating and cooling<small>Active plant needed for both across the year</small></label></div>
+        <div class="choice"><input type="radio" name="cond" id="c_cool" value="cooling"><label for="c_cool">Cooling-led<small>Cooling dominates; little or passive heating</small></label></div>
+        <div class="choice"><input type="radio" name="cond" id="c_heat" value="heating"><label for="c_heat">Heating-led<small>Heating dominates; little or passive cooling</small></label></div>
+      </div>
+      <p class="hint" id="condNote"></p>
+
+      <div class="nav">
+        <button type="button" class="btn ghost" data-go="1">Back</button>
+        <button type="button" class="btn" data-go="3">Next: choose a system</button>
+      </div>
+    </section>
+
+    <!-- STEP 4: system -->
+    <section class="card step" data-step="3">
+      <h2>4. System architecture</h2>
+      <p class="sub">Pick the system family for your building. Every option below is used in the Australian commercial sector. The fit badge reflects your climate, program, and fresh-air choice, but it is a prompt, not a verdict: a well-argued case can override it. Read the trade-offs, then choose the one you will justify.</p>
+      <div class="sysgrid" id="sysGrid"></div>
+
+      <div class="nav">
+        <button type="button" class="btn ghost" data-go="2">Back</button>
+        <button type="button" class="btn" data-go="4">Next: plant &amp; heat source</button>
+      </div>
+    </section>
+
+    <!-- STEP 5: plant -->
+    <section class="card step" data-step="4">
+      <h2>5. Plant and heat source</h2>
+      <p class="sub">The plant behind your terminals is where most of the carbon decision sits. What makes the cooling, what makes the heat, and which refrigerant runs through it all shape the operational emissions you will discuss in Assignment 2.</p>
+
+      <div id="plantFields"></div>
+
+      <div class="nav">
+        <button type="button" class="btn ghost" data-go="3">Back</button>
+        <button type="button" class="btn" data-go="5">See the system</button>
+      </div>
+    </section>
+
+    <!-- STEP 6: result -->
+    <section class="card step" data-step="5">
+      <h2>6. Your system</h2>
+      <p class="sub" id="resultLede"></p>
+
+      <div class="schematic" id="schematic"></div>
+      <div class="legend" id="legend"></div>
+
+      <div class="explain" id="explain"></div>
+
+      <h3>Carbon and a low-carbon pathway</h3>
+      <div class="badges" id="carbonBadges"></div>
+      <p class="note" id="carbonIntro"></p>
+      <div id="levers"></div>
+
+      <h3>Carry this into Assignment 2</h3>
+      <p class="sub">Write, in your own words, why this system suits your building and how you would lower its carbon. This is the core of the A2 system-selection and decarbonisation argument, and what the panel will probe in the Week 11 defence. The tool cannot make this case for you.</p>
+      <label for="notes">Your justification</label>
+      <textarea id="notes" placeholder="This building is a [program] in NCC zone [x]. I chose [system] because... The main carbon lever is... I would trade off... against..."></textarea>
+
+      <div class="results">
+        <div class="summary-box" id="summaryBox"></div>
+      </div>
+      <div class="btn-row">
+        <button type="button" class="btn" id="buildCarry">Build a summary to copy</button>
+        <button type="button" class="btn ghost" id="printBtn">Print / save as PDF</button>
+        <button type="button" class="btn ghost" id="restart">Start over</button>
+      </div>
+      <div class="carry" id="carry" style="display:none"></div>
+
+      <div class="nav">
+        <button type="button" class="btn ghost" data-go="4">Back</button>
+        <span></span>
+      </div>
+
+      <details>
+        <summary>What this tool does and does not do</summary>
+        <div class="inner">
+          <p>It maps your choices onto a named system, draws it, and explains the parts and the carbon story. It is a reasoning scaffold for the concept design in Assignment 2.</p>
+          <p>It does <b>not</b> size plant, estimate loads or energy, or tell you which system is correct. Sizing is pro-rated from your DesignBuilder loads (Assignment 1); the choice and its justification are your professional judgement (Assignment 2 and the Week 11 defence). Do not paste any figure from this tool into an assignment as a result.</p>
+        </div>
+      </details>
+    </section>
+  </form>
+
+  <footer class="page">
+    A teaching aid for BPSD6030 Week 5. The system taxonomy follows the unit's key terminology and the Australian commercial market; the schematic is a stylised concept diagram, not a construction drawing. Wizard structure and the fresh-air / conditioning framing adapt the openly published <a href="https://doi.org/10.5281/zenodo.10711959">HVAC System Selector</a> (Irani, Reinhard &amp; Reinhart, 2023, MIT Sustainable Design Lab, CC&nbsp;BY) to Australian systems, metric units, NCC climate zones, and a decarbonisation focus. Self-contained, open-source, no tracking. Not the output of a load or energy simulation.
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+
+  // ---------- reference data ----------
+  var ZONES = [
+    { z: "1", name: "Zone 1 — hot humid summer, warm winter", eg: "Darwin, Cairns", cool: true, heat: false, humid: true, arid: false },
+    { z: "2", name: "Zone 2 — warm humid summer, mild winter", eg: "Brisbane, Gold Coast", cool: true, heat: false, humid: true, arid: false },
+    { z: "3", name: "Zone 3 — hot dry summer, warm winter", eg: "Alice Springs, Longreach", cool: true, heat: false, humid: false, arid: true },
+    { z: "4", name: "Zone 4 — hot dry summer, cool winter", eg: "Mildura, Dubbo", cool: true, heat: true, humid: false, arid: true },
+    { z: "5", name: "Zone 5 — warm temperate", eg: "Sydney, Perth, Adelaide", cool: true, heat: true, humid: false, arid: false },
+    { z: "6", name: "Zone 6 — mild temperate", eg: "Melbourne, Geelong", cool: true, heat: true, humid: false, arid: false },
+    { z: "7", name: "Zone 7 — cool temperate", eg: "Canberra, Hobart, Ballarat", cool: true, heat: true, humid: false, arid: false },
+    { z: "8", name: "Zone 8 — alpine", eg: "Thredbo, Cabramurra", cool: false, heat: true, humid: false, arid: false }
+  ];
+  function zone() { return ZONES.filter(function (z) { return z.z === state.zone; })[0]; }
+
+  // system families. air: how the space air is handled. oa: expects DOAS.
+  // refrig: refrigerant exposure at the space (leak/GWP risk). water: uses a hydronic loop.
+  var SYSTEMS = [
+    {
+      id: "vav", name: "VAV (variable air volume)", fam: "All-air",
+      air: "all-air", oa: "mixed-air", water: "coil", refrig: "low",
+      blurb: "One central air-handling plant conditions and delivers all the air; zone boxes vary the flow to each area.",
+      pros: ["Mature, well understood", "Good for large deep-plan floors", "Central filtration and control"],
+      cons: ["Bulky ducts and risers", "Fan energy if poorly controlled", "Slower zone response"],
+      fit: function () {
+        var s = 2; var why = [];
+        if (state.gfa >= 5000) { s += 1; why.push("suits a large floor plate"); } else { why.push("often oversized for a small tenancy"); }
+        if (state.oa === "doas") { s -= 2; why.push("you chose DOAS, which is a different architecture"); }
+        return { s: s, why: why };
+      }
+    },
+    {
+      id: "cav", name: "CAV (constant air volume)", fam: "All-air",
+      air: "all-air", oa: "mixed-air", water: "coil", refrig: "low",
+      blurb: "A simpler all-air system holding a constant supply rate; suits a single zone or a uniform space.",
+      pros: ["Simple and robust", "Low first cost", "Fine for one uniform zone"],
+      cons: ["Poor part-load efficiency", "Little zone control", "Wastes energy at low occupancy"],
+      fit: function () {
+        var s = 1; var why = [];
+        if (state.floors <= 2 || state.gfa < 2000) { s += 1; why.push("acceptable for a small single-zone space"); }
+        else { why.push("weak zoning for a multi-zone building"); }
+        if (state.oa === "doas") { s -= 2; why.push("you chose DOAS"); }
+        return { s: s, why: why };
+      }
+    },
+    {
+      id: "beam", name: "DOAS + chilled beams", fam: "Air + water",
+      air: "terminal", oa: "doas", water: "loop", refrig: "low",
+      blurb: "A dedicated outdoor-air unit handles ventilation and humidity; chilled/heated water beams do the sensible conditioning with little fan energy.",
+      pros: ["Low fan energy", "Quiet, draught-free comfort", "Warm chilled water suits heat pumps"],
+      cons: ["Condensation risk if humidity is not controlled", "Limited to sensible loads", "Higher first cost"],
+      fit: function () {
+        var s = 2; var why = [];
+        if (state.oa !== "doas") { s -= 2; why.push("needs a DOAS for fresh air and latent control"); }
+        if (zone().humid) { s -= 1; why.push("humid zone: manage condensation carefully"); }
+        else { why.push("drier climate suits beams well"); }
+        if (state.program === "office" || state.program === "education") { s += 1; why.push("good for stable-occupancy offices"); }
+        return { s: s, why: why };
+      }
+    },
+    {
+      id: "fcu", name: "DOAS + fan-coil units (FCU)", fam: "Air + water",
+      air: "terminal", oa: "doas", water: "loop", refrig: "low",
+      blurb: "A DOAS supplies fresh air; small water-fed fan-coil units in each zone provide flexible local heating and cooling.",
+      pros: ["Very flexible zoning", "Handles higher loads than beams", "Widely used, familiar to trades"],
+      cons: ["Fan and filter maintenance in ceilings", "Condensate management", "Some noise"],
+      fit: function () {
+        var s = 2; var why = [];
+        if (state.oa !== "doas") { s -= 2; why.push("needs a DOAS for fresh air"); }
+        if (state.program === "hotel" || state.program === "mixed") { s += 1; why.push("suits cellular hotel/mixed layouts"); }
+        why.push("copes with humidity better than beams");
+        return { s: s, why: why };
+      }
+    },
+    {
+      id: "radiant", name: "DOAS + radiant slab", fam: "Air + water",
+      air: "terminal", oa: "doas", water: "loop", refrig: "low",
+      blurb: "A DOAS handles ventilation and latent load; water loops embedded in the slab heat and cool the space through its thermal mass.",
+      pros: ["Very high comfort, silent", "Low temperatures suit heat pumps", "Uses structural mass"],
+      cons: ["Slow to respond", "Condensation risk in cooling", "Needs early structural coordination"],
+      fit: function () {
+        var s = 1; var why = [];
+        if (state.oa !== "doas") { s -= 2; why.push("needs a DOAS for fresh air and latent"); }
+        if (state.mode === "new") { s += 1; why.push("best committed in a new design"); }
+        else { s -= 1; why.push("hard to retrofit into an existing slab"); }
+        if (zone().humid) { s -= 1; why.push("humid zone raises slab condensation risk"); }
+        return { s: s, why: why };
+      }
+    },
+    {
+      id: "vrf", name: "VRF/VRV (+ DOAS)", fam: "Refrigerant",
+      air: "terminal", oa: "doas", water: "none", refrig: "high",
+      blurb: "Refrigerant is piped from an outdoor unit to indoor heads in each zone; heat-recovery models move heat between zones. A small DOAS adds fresh air.",
+      pros: ["Excellent zoning and part-load", "All-electric", "Heat recovery between zones", "Retrofit-friendly"],
+      cons: ["Large refrigerant charge (GWP and leak risk)", "Needs a separate DOAS", "Pipe-length limits"],
+      fit: function () {
+        var s = 2; var why = [];
+        if (state.program === "office" || state.program === "mixed" || state.program === "retail") { s += 1; why.push("strong for varied commercial zoning"); }
+        if (state.mode === "existing") { s += 1; why.push("good retrofit option"); }
+        why.push("all-electric, but watch refrigerant GWP");
+        return { s: s, why: why };
+      }
+    },
+    {
+      id: "dx", name: "Split / packaged DX", fam: "Refrigerant",
+      air: "package", oa: "mixed-air", water: "none", refrig: "high",
+      blurb: "Self-contained direct-expansion units (wall splits, ducted splits, or rooftop packages) heat and cool a zone directly with refrigerant.",
+      pros: ["Low first cost", "Simple, all-electric", "Good for small standalone tenancies"],
+      cons: ["Limited central control", "Refrigerant in every unit", "Poor for large integrated buildings"],
+      fit: function () {
+        var s = 1; var why = [];
+        if (state.gfa < 2000 || state.program === "retail") { s += 1; why.push("suits a small or retail tenancy"); }
+        else { s -= 1; why.push("does not scale to a large integrated building"); }
+        return { s: s, why: why };
+      }
+    },
+    {
+      id: "evap", name: "Evaporative cooling", fam: "Evaporative",
+      air: "package", oa: "mixed-air", water: "none", refrig: "none",
+      blurb: "Outdoor air is cooled by evaporating water, then supplied to the space. Very low energy, but only works where the air is dry, and it cannot dehumidify.",
+      pros: ["Very low energy", "No refrigerant", "Lots of fresh air"],
+      cons: ["Dry climates only", "High water use", "No dehumidification or real heating"],
+      fit: function () {
+        var s = 0; var why = [];
+        if (zone().arid) { s += 2; why.push("dry climate: evaporative is viable here"); }
+        else { s -= 1; why.push("humid/temperate: evaporative will not hold comfort"); }
+        if (state.cond === "both" || state.cond === "heating") { why.push("pair with separate heating"); }
+        return { s: s, why: why };
+      }
+    }
+  ];
+  function sysById(id) { return SYSTEMS.filter(function (x) { return x.id === id; })[0]; }
+
+  // ---------- state ----------
+  var state = {
+    mode: "new", program: "office", zone: "5", floors: 6, gfa: 12000,
+    operable: "sealed", oa: "mixed-air", cond: "both",
+    system: "vav", coolSource: "air-chiller", heatSource: "heatpump", refrigerant: "low",
+    notes: ""
+  };
+  var step = 0;
+  var STEPS = ["Building", "Fresh air", "Heating & cooling", "System", "Plant", "Result"];
+
+  // ---------- stepper ----------
+  function renderStepper() {
+    $("stepper").innerHTML = STEPS.map(function (s, i) {
+      var cls = "st" + (i === step ? " active" : "") + (i < step ? " done" : "");
+      var mark = i < step ? "✓" : (i + 1);
+      return '<span class="' + cls + '"><span class="n">' + mark + '</span>' + s + '</span>';
+    }).join("");
+  }
+  function show(i) {
+    step = Math.max(0, Math.min(STEPS.length - 1, i));
+    var steps = document.querySelectorAll(".step");
+    for (var k = 0; k < steps.length; k++) steps[k].classList.toggle("active", +steps[k].dataset.step === step);
+    renderStepper();
+    if (step === 4) renderPlant();
+    if (step === 5) renderResult();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // ---------- step 1 ----------
+  function buildZoneSelect() {
+    $("zone").innerHTML = ZONES.map(function (z) {
+      return '<option value="' + z.z + '">' + z.name + '</option>';
+    }).join("");
+    $("zone").value = state.zone;
+    zoneHint();
+  }
+  function zoneHint() { $("zoneHint").textContent = "e.g. " + zone().eg + "."; }
+
+  // ---------- step 2 notes ----------
+  function oaNote() {
+    $("oaNote").textContent = state.oa === "doas"
+      ? "DOAS decouples ventilation from conditioning, so you will pick a separate terminal system (beams, fan-coils, radiant, or VRF) next."
+      : "An all-air system carries fresh air and conditioning together, so the next choice is VAV or CAV.";
+  }
+  function condNote() {
+    var z = zone();
+    var t = [];
+    if (z.humid) t.push("A humid zone means the latent (dehumidification) load matters as much as temperature.");
+    if (z.arid) t.push("A dry zone opens up evaporative cooling and eases dehumidification.");
+    if (!z.heat) t.push("Little heating is typical here, but confirm against your DesignBuilder heating peak.");
+    if (z.z === "8") t.push("Alpine heating is severe; heat-pump sizing at low ambient needs care.");
+    $("condNote").textContent = t.join(" ");
+  }
+
+  // ---------- step 4 ----------
+  function fitClass(s) { return s >= 3 ? "good" : (s >= 1 ? "warn" : "bad"); }
+  function fitLabel(s) { return s >= 3 ? "Strong fit" : (s >= 1 ? "Possible" : "Poor fit here"); }
+  function renderSystems() {
+    // sort by fit descending so the strongest options surface first, but keep all visible
+    var items = SYSTEMS.map(function (sy) { var f = sy.fit(); return { sy: sy, f: f }; });
+    items.sort(function (a, b) { return b.f.s - a.f.s; });
+    $("sysGrid").innerHTML = items.map(function (o) {
+      var sy = o.sy, f = o.f;
+      var checked = state.system === sy.id ? " checked" : "";
+      return '<div class="sys">' +
+        '<input type="radio" name="sys" id="sys_' + sy.id + '" value="' + sy.id + '"' + checked + '>' +
+        '<label for="sys_' + sy.id + '">' +
+          '<span class="fam">' + sy.fam + '</span>' +
+          '<span class="name">' + sy.name + '</span>' +
+          '<p class="blurb">' + sy.blurb + '</p>' +
+          '<div class="proscons">' +
+            '<div class="p"><ul>' + sy.pros.map(function (p) { return '<li>' + p + '</li>'; }).join("") + '</ul></div>' +
+            '<div class="c"><ul>' + sy.cons.map(function (c) { return '<li>' + c + '</li>'; }).join("") + '</ul></div>' +
+          '</div>' +
+          '<span class="fit ' + fitClass(f.s) + '">' + fitLabel(f.s) + ': ' + f.why.slice(0, 2).join("; ") + '</span>' +
+        '</label>' +
+      '</div>';
+    }).join("");
+    var radios = document.querySelectorAll('input[name="sys"]');
+    for (var i = 0; i < radios.length; i++) radios[i].addEventListener("change", function () {
+      state.system = this.value; reconcilePlant();
+    });
+  }
+
+  // ---------- step 5: plant ----------
+  // reconcile plant defaults with the chosen system
+  function reconcilePlant() {
+    var sy = sysById(state.system);
+    if (sy.refrig === "high" || sy.id === "evap") { state.coolSource = "dx"; }
+    else if (state.coolSource === "dx") { state.coolSource = "air-chiller"; }
+    if (sy.id === "evap") { state.heatSource = "none"; }
+    else if (state.heatSource === "none") { state.heatSource = "heatpump"; }
+  }
+  function renderPlant() {
+    reconcilePlant();
+    var sy = sysById(state.system);
+    var html = "";
+
+    // cooling source
+    html += '<h3>Cooling source</h3>';
+    if (sy.refrig === "high") {
+      html += '<p class="hint">' + sy.name + ' makes cooling directly with refrigerant (direct expansion), so there is no central chiller. The refrigerant choice below is the key lever.</p>';
+    } else if (sy.id === "evap") {
+      html += '<p class="hint">Evaporative cooling uses water, not a refrigeration cycle. There is no chiller and no refrigerant.</p>';
+    } else {
+      html += '<div class="choices" id="coolChoices">' +
+        radio("cool", "air-chiller", "Air-cooled chiller", "Simple, no water tower; lower peak COP", state.coolSource) +
+        radio("cool", "water-chiller", "Water-cooled chiller + tower", "Higher COP; adds water use and a cooling tower", state.coolSource) +
+      '</div>';
+    }
+
+    // heat source
+    html += '<h3>Heat source</h3>';
+    if (sy.id === "evap") {
+      html += '<p class="hint">Evaporative cooling does not heat. If your building needs heating (check your loads), add a separate heat source and note it in Assignment 2.</p>';
+    } else {
+      html += '<div class="choices" id="heatChoices">' +
+        radio("heat", "heatpump", "Electric heat pump / reverse-cycle", "All-electric; high efficiency; grid-decarbonises", state.heatSource) +
+        radio("heat", "gas", "Gas-fired boiler", "On-site combustion; a carbon liability to design out", state.heatSource) +
+        radio("heat", "resistance", "Electric resistance", "All-electric but low efficiency; use sparingly", state.heatSource) +
+      '</div>';
+      if (state.system === "beam" || state.system === "radiant") {
+        html += '<p class="hint">Beams and slabs run at mild water temperatures, which is exactly where a heat pump is most efficient. That makes a heat pump the natural low-carbon match.</p>';
+      }
+    }
+
+    // refrigerant
+    html += '<h3>Refrigerant</h3>';
+    if (sy.refrig === "none") {
+      html += '<p class="hint">This system uses no refrigerant.</p>';
+    } else {
+      var exposure = sy.refrig === "high"
+        ? "This system holds a large refrigerant charge distributed through the building, so global-warming potential (GWP) and leakage are a real concern."
+        : "Refrigerant is contained at the central plant here, so the charge and leak exposure are smaller, but the refrigerant still matters.";
+      html += '<p class="hint">' + exposure + '</p>' +
+        '<div class="choices" id="refChoices">' +
+        radio("ref", "low", "Low-GWP refrigerant", "e.g. R32, R290, R454B; the responsible default", state.refrigerant) +
+        radio("ref", "legacy", "Legacy high-GWP", "e.g. R410A, R134a; being phased down", state.refrigerant) +
+      '</div>';
+    }
+
+    $("plantFields").innerHTML = html;
+
+    wireRadioGroup("cool", "coolSource");
+    wireRadioGroup("heat", "heatSource");
+    wireRadioGroup("ref", "refrigerant");
+  }
+  function radio(group, val, title, sub, current) {
+    var id = group + "_" + val;
+    var checked = current === val ? " checked" : "";
+    return '<div class="choice"><input type="radio" name="' + group + '" id="' + id + '" value="' + val + '"' + checked + '>' +
+      '<label for="' + id + '">' + title + '<small>' + sub + '</small></label></div>';
+  }
+  function wireRadioGroup(group, key) {
+    var radios = document.querySelectorAll('input[name="' + group + '"]');
+    for (var i = 0; i < radios.length; i++) radios[i].addEventListener("change", function () { state[key] = this.value; });
+  }
+
+  // ---------- schematic ----------
+  var COL = {
+    heat: getVar("--heat"), cool: getVar("--cool"), elec: getVar("--elec"),
+    gas: getVar("--gas"), water: getVar("--water"), air: getVar("--air"),
+    refrig: getVar("--refrig"), plant: getVar("--plant"), plantInk: getVar("--plant-ink"),
+    floor: getVar("--floor"), line: getVar("--line"), ink: getVar("--ink"), muted: getVar("--muted")
+  };
+  function getVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim() || "#888"; }
+
+  function drawSchematic() {
+    var sy = sysById(state.system);
+    var nDraw = Math.max(1, Math.min(4, state.floors));
+    var W = 720, H = 470;
+    var bx = 200, bw = 360, top = 96, ground = 392;
+    var fh = (ground - top) / nDraw;
+
+    var used = {}; // legend tracking
+    function mark(k) { used[k] = true; }
+    function rect(x, y, w, h, fill, stroke) {
+      return '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="4" fill="' + fill + '" stroke="' + (stroke || COL.line) + '" stroke-width="1"/>';
+    }
+    function line(x1, y1, x2, y2, col, w, dash) {
+      return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + col + '" stroke-width="' + (w || 3) + '"' + (dash ? ' stroke-dasharray="' + dash + '"' : '') + ' stroke-linecap="round"/>';
+    }
+    function txt(x, y, s, col, size, anchor, weight) {
+      return '<text x="' + x + '" y="' + y + '" fill="' + (col || COL.ink) + '" font-size="' + (size || 11) + '" text-anchor="' + (anchor || "start") + '"' + (weight ? ' font-weight="' + weight + '"' : '') + ' font-family="-apple-system,Segoe UI,Roboto,sans-serif">' + s + '</text>';
+    }
+
+    var g = "";
+
+    // ground + building shell
+    g += '<line x1="20" y1="' + ground + '" x2="' + (W - 20) + '" y2="' + ground + '" stroke="' + COL.muted + '" stroke-width="2"/>';
+    g += rect(bx, top, bw, ground - top, COL.floor, COL.line);
+    // floor plates + occupant tick
+    for (var f = 0; f < nDraw; f++) {
+      var fy = top + f * fh;
+      if (f > 0) g += line(bx, fy, bx + bw, fy, COL.line, 1);
+      g += '<circle cx="' + (bx + bw / 2) + '" cy="' + (fy + fh - 10) + '" r="3" fill="' + COL.muted + '"/>';
+    }
+    if (state.floors > nDraw) g += txt(bx + bw, ground + 16, state.floors + " floors (showing " + nDraw + ")", COL.muted, 10, "end");
+
+    // electricity supply (always) from grid at bottom-left to plant
+    // decide plant placement per system
+    var roofY = 20, roofH = 28;
+    var sideX = 40, sideW = 120;
+
+    // helper: draw a terminal on each floor at right, with a label once
+    function terminals(kind, col, label) {
+      var out = "";
+      for (var i = 0; i < nDraw; i++) {
+        var cy = top + i * fh + fh / 2;
+        out += rect(bx + bw - 30, cy - 8, 22, 16, COL.plant, col);
+      }
+      out += txt(bx + bw - 19, top - 8, label, col, 10, "middle", "600");
+      return out;
+    }
+    // riser vertical line
+    function riser(x, col, dash, w) { return line(x, top + 6, x, ground - 6, col, w || 4, dash); }
+
+    // ===== per-architecture drawing =====
+    if (sy.air === "all-air") {
+      // rooftop AHU
+      g += rect(bx + bw / 2 - 70, roofY, 140, roofH, COL.plant, COL.line);
+      g += txt(bx + bw / 2, roofY + 19, "Air-handling unit (AHU)", COL.plantInk, 11, "middle", "600");
+      // fresh air in/out arrows
+      g += line(bx + bw / 2 - 90, roofY + 15, bx + bw / 2 - 70, roofY + 15, COL.air, 3); mark("air");
+      g += txt(bx + bw / 2 - 92, roofY + 12, "OA", COL.muted, 9, "end");
+      // supply + return ducts down a riser
+      var axS = bx + 46, axR = bx + 74;
+      g += riser(axS, COL.cool, null, 8); mark("cool"); // treat supply as conditioned (blue)
+      g += riser(axR, COL.air, "2 6", 4); mark("air");
+      g += line(bx + bw / 2 - 40, roofY + roofH, axS, top + 6, COL.cool, 6);
+      g += line(bx + bw / 2 + 20, roofY + roofH, axR, top + 6, COL.air, 3, "2 6");
+      // diffusers per floor
+      for (var d = 0; d < nDraw; d++) {
+        var dy = top + d * fh + 14;
+        g += line(axS, dy, axS + 60, dy, COL.cool, 4);
+        g += '<polygon points="' + (axS + 60) + ',' + (dy - 4) + ' ' + (axS + 72) + ',' + dy + ' ' + (axS + 60) + ',' + (dy + 4) + '" fill="' + COL.cool + '"/>';
+      }
+      g += txt(axS - 6, top - 16, "Supply air", COL.cool, 10, "end", "600");
+      // coils fed by plant
+      if (state.coolSource !== "dx") {
+        // chiller/boiler in basement-left, water up to AHU
+        g += drawGroundPlant(sideX, sideW, ground, rect, txt, line, mark);
+        // water loop from ground plant up the left to roof AHU
+        g += line(sideX + sideW / 2, ground + 2, sideX + sideW / 2, roofY + roofH + 10, COL.water, 4);
+        g += line(sideX + sideW / 2, roofY + roofH + 10, bx + bw / 2 - 70, roofY + roofH - 6, COL.water, 4); mark("water");
+        g += txt(sideX + sideW / 2 + 6, (ground + roofY) / 2, "Chilled / heating water", COL.water, 10, "start", "600");
+      } else {
+        g += txt(bx + bw / 2, roofY + roofH + 12, "Packaged DX at the AHU", COL.muted, 10, "middle");
+      }
+    }
+    else if (sy.air === "terminal") {
+      // DOAS on roof (fresh air only)
+      g += rect(bx + bw / 2 - 60, roofY, 120, roofH, COL.plant, COL.line);
+      g += txt(bx + bw / 2, roofY + 19, "DOAS (fresh air)", COL.plantInk, 11, "middle", "600");
+      g += line(bx + bw / 2 - 80, roofY + 15, bx + bw / 2 - 60, roofY + 15, COL.air, 3); mark("air");
+      g += txt(bx + bw / 2 - 82, roofY + 12, "OA", COL.muted, 9, "end");
+      // small OA duct riser
+      var oaX = bx + 40;
+      g += line(bx + bw / 2 - 40, roofY + roofH, oaX, top + 6, COL.air, 3, "2 6");
+      g += riser(oaX, COL.air, "2 6", 3);
+      for (var o = 0; o < nDraw; o++) { var oy = top + o * fh + 22; g += line(oaX, oy, oaX + 34, oy, COL.air, 3, "2 6"); }
+      g += txt(oaX + 20, top - 8, "Fresh air", COL.muted, 10, "middle", "600");
+
+      if (sy.water === "none") {
+        // VRF: refrigerant loop from side condenser to indoor heads
+        g += drawGroundPlant(sideX, sideW, ground, rect, txt, line, mark, "VRF outdoor unit");
+        var rx = bx + bw - 60;
+        g += line(sideX + sideW, ground - 20, rx, ground - 6, COL.refrig, 3);
+        g += riser(rx, COL.refrig, "1 5", 3); mark("refrig");
+        g += terminals("vrf", COL.refrig, "VRF indoor heads");
+        for (var v = 0; v < nDraw; v++) { var vy = top + v * fh + fh / 2; g += line(rx, vy, bx + bw - 30, vy, COL.refrig, 3, "1 5"); }
+        g += txt((sideX + sideW + rx) / 2, ground - 26, "Refrigerant", COL.refrig, 10, "middle", "600");
+      } else {
+        // water loop terminals (beams / FCU / radiant) from ground chiller/boiler
+        g += drawGroundPlant(sideX, sideW, ground, rect, txt, line, mark);
+        var wx = bx + bw - 62;
+        g += line(sideX + sideW, ground - 20, wx, ground - 6, COL.water, 4);
+        g += riser(wx, COL.water, null, 4); mark("water");
+        var tlabel = state.system === "beam" ? "Chilled beams" : (state.system === "radiant" ? "Radiant slab" : "Fan-coil units");
+        if (state.system === "radiant") {
+          // draw slab loops as coils along each floor base
+          for (var r = 0; r < nDraw; r++) {
+            var ry = top + r * fh + fh - 6;
+            g += line(wx, ry, bx + 90, ry, COL.water, 4);
+          }
+          g += txt(wx, top - 12, tlabel, COL.water, 10, "end", "600");
+        } else {
+          g += terminals(state.system, COL.water, tlabel);
+          for (var t2 = 0; t2 < nDraw; t2++) { var ty = top + t2 * fh + fh / 2; g += line(wx, ty, bx + bw - 30, ty, COL.water, 4); }
+        }
+        g += txt((sideX + sideW + wx) / 2, ground - 26, "Chilled / heating water", COL.water, 10, "middle", "600");
+      }
+    }
+    else if (sy.air === "package") {
+      if (state.system === "evap") {
+        // rooftop evap cooler
+        g += rect(bx + bw / 2 - 60, roofY, 120, roofH, COL.plant, COL.line);
+        g += txt(bx + bw / 2, roofY + 19, "Evaporative cooler", COL.plantInk, 11, "middle", "600");
+        g += line(bx + bw / 2 - 80, roofY + 15, bx + bw / 2 - 60, roofY + 15, COL.air, 3); mark("air");
+        g += txt(bx + bw / 2 - 82, roofY + 12, "OA", COL.muted, 9, "end");
+        var ex = bx + 60;
+        g += line(bx + bw / 2 - 30, roofY + roofH, ex, top + 6, COL.cool, 6); mark("cool");
+        g += riser(ex, COL.cool, null, 6);
+        for (var e = 0; e < nDraw; e++) { var ey = top + e * fh + 16; g += line(ex, ey, ex + 60, ey, COL.cool, 4); }
+        g += txt(ex + 40, top - 12, "Cooled supply air", COL.cool, 10, "start", "600");
+        // water make-up
+        g += line(sideX + 60, ground, ex, roofY + roofH + 8, COL.water, 3, "3 4"); mark("water");
+        g += txt(sideX + 20, ground - 10, "Water", COL.water, 10, "start", "600");
+      } else {
+        // split / packaged DX: per-floor indoor + outdoor units, refrigerant short links
+        mark("refrig");
+        for (var p = 0; p < nDraw; p++) {
+          var py = top + p * fh + fh / 2;
+          g += rect(bx + bw - 30, py - 8, 22, 16, COL.plant, COL.refrig); // indoor unit
+          g += rect(bx + bw + 6, py - 9, 20, 18, COL.plant, COL.refrig);  // outdoor unit on facade
+          g += line(bx + bw - 8, py, bx + bw + 6, py, COL.refrig, 3, "1 5");
+        }
+        g += txt(bx + bw - 34, top - 12, "Indoor units", COL.refrig, 10, "end", "600");
+        g += txt(bx + bw + 2, top - 12, "Outdoor units", COL.refrig, 10, "start", "600");
+      }
+    }
+
+    // electricity feed (grid) to whichever plant, drawn along the ground
+    g += line(20, ground + 2, sideX + sideW / 2, ground + 2, COL.elec, 3); mark("elec");
+    g += '<polygon points="18,' + (ground - 4) + ' 26,' + (ground + 2) + ' 18,' + (ground + 8) + '" fill="' + COL.elec + '"/>';
+    g += txt(30, ground + 16, "Grid electricity", COL.elec, 10, "start", "600");
+
+    // gas feed if boiler
+    if (state.heatSource === "gas") {
+      g += line(20, ground + 26, sideX + sideW / 2, ground + 26, COL.gas, 3); mark("gas");
+      g += txt(30, ground + 38, "Natural gas", COL.gas, 10, "start", "600");
+    }
+
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="System schematic">' + g + '</svg>';
+    $("schematic").innerHTML = svg;
+    renderLegend(used);
+  }
+  // shared ground plant box (chiller + optional boiler)
+  function drawGroundPlant(x, w, ground, rect, txt, line, mark, labelOverride) {
+    // plant room sits just above the ground line on the left (a basement/side plant space)
+    var out = rect(x, ground - 40, w, 34, COL.plant, COL.line);
+    var label = labelOverride || (state.coolSource === "water-chiller" ? "Chiller + tower / heat source" : "Chiller / heat source");
+    out += txt(x + w / 2, ground - 26, "Plant room", COL.plantInk, 10, "middle", "600");
+    out += txt(x + w / 2, ground - 13, label, COL.plantInk, 9, "middle");
+    if (labelOverride !== "VRF outdoor unit") mark("plant");
+    return out;
+  }
+  function renderLegend(used) {
+    var items = [];
+    if (used.cool) items.push(['i', COL.cool, "Cooling / conditioned air"]);
+    if (used.heat) items.push(['i', COL.heat, "Heating"]);
+    if (used.water) items.push(['i', COL.water, "Water loop"]);
+    if (used.air) items.push(['i', COL.air, "Fresh / return air"]);
+    if (used.refrig) items.push(['i', COL.refrig, "Refrigerant"]);
+    if (used.elec) items.push(['i', COL.elec, "Electricity"]);
+    if (used.gas) items.push(['i', COL.gas, "Gas"]);
+    items.push(['s', COL.plant, "Plant / equipment"]);
+    $("legend").innerHTML = items.map(function (it) {
+      var mk = it[0] === 'i' ? '<i style="background:' + it[1] + '"></i>' : '<span class="swatch" style="background:' + it[1] + ';border:1px solid ' + COL.line + '"></span>';
+      return '<span>' + mk + it[2] + '</span>';
+    }).join("");
+  }
+
+  // ---------- result: explanation ----------
+  function explainParts() {
+    var sy = sysById(state.system);
+    var parts = [];
+    function part(col, label, text) { parts.push({ col: col, label: label, text: text }); }
+
+    if (sy.air === "all-air") {
+      part(COL.air, "Fresh air", "The air-handling unit draws in outdoor air, filters it, and mixes it with return air.");
+      part(COL.cool, "Conditioning + delivery", "The same unit heats or cools that air, then " + (state.system === "vav" ? "zone VAV boxes vary the flow" : "a constant flow is delivered") + " through ducts and diffusers. Air is the medium that both ventilates and conditions.");
+      if (state.coolSource !== "dx") part(COL.water, "Plant", "A " + (state.coolSource === "water-chiller" ? "water-cooled chiller with a cooling tower" : "air-cooled chiller") + " (and the heat source) feed chilled and heating water to the unit's coils.");
+      else part(COL.refrig, "Plant", "Packaged direct-expansion coils cool the air at the unit, with no central water loop.");
+    } else if (sy.air === "terminal") {
+      part(COL.air, "Fresh air (DOAS)", "A dedicated outdoor-air system supplies only the ventilation air, pre-conditioned and, in humid climates, dehumidified. This decouples ventilation from the space conditioning.");
+      if (sy.water !== "none") {
+        var tn = state.system === "beam" ? "Chilled beams" : (state.system === "radiant" ? "Radiant slab loops" : "Fan-coil units");
+        part(COL.water, "Space conditioning", tn + " handle the sensible heating and cooling using a water loop, quietly and with low fan energy.");
+        part(COL.water, "Plant", "A " + (state.coolSource === "water-chiller" ? "water-cooled chiller with a tower" : "air-cooled chiller") + " and the heat source generate the chilled and heating water.");
+      } else {
+        part(COL.refrig, "Space conditioning", "Refrigerant is piped from the outdoor unit to indoor VRF heads in each zone; heat-recovery units can move heat from a zone that needs cooling to one that needs heating.");
+      }
+    } else if (state.system === "evap") {
+      part(COL.cool, "Cooling", "Outdoor air is drawn across a wetted medium; evaporating water cools it, and that cool air is supplied to the space. It works only because the incoming air is dry.");
+      part(COL.water, "Consumable", "The process consumes water rather than running a refrigeration cycle, so energy use is very low but water use is not.");
+    } else {
+      part(COL.refrig, "Conditioning", "Self-contained direct-expansion units heat and cool each zone with refrigerant, an indoor unit paired with an outdoor unit.");
+      part(COL.air, "Fresh air", "Ventilation is added separately (openable windows, an OA fan, or a small DOAS), since a basic split does not guarantee fresh-air rates.");
+    }
+
+    // heat source line
+    if (state.system !== "evap") {
+      if (state.heatSource === "gas") part(COL.gas, "Heat source", "Heating comes from an on-site gas boiler, which burns fuel in the building. This is the main carbon liability in the concept.");
+      else if (state.heatSource === "heatpump") part(COL.heat, "Heat source", "Heating is by electric heat pump (reverse cycle), moving heat rather than burning fuel, so it is all-electric and efficient.");
+      else part(COL.heat, "Heat source", "Heating is by electric resistance: all-electric but inefficient, so keep it to a top-up role.");
+    }
+
+    var sub = sy.name + " for a " + programLabel() + " in " + zone().name.split(" — ")[0] + ".";
+    $("resultLede").textContent = sub + " Here is how it works and what it means for carbon.";
+    $("explain").innerHTML = '<p class="note">Read from fresh air, through conditioning, to the plant that supplies it:</p>' +
+      parts.map(function (p) {
+        return '<div class="part"><span class="dot" style="background:' + p.col + '"></span><span><b>' + p.label + ':</b> ' + p.text + '</span></div>';
+      }).join("");
+  }
+  function programLabel() {
+    return { office: "office", retail: "retail tenancy", mixed: "mixed-use building", education: "education building", hotel: "hotel / residential tower", healthcare: "healthcare / lab building" }[state.program];
+  }
+
+  // ---------- result: carbon + levers ----------
+  function renderCarbon() {
+    var sy = sysById(state.system);
+    var combustion = state.heatSource === "gas";
+    var allElectric = !combustion && state.system !== "evap";
+    var refrigRisk = sy.refrig === "high" ? "high" : (sy.refrig === "low" ? "contained" : "none");
+
+    var badges = [];
+    badges.push(['<span class="badge ' + (combustion ? "bad" : "good") + '">' + (combustion ? "On-site combustion (gas)" : "No on-site combustion") + '</span>']);
+    badges.push(['<span class="badge ' + (allElectric ? "good" : (state.system === "evap" ? "good" : "warn")) + '">' + (allElectric || state.system === "evap" ? "All-electric" : "Not fully electric") + '</span>']);
+    if (sy.refrig !== "none") {
+      var rc = state.refrigerant === "legacy" ? "bad" : (refrigRisk === "high" ? "warn" : "good");
+      var rl = state.refrigerant === "legacy" ? "High-GWP refrigerant" : "Low-GWP refrigerant" + (refrigRisk === "high" ? " (large charge)" : "");
+      badges.push(['<span class="badge ' + rc + '">' + rl + '</span>']);
+    } else {
+      badges.push(['<span class="badge good">No refrigerant</span>']);
+    }
+    $("carbonBadges").innerHTML = badges.join("");
+
+    $("carbonIntro").textContent = "Operational carbon here is driven by three things: whether anything is burned on site, how efficiently electricity is turned into heating and cooling, and the refrigerant. Ranked levers for this configuration:";
+
+    // build levers
+    var levers = [];
+    function lever(name, imp, text) { levers.push({ name: name, imp: imp, text: text }); }
+    var z = zone();
+
+    if (combustion) {
+      lever("Electrify the heat source", "high",
+        "Replace the gas boiler with an electric heat pump (reverse-cycle or, for a water loop, an air-to-water heat pump). This removes on-site combustion entirely and lets the heating decarbonise as the grid does." + (z.z === "8" || z.z === "7" ? " In this cool/alpine zone, size the heat pump for the low-ambient heating peak and consider a small resistance or storage top-up for the coldest hours." : ""));
+    }
+    if (sy.refrig === "high") {
+      lever(state.refrigerant === "legacy" ? "Switch to a low-GWP refrigerant" : "Manage the refrigerant charge", state.refrigerant === "legacy" ? "high" : "med",
+        (state.refrigerant === "legacy"
+          ? "This system holds a large refrigerant charge throughout the building, so specify a low-GWP refrigerant (R32 or R454B) instead of R410A. "
+          : "You have already chosen a low-GWP refrigerant, which is good. ") +
+        "Minimise pipe runs and charge, and design for leak detection: at this charge, refrigerant leakage can rival a year of operational emissions.");
+    }
+    if (state.system === "beam" || state.system === "radiant") {
+      lever("Exploit the mild water temperatures", "high",
+        "Beams and slabs run at gentle water temperatures (warm chilled water, mild heating water). A heat pump serving them runs at a high COP, so a water-loop heat pump is both a natural and a very efficient low-carbon plant here.");
+    }
+    if (state.coolSource === "water-chiller") {
+      lever("Weigh water-cooled COP against water use", "med",
+        "A water-cooled chiller lifts cooling efficiency, but adds a cooling tower with water consumption and Legionella management. In a water-scarce site or dry zone, an air-cooled or hybrid chiller may be the more responsible whole-of-environment choice.");
+    }
+    if (allElectric) {
+      lever("Pair all-electric plant with clean supply", "high",
+        "Because nothing is burned on site, operational carbon tracks the electricity supply. Commit roof area to on-site PV and back it with a GreenPower or renewable PPA contract; this is the single biggest lever once the plant is electric.");
+    }
+    if (state.oa === "doas") {
+      lever("Add heat recovery to the DOAS", "med",
+        "An enthalpy or energy-recovery wheel on the dedicated outdoor-air unit reclaims heating and cooling from the exhaust, cutting the energy spent conditioning fresh air" + (z.humid ? ", which is significant in this humid zone where the outdoor air carries a large latent load." : "."));
+    }
+    if (state.operable === "mixed") {
+      lever("Bank the mixed-mode hours", "med",
+        "Openable windows let the plant switch off in mild weather. Design the controls so mechanical and natural modes do not fight, and count the free-running hours as avoided operational carbon.");
+    }
+    if (z.arid && state.system !== "evap") {
+      lever("Consider evaporative or hybrid pre-cooling", "low",
+        "In this dry zone, indirect evaporative pre-cooling can shed a share of the mechanical cooling energy at very low carbon. It complements, rather than replaces, the system you have chosen.");
+    }
+    if (state.system === "evap") {
+      lever("Electrify the companion heating", "high",
+        "Evaporative cooling is already very low carbon (no combustion, no refrigerant, low energy), so the carbon question shifts to the heating it cannot provide. Pair it with an electric heat pump rather than a gas heater, and the whole system becomes all-electric." + (z.heat ? " This matters here, where the heating season is real." : ""));
+      lever("Account for water, not just energy", "med",
+        "The environmental cost of evaporative cooling is water, not carbon. In a dry or water-scarce region, quantify the water use and consider an indirect (plate) stage to cut consumption. This is the trade-off to argue explicitly in Assignment 2.");
+    }
+    // universal closing lever
+    lever("Right-size from your loads, then shift the peak", "med",
+      "Size plant from your DesignBuilder peak loads (Assignment 1), not a rule of thumb: oversized plant runs inefficiently and embodies needless carbon. Where you can, use thermal mass or night pre-cooling to shift demand off the grid peak.");
+
+    // order: high, med, low
+    var order = { high: 0, med: 1, low: 2 };
+    levers.sort(function (a, b) { return order[a.imp] - order[b.imp]; });
+    $("levers").innerHTML = levers.map(function (l) {
+      return '<div class="lever"><div class="top"><span class="lname">' + l.name + '</span>' +
+        '<span class="imp ' + l.imp + '">' + (l.imp === "high" ? "High impact" : l.imp === "med" ? "Medium" : "Situational") + '</span></div>' +
+        '<p>' + l.text + '</p></div>';
+    }).join("");
+  }
+
+  // ---------- result: summary ----------
+  function renderSummary() {
+    var sy = sysById(state.system);
+    var rows = [
+      ["Building", programLabel() + ", " + state.floors + " floors, ~" + Number(state.gfa).toLocaleString() + " m²"],
+      ["Climate", zone().name.split(" — ")[0] + " (" + zone().eg + ")"],
+      ["Fresh air", state.oa === "doas" ? "Dedicated outdoor air (DOAS)" : "All-air (mixed)" + (state.operable === "mixed" ? ", mixed-mode" : "")],
+      ["System", sy.name],
+      ["Cooling source", sy.refrig === "high" ? "Direct expansion (refrigerant)" : (state.system === "evap" ? "Evaporative" : (state.coolSource === "water-chiller" ? "Water-cooled chiller + tower" : "Air-cooled chiller"))],
+      ["Heat source", state.system === "evap" ? "Separate (none in this system)" : (state.heatSource === "gas" ? "Gas boiler" : state.heatSource === "heatpump" ? "Electric heat pump" : "Electric resistance")],
+      ["Refrigerant", sy.refrig === "none" ? "None" : (state.refrigerant === "legacy" ? "Legacy high-GWP" : "Low-GWP")]
+    ];
+    $("summaryBox").innerHTML = rows.map(function (r) {
+      return '<div class="row"><span class="k">' + r[0] + '</span><span class="v">' + r[1] + '</span></div>';
+    }).join("");
+  }
+
+  function renderResult() {
+    reconcilePlant();
+    explainParts();
+    drawSchematic();
+    renderCarbon();
+    renderSummary();
+  }
+
+  // ---------- carry text ----------
+  function buildCarry() {
+    var sy = sysById(state.system);
+    var lines = [];
+    lines.push("HVAC CONCEPT — carry into Assignment 2");
+    lines.push("");
+    lines.push("Building: " + programLabel() + ", " + state.floors + " floors, ~" + Number(state.gfa).toLocaleString() + " m²");
+    lines.push("Climate: " + zone().name + " (e.g. " + zone().eg + ")");
+    lines.push("Fresh air: " + (state.oa === "doas" ? "DOAS" : "all-air") + (state.operable === "mixed" ? " + mixed-mode" : ""));
+    lines.push("System: " + sy.name);
+    lines.push("Cooling: " + (sy.refrig === "high" ? "DX refrigerant" : (state.system === "evap" ? "evaporative" : (state.coolSource === "water-chiller" ? "water-cooled chiller + tower" : "air-cooled chiller"))));
+    lines.push("Heat source: " + (state.system === "evap" ? "separate" : (state.heatSource === "gas" ? "gas boiler" : state.heatSource === "heatpump" ? "electric heat pump" : "electric resistance")));
+    lines.push("Refrigerant: " + (sy.refrig === "none" ? "none" : (state.refrigerant === "legacy" ? "legacy high-GWP" : "low-GWP")));
+    lines.push("");
+    lines.push("My justification:");
+    lines.push(state.notes.trim() ? state.notes.trim() : "[write your reasoning above before copying]");
+    lines.push("");
+    lines.push("Reminder: size plant from your DesignBuilder (A1) loads. This tool does not size or calculate loads.");
+    var el = $("carry");
+    el.textContent = lines.join("\n");
+    el.style.display = "block";
+    // best-effort clipboard
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(el.textContent);
+        $("buildCarry").textContent = "Copied to clipboard ✓";
+        setTimeout(function () { $("buildCarry").textContent = "Build a summary to copy"; }, 2500);
+      }
+    } catch (e) { /* manual select fallback: the block is visible to copy */ }
+  }
+
+  // ---------- listeners ----------
+  document.querySelectorAll("[data-go]").forEach(function (b) {
+    b.addEventListener("click", function () { show(+this.dataset.go); });
+  });
+  $("mode").addEventListener("change", function () { state.mode = this.value; });
+  $("program").addEventListener("change", function () { state.program = this.value; });
+  $("zone").addEventListener("change", function () { state.zone = this.value; zoneHint(); });
+  $("floors").addEventListener("input", function () { state.floors = Math.max(1, Math.min(60, parseInt(this.value, 10) || 1)); });
+  $("gfa").addEventListener("input", function () { state.gfa = Math.max(100, parseInt(this.value, 10) || 100); });
+  document.querySelectorAll('input[name="operable"]').forEach(function (r) { r.addEventListener("change", function () { state.operable = this.value; }); });
+  document.querySelectorAll('input[name="oa"]').forEach(function (r) { r.addEventListener("change", function () { state.oa = this.value; oaNote(); renderSystems(); }); });
+  document.querySelectorAll('input[name="cond"]').forEach(function (r) { r.addEventListener("change", function () { state.cond = this.value; condNote(); }); });
+  // build systems when entering step 4
+  document.querySelector('[data-go="3"]').addEventListener("click", renderSystems);
+  document.querySelector('[data-go="2"]').addEventListener("click", condNote);
+  $("notes").addEventListener("input", function () { state.notes = this.value; });
+  $("buildCarry").addEventListener("click", buildCarry);
+  $("printBtn").addEventListener("click", function () { window.print(); });
+  $("restart").addEventListener("click", function () { show(0); });
+
+  // ---------- init ----------
+  buildZoneSelect();
+  oaNote();
+  condNote();
+  renderSystems();
+  renderStepper();
+})();
+</script>
+</body>
+</html>
