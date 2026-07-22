@@ -6,10 +6,28 @@
 <title>IAQ &amp; Ventilation Calculator — BPSD5030</title>
 <style>
   :root {
-    --bg: #f6f7f9; --card: #ffffff; --ink: #1c2430; --muted: #5a6675;
-    --line: #dfe4ea; --accent: #0e7c86; --accent-ink: #ffffff;
-    --good: #1a7f4b; --warn: #b4690e; --bad: #b02a37;
-    --field: #ffffff; --result-bg: #eef6f7;
+    --bg: #f4f6f7; --card: #fcfdfd; --ink: #1c2430; --muted: #5a6675;
+    --line: #dfe4ea; --accent: #0e7c86; --accent-ink: #fbfefe;
+    --good: #1a7f4b; --warn: #9c5a0b; --bad: #b02a37;
+    --field: #fdfefe; --result-bg: #edf4f5;
+    /* one radius scale, one shadow — do not add values outside these */
+    --r-sm: 3px; --r-md: 8px; --r-pill: 999px;
+    --shadow: 0 3px 8px rgba(20, 38, 46, .12);
+
+    /* Type: six roles, ~1.15 ratio. Roles are distinguished by weight and
+       colour as much as size, so sizes never sit closer than one step. */
+    --t-glyph: .68rem;   /* icon characters, not text */
+    --t-glyph-lg: 1.4rem;
+    --t-meta:  .78rem;   /* captions, hints, footer, table headers */
+    --t-label: .875rem;  /* field labels, notes, buttons, summaries */
+    --t-body:  1rem;
+    --t-lead:  1.125rem; /* primer opening line */
+    --t-h2:    1.3rem;
+    --t-h1:    1.625rem;
+
+    /* Space: 4px base. Tight inside a group, generous between groups. */
+    --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px;
+    --s-5: 20px; --s-6: 24px; --s-8: 32px; --s-12: 48px;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -17,123 +35,133 @@
       --line: #2a3441; --accent: #38b2bd; --accent-ink: #06212a;
       --good: #57c98a; --warn: #e0a955; --bad: #e2707a;
       --field: #0f151c; --result-bg: #13232a;
+      --shadow: 0 3px 8px rgba(0, 0, 0, .34);
     }
+    /* Light text on a dark surface blooms and reads thinner. Compensate on
+       all three axes: a little more leading, a little more tracking, and one
+       step more weight on the low-contrast roles. */
+    body { line-height: 1.6; letter-spacing: .004em; }
+    .primer p, .sub, .note, label, .deriv { font-weight: 450; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: .01ms !important; animation-duration: .01ms !important; }
   }
   * { box-sizing: border-box; }
   body {
     margin: 0; background: var(--bg); color: var(--ink);
     font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
-  .wrap { max-width: 860px; margin: 0 auto; padding: 24px 18px 64px; }
-  header.page { margin-bottom: 8px; }
-  h1 { font-size: 1.5rem; margin: 0 0 4px; }
-  .lede { color: var(--muted); margin: 0 0 18px; max-width: 62ch; }
-  .home { display: inline-block; color: var(--accent); text-decoration: none; font-size: .9rem; margin-bottom: 14px; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: var(--s-6) var(--s-4) var(--s-12); }
+  header.page { margin-bottom: var(--s-2); }
+  h1 { font-size: var(--t-h1); margin: 0 0 var(--s-1); letter-spacing: -.018em; }
+  .lede { color: var(--muted); margin: 0 0 var(--s-6); max-width: 62ch; }
+  .home { display: inline-block; color: var(--accent); text-decoration: none; font-size: var(--t-label); margin-bottom: var(--s-4); }
   .home:hover { text-decoration: underline; }
 
   /* ---- ordered tabs ---- */
-  .tabs { display: flex; gap: 6px; margin: 4px 0 18px; flex-wrap: wrap; }
+  .tabs { display: flex; gap: var(--s-2); margin: 0 0 var(--s-6); flex-wrap: wrap; }
   .tab { border: 1px solid var(--line); background: var(--field); color: var(--muted);
-    border-radius: 999px; padding: 7px 15px 7px 8px; font-size: .9rem; cursor: pointer;
-    display: inline-flex; align-items: center; gap: 8px; font-family: inherit; }
+    border-radius: var(--r-pill); padding: var(--s-2) var(--s-4) var(--s-2) var(--s-2); font-size: var(--t-label); cursor: pointer;
+    display: inline-flex; align-items: center; gap: var(--s-2); font-family: inherit; }
   .tab:hover { border-color: var(--accent); color: var(--ink); }
   .tab.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
   .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .tab .n { display: inline-flex; align-items: center; justify-content: center;
     width: 21px; height: 21px; border-radius: 50%; background: var(--line); color: var(--muted);
-    font-size: .78rem; font-weight: 700; flex: none; }
+    font-size: var(--t-meta); font-weight: 700; flex: none; }
   .tab.active .n { background: var(--accent-ink); color: var(--accent); }
 
   section.card {
-    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
-    padding: 18px 18px 20px; margin: 0;
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md);
+    padding: var(--s-6); margin: 0;
   }
   .card[hidden] { display: none; }
-  h2 { font-size: 1.15rem; margin: 0 0 4px; }
-  .sub { color: var(--muted); font-size: .92rem; margin: 0 0 14px; }
+  h2 { font-size: var(--t-h2); margin: 0 0 var(--s-1); letter-spacing: -.012em; }
+  .sub { color: var(--muted); font-size: var(--t-label); margin: 0 0 var(--s-4); }
 
-  /* ---- per-tab primer ("the idea behind the number") ---- */
-  .primer { background: var(--result-bg); border-left: 3px solid var(--accent);
-    border-radius: 8px; padding: 12px 15px; margin: 0 0 18px; }
-  .primer .what { font-weight: 600; margin: 0 0 5px; }
-  .primer p { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.5; }
+  /* ---- per-tab primer ("the idea behind the number") ----
+     Hierarchy comes from type and space, not a coloured bar. */
+  .primer { margin: 0 0 var(--s-6); padding: 0 0 var(--s-5); border-bottom: 1px solid var(--line); }
+  .primer .what { font-weight: 600; font-size: var(--t-lead); letter-spacing: -.011em;
+    margin: 0 0 var(--s-2); max-width: 58ch; }
+  .primer p { margin: 0; color: var(--muted); font-size: var(--t-label); line-height: 1.62; max-width: 64ch; }
 
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; align-items: end; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--s-3); align-items: end; }
   .grid > div { display: flex; flex-direction: column; }
   .grid > div > input, .grid > div > select { margin-top: auto; }
-  label { display: block; font-size: .85rem; color: var(--muted); margin-bottom: 4px; }
+  label { display: block; font-size: var(--t-label); color: var(--muted); margin-bottom: var(--s-1); }
   input, select {
-    width: 100%; padding: 8px 10px; font-size: 1rem; color: var(--ink);
-    background: var(--field); border: 1px solid var(--line); border-radius: 8px;
+    width: 100%; padding: var(--s-2) var(--s-3); font-size: var(--t-body); color: var(--ink);
+    background: var(--field); border: 1px solid var(--line); border-radius: var(--r-md);
   }
   input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .results { margin-top: 16px; background: var(--result-bg); border-radius: 10px; padding: 4px 14px; }
-  .row { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+  .results { margin-top: var(--s-5); background: var(--result-bg); border-radius: var(--r-md); padding: var(--s-1) var(--s-4); }
+  .row { display: flex; justify-content: space-between; gap: var(--s-3); padding: var(--s-2) 0; border-bottom: 1px solid var(--line); }
   .row:last-child { border-bottom: 0; }
   .row .k { color: var(--muted); }
   .row .v { font-variant-numeric: tabular-nums; font-weight: 600; }
-  .verdict { margin-top: 14px; padding: 12px 14px; border-radius: 10px; font-weight: 600; border: 1px solid var(--line); }
+  .verdict { margin-top: var(--s-4); padding: var(--s-3) var(--s-4); border-radius: var(--r-md); font-weight: 600; border: 1px solid var(--line); }
   .verdict.good { color: var(--good); }
   .verdict.bad { color: var(--bad); }
   .verdict.warn { color: var(--warn); }
-  canvas { width: 100%; height: auto; display: block; margin-top: 8px; }
-  .formula { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .86rem;
-    background: var(--result-bg); border-radius: 8px; padding: 10px 12px; margin: 6px 0; overflow-x: auto; }
-  .note { color: var(--muted); font-size: .86rem; }
+  canvas { width: 100%; height: auto; display: block; margin-top: var(--s-2); }
+  .formula { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: var(--t-label);
+    background: var(--result-bg); border-radius: var(--r-md); padding: var(--s-3); margin: var(--s-2) 0; overflow-x: auto; }
+  .note { color: var(--muted); font-size: var(--t-label); }
 
-  /* ---- "the maths behind it" panel ---- */
-  details.maths { margin-top: 16px; border-left: 3px solid var(--accent);
-    background: var(--result-bg); border-radius: 8px; padding: 4px 15px; }
-  details.maths[open] { padding-bottom: 12px; }
-  details.maths > summary { cursor: pointer; color: var(--accent); font-size: .9rem;
-    font-weight: 600; padding: 9px 0; list-style: none; }
+  /* ---- "the maths behind it" panel ----
+     A top hairline, not a nested tinted card. */
+  details.maths { margin-top: var(--s-6); border-top: 1px solid var(--line); padding: 0; }
+  details.maths[open] { padding-bottom: var(--s-4); }
+  details.maths > summary { cursor: pointer; color: var(--accent); font-size: var(--t-label);
+    font-weight: 600; padding: var(--s-3) 0; list-style: none; }
   details.maths > summary::-webkit-details-marker { display: none; }
   details.maths > summary::before { content: "▸ "; }
   details.maths[open] > summary::before { content: "▾ "; }
-  details.maths .deriv { color: var(--muted); font-size: .88rem; margin: 8px 0 0; }
+  details.maths .deriv { color: var(--muted); font-size: var(--t-label); margin: var(--s-2) 0 0; }
 
   /* ---- Back / Next ---- */
-  .tabnav { display: flex; justify-content: space-between; margin-top: 20px; gap: 8px; }
+  .tabnav { display: flex; justify-content: space-between; margin-top: var(--s-6); gap: var(--s-2); }
   .tabnav .btn[disabled] { opacity: .35; cursor: default; }
 
-  footer.page { color: var(--muted); font-size: .82rem; margin-top: 24px; border-top: 1px solid var(--line); padding-top: 14px; }
+  footer.page { color: var(--muted); font-size: var(--t-meta); margin-top: var(--s-8); border-top: 1px solid var(--line); padding-top: var(--s-4); }
   .rangeval { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
-  table.sched { width: 100%; border-collapse: collapse; margin: 6px 0 10px; }
-  table.sched th { text-align: left; color: var(--muted); font-weight: 500; font-size: .78rem; padding: 4px 8px; }
-  table.sched td { padding: 3px 6px; }
-  table.sched input { padding: 6px 8px; font-size: .95rem; }
+  table.sched { width: 100%; border-collapse: collapse; margin: var(--s-2) 0 var(--s-3); }
+  table.sched th { text-align: left; color: var(--muted); font-weight: 500; font-size: var(--t-meta); padding: var(--s-1) var(--s-2); }
+  table.sched td { padding: var(--s-1) var(--s-2); }
+  table.sched input { padding: var(--s-1) var(--s-2); font-size: var(--t-label); }
   table.sched td:last-child { width: 34px; text-align: center; }
-  .btn-row { display: flex; gap: 8px; margin: 2px 0 4px; flex-wrap: wrap; }
-  .btn { background: var(--accent); color: var(--accent-ink); border: none; border-radius: 8px;
-    padding: 7px 12px; font-size: .88rem; cursor: pointer; font-family: inherit; }
+  .btn-row { display: flex; gap: var(--s-2); margin: 0 0 var(--s-1); flex-wrap: wrap; }
+  .btn { background: var(--accent); color: var(--accent-ink); border: none; border-radius: var(--r-md);
+    padding: var(--s-2) var(--s-3); font-size: var(--t-label); cursor: pointer; font-family: inherit; }
   .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
   .iconbtn { background: transparent; border: 1px solid var(--line); color: var(--muted);
-    border-radius: 6px; cursor: pointer; padding: 3px 9px; font-size: 1rem; line-height: 1; }
+    border-radius: var(--r-sm); cursor: pointer; padding: var(--s-1) var(--s-2); font-size: var(--t-body); line-height: 1; }
   .iconbtn:hover { color: var(--bad); border-color: var(--bad); }
 
   /* ---- accessible info popover (replaces native title=) ---- */
   .info-wrap { position: relative; display: inline-block; vertical-align: middle; }
   .info-tip { display: inline-flex; align-items: center; justify-content: center;
-    width: 16px; height: 16px; margin-left: 4px; border-radius: 50%; border: none; padding: 0;
-    background: var(--line); color: var(--muted); font-size: .68rem; font-weight: 700;
+    width: 16px; height: 16px; margin-left: var(--s-1); border-radius: 50%; border: none; padding: 0;
+    background: var(--line); color: var(--muted); font-size: var(--t-glyph); font-weight: 700;
     font-family: inherit; font-style: normal; line-height: 1; cursor: pointer; user-select: none; }
   .info-tip:hover, .info-tip[aria-expanded="true"] { background: var(--accent); color: var(--accent-ink); }
   .info-tip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .popover { position: absolute; z-index: 30; left: 0; bottom: calc(100% + 8px);
     width: max-content; max-width: 250px; background: var(--card); color: var(--ink);
-    border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px;
-    font-size: .82rem; font-weight: 400; line-height: 1.45; text-align: left;
-    box-shadow: 0 6px 22px rgba(0,0,0,.18); }
+    border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-2) var(--s-3);
+    font-size: var(--t-meta); font-weight: 400; line-height: 1.45; text-align: left;
+    box-shadow: var(--shadow); }
   .popover[hidden] { display: none; }
 
-  .csv-upload { margin-top: 14px; border: 1.5px dashed var(--line); border-radius: 10px;
-    padding: 16px; text-align: center; cursor: pointer; transition: border-color .15s, background .15s; }
+  .csv-upload { margin-top: var(--s-4); border: 1.5px dashed var(--line); border-radius: var(--r-md);
+    padding: var(--s-4); text-align: center; cursor: pointer; transition: border-color .15s, background .15s; }
   .csv-upload:hover, .csv-upload.drag-over { border-color: var(--accent); background: var(--result-bg); }
-  .csv-label { display: block; color: var(--muted); font-size: .9rem; cursor: pointer; }
+  .csv-label { display: block; color: var(--muted); font-size: var(--t-label); cursor: pointer; }
   .csv-label strong { color: var(--accent); }
-  .csv-icon { font-size: 1.4rem; display: block; margin-bottom: 4px; }
-  .csv-hint { display: block; font-size: .78rem; margin-top: 4px; }
-  .csv-clear { margin-top: 10px; }
+  .csv-icon { font-size: var(--t-glyph-lg); display: block; margin-bottom: var(--s-1); }
+  .csv-hint { display: block; font-size: var(--t-meta); margin-top: var(--s-1); }
+  .csv-clear { margin-top: var(--s-3); }
   .hidden { display: none; }
 </style>
 </head>
@@ -142,7 +170,7 @@
   <a class="home" href="index.html">&larr; BPSD5030 tutorial tools</a>
   <header class="page">
     <h1>IAQ &amp; Ventilation Calculator</h1>
-    <p class="lede">Work out the outdoor air a space needs, then check what it actually delivers from measured CO<sub>2</sub> — one step at a time. The tool does the arithmetic; deciding whether the space is adequately ventilated, and what you would change, is yours.</p>
+    <p class="lede">Work out the outdoor air a space needs, then check what it actually delivers from measured CO<sub>2</sub>, one step at a time. The tool does the arithmetic. Deciding whether the space is adequately ventilated, and what you would change, is yours.</p>
   </header>
 
   <!-- ===== Tabs ===== -->
@@ -157,7 +185,7 @@
   <section class="card" role="tabpanel" id="panel-1" aria-labelledby="tab-1" tabindex="0">
     <div class="primer">
       <p class="what">How much outdoor air the standard says this space needs.</p>
-      <p>ASHRAE 62.1 sets a <em>floor</em> for outdoor air, built from two sources of indoor pollution: people (who exhale CO<sub>2</sub> and other bioeffluents) and the building itself (finishes and furnishings that off-gas whatever the occupancy). It adds a per-person allowance and a per-area allowance to cover both — which is why a densely packed teaching room is asked for far more air than a corridor of the same floor area. Pick your space type to load the standard's values, then read off the required outdoor airflow, V<sub>oz</sub>.</p>
+      <p>ASHRAE 62.1 sets a <em>floor</em> for outdoor air. Two things pollute the air indoors: the people, who exhale CO<sub>2</sub> and other bioeffluents, and the building itself, whose finishes and furnishings off-gas whether or not anyone is there. So the standard adds a per-person allowance to a per-area allowance. That is why a packed teaching room is asked for far more air than a corridor of the same floor area. Pick your space type to load the standard's values, then read off the required outdoor airflow, V<sub>oz</sub>.</p>
     </div>
     <div class="grid">
       <div>
@@ -172,11 +200,11 @@
         </select>
       </div>
       <div>
-        <label for="rp">R<sub>p</sub> — per person (L/s·person)<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About R-p">i</button><span class="popover" role="tooltip" hidden>From ASHRAE 62.1 Table 6.2.2.1 — outdoor airflow required per occupant. Classroom/lecture ≈ 3.8; office/conference ≈ 2.5.</span></span></label>
+        <label for="rp">R<sub>p</sub> — per person (L/s·person)<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About R-p">i</button><span class="popover" role="tooltip" hidden>From ASHRAE 62.1 Table 6.2.2.1: outdoor airflow required per occupant. Classroom/lecture ≈ 3.8; office/conference ≈ 2.5.</span></span></label>
         <input id="rp" type="number" step="0.1" value="3.8">
       </div>
       <div>
-        <label for="ra">R<sub>a</sub> — per area (L/s·m&sup2;)<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About R-a">i</button><span class="popover" role="tooltip" hidden>From ASHRAE 62.1 Table 6.2.2.1 — outdoor airflow required per unit floor area, covering building and furnishing emissions. Typically 0.3 L/s·m².</span></span></label>
+        <label for="ra">R<sub>a</sub> — per area (L/s·m&sup2;)<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About R-a">i</button><span class="popover" role="tooltip" hidden>From ASHRAE 62.1 Table 6.2.2.1: outdoor airflow required per unit floor area, covering building and furnishing emissions. Typically 0.3 L/s·m².</span></span></label>
         <input id="ra" type="number" step="0.1" value="0.3">
       </div>
       <div>
@@ -196,7 +224,7 @@
         <input id="ez" type="number" step="0.05" value="1.0">
       </div>
     </div>
-    <div class="results" id="reqResults"></div>
+    <div class="results" id="reqResults" role="status" aria-live="polite" aria-atomic="true"></div>
     <details class="maths">
       <summary>The maths behind the required airflow</summary>
       <div class="formula">Vbz = (Rp &times; Pz) + (Ra &times; Az)   ·   Voz = Vbz / Ez</div>
@@ -212,7 +240,7 @@
   <section class="card" role="tabpanel" id="panel-2" aria-labelledby="tab-2" tabindex="0" hidden>
     <div class="primer">
       <p class="what">What the space actually delivers, back-calculated from your CO<sub>2</sub> reading.</p>
-      <p>People add CO<sub>2</sub> at a fairly steady rate and ventilation carries it away; when the concentration stops rising, the two are in balance and that steady CO<sub>2</sub> level becomes a fingerprint of the ventilation. Read the flattened value off your measured curve to work backwards to the outdoor airflow per person, the room total Q<sub>total</sub>, and air changes per hour. The tool then flags whether that meets the requirement from step 1.</p>
+      <p>People add CO<sub>2</sub> at a fairly steady rate and ventilation carries it away. When the concentration stops rising, those two rates are in balance. That is what lets you work backwards. Read the flattened value off your measured curve and the tool returns outdoor airflow per person, the room total Q<sub>total</sub>, and air changes per hour, then checks the result against the requirement from step 1.</p>
     </div>
     <div class="grid">
       <div>
@@ -236,8 +264,8 @@
         <input id="height" type="number" step="0.1" value="3.3">
       </div>
     </div>
-    <div class="results" id="actResults"></div>
-    <div class="verdict" id="verdict"></div>
+    <div class="results" id="actResults" role="status" aria-live="polite" aria-atomic="true"></div>
+    <div class="verdict" id="verdict" role="status" aria-live="polite" aria-atomic="true"></div>
     <details class="maths">
       <summary>The maths behind the measured ventilation</summary>
       <div class="formula">Qperson = G / (Ci &minus; Co)   ·   Qtotal = Qperson &times; N   ·   ACH = (Qtotal &times; 3.6) / Volume</div>
@@ -252,8 +280,8 @@
   <!-- ===== Tab 3: CO2 over time ===== -->
   <section class="card" role="tabpanel" id="panel-3" aria-labelledby="tab-3" tabindex="0" hidden>
     <div class="primer">
-      <p class="what">The whole curve — how fast CO<sub>2</sub> builds up and clears, not just the plateau.</p>
-      <p>The plateau is only half the story: how quickly a room reaches it, and how fast it clears when a window opens, is itself a ventilation measurement. This runs the full transient mass balance so you can watch CO<sub>2</sub> rise as a room fills and decay when people leave — the same curve your sensor draws. Room volume, generation G and outdoor CO<sub>2</sub> carry over from step 2; you set who is in the room, and how it is ventilated, over time.</p>
+      <p class="what">The whole curve: how fast CO<sub>2</sub> builds up, and how fast it clears.</p>
+      <p>A plateau tells you the steady state. How quickly the room reaches it, and how fast it clears once a window opens, is a ventilation measurement in its own right. This runs the full transient mass balance, so you can watch CO<sub>2</sub> rise as a room fills and decay after people leave. It is the same curve your sensor draws. Room volume, generation G and outdoor CO<sub>2</sub> carry over from step 2. You set who is in the room, and how it is ventilated, over time.</p>
     </div>
     <div class="grid">
       <div>
@@ -265,7 +293,7 @@
         <input id="tC0" type="number" step="10" value="420">
       </div>
     </div>
-    <p class="note" style="margin-top:14px;">Occupancy schedule — each row sets the people count <em>N</em> and ventilation <em>Q</em> that apply <strong>from that time onward</strong>. Add a row to open a window (raise Q) or have the class leave (drop N to 0) partway through.</p>
+    <p class="note" style="margin-top:14px;">Occupancy schedule. Each row sets the people count <em>N</em> and ventilation <em>Q</em> that apply <strong>from that time onward</strong>. Add a row to open a window (raise Q) or have the class leave (drop N to 0) partway through.</p>
     <table class="sched" id="schedTable">
       <thead>
         <tr><th>From (min)</th><th>People, N</th><th>Ventilation Q (L/s)</th><th></th></tr>
@@ -276,7 +304,7 @@
       <button type="button" class="btn ghost" id="schedAdd">+ Add change</button>
       <button type="button" class="btn ghost" id="schedReset">Reset to step 2</button>
     </div>
-    <div class="results" id="tResults"></div>
+    <div class="results" id="tResults" role="status" aria-live="polite" aria-atomic="true"></div>
     <canvas id="tChart" width="820" height="360" role="img" aria-label="Predicted CO2 concentration over time"></canvas>
     <div class="csv-upload" id="csvDrop">
       <label class="csv-label" for="csvFile">
@@ -290,7 +318,7 @@
     <details class="maths">
       <summary>The maths behind the curve</summary>
       <div class="formula">V &middot; dC/dt = N&middot;G + Q&middot;(Co &minus; C)   &rarr;   C(t) = Css + (C&#8320; &minus; Css)&middot;e<sup>&minus;(Q/V)t</sup>,   &tau; = V/Q</div>
-      <p class="deriv">The transient single-zone mass balance V&middot;dC/dt = N&middot;G + Q&middot;(C<sub>o</sub> &minus; C) solves to C(t) = C<sub>ss</sub> + (C&#8320; &minus; C<sub>ss</sub>)&middot;e<sup>&minus;(Q/V)t</sup>, with time constant &tau; = V/Q. C<sub>ss</sub> is the steady-state level the curve heads toward; the steady-state shortcut in step 2 is just this equation once the exponential has decayed to near zero. The time constant &tau; is how long the room takes to cover 63% of any change — the same &tau; governs both rise and decay. After about 3&tau; the curve has effectively flattened, which is when the step-2 estimate becomes valid.</p>
+      <p class="deriv">The transient single-zone mass balance V&middot;dC/dt = N&middot;G + Q&middot;(C<sub>o</sub> &minus; C) solves to C(t) = C<sub>ss</sub> + (C&#8320; &minus; C<sub>ss</sub>)&middot;e<sup>&minus;(Q/V)t</sup>, with time constant &tau; = V/Q. C<sub>ss</sub> is the steady-state level the curve heads toward; the steady-state shortcut in step 2 is just this equation once the exponential has decayed to near zero. The time constant &tau; is how long the room takes to cover 63% of any change. The same &tau; governs both rise and decay. After about 3&tau; the curve has effectively flattened, which is when the step-2 estimate becomes valid.</p>
     </details>
     <div class="tabnav">
       <button type="button" class="btn ghost" data-nav="prev">&larr; Back</button>
@@ -302,7 +330,7 @@
   <section class="card" role="tabpanel" id="panel-4" aria-labelledby="tab-4" tabindex="0" hidden>
     <div class="primer">
       <p class="what">How many people this room can hold before the air quality slips.</p>
-      <p>Holding the ventilation you measured in step 2 fixed, this sweeps occupancy to show where steady-state CO<sub>2</sub> would land against the 1,000 ppm guideline (the dashed line). It turns a pass/fail reading into a capacity question — not "is it fine now" but "how many people before it stops being fine". Find the occupancy at which your space would cross the guideline.</p>
+      <p>This holds the ventilation you measured in step 2 fixed and sweeps occupancy, showing where steady-state CO<sub>2</sub> would land against the 1,000 ppm guideline (the dashed line). The question shifts from whether the room is acceptable now to how many people it can take before it stops being acceptable. Find the occupancy at which your space would cross the guideline.</p>
     </div>
     <div class="grid">
       <div>
@@ -314,7 +342,7 @@
         <input id="scenQ" type="range" min="10" max="1500" step="10" value="470">
       </div>
     </div>
-    <div class="results" id="scenResults"></div>
+    <div class="results" id="scenResults" role="status" aria-live="polite" aria-atomic="true"></div>
     <canvas id="chart" width="820" height="360" role="img" aria-label="Predicted steady-state CO2 versus occupancy"></canvas>
     <details class="maths">
       <summary>The maths behind the scenario</summary>

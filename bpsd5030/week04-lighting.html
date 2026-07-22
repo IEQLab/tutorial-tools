@@ -6,10 +6,28 @@
 <title>Lighting Uniformity Explorer — BPSD5030 (Week 4)</title>
 <style>
   :root {
-    --bg: #f6f7f9; --card: #ffffff; --ink: #1c2430; --muted: #5a6675;
-    --line: #dfe4ea; --accent: #0e7c86; --accent-ink: #ffffff;
-    --good: #1a7f4b; --warn: #b4690e; --bad: #b02a37;
-    --field: #ffffff; --result-bg: #eef6f7;
+    --bg: #f4f6f7; --card: #fcfdfd; --ink: #1c2430; --muted: #5a6675;
+    --line: #dfe4ea; --accent: #0e7c86; --accent-ink: #fbfefe;
+    --good: #1a7f4b; --warn: #9c5a0b; --bad: #b02a37;
+    --field: #fdfefe; --result-bg: #edf4f5;
+    /* one radius scale, one shadow — do not add values outside these */
+    --r-sm: 3px; --r-md: 8px; --r-pill: 999px;
+    --shadow: 0 3px 8px rgba(20, 38, 46, .12);
+
+    /* Type: six roles, ~1.15 ratio. Roles are distinguished by weight and
+       colour as much as size, so sizes never sit closer than one step. */
+    --t-glyph: .68rem;   /* icon characters, not text */
+    --t-glyph-lg: 1.4rem;
+    --t-meta:  .78rem;   /* captions, hints, footer, table headers */
+    --t-label: .875rem;  /* field labels, notes, buttons, summaries */
+    --t-body:  1rem;
+    --t-lead:  1.125rem; /* primer opening line */
+    --t-h2:    1.3rem;
+    --t-h1:    1.625rem;
+
+    /* Space: 4px base. Tight inside a group, generous between groups. */
+    --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px;
+    --s-5: 20px; --s-6: 24px; --s-8: 32px; --s-12: 48px;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -17,125 +35,136 @@
       --line: #2a3441; --accent: #38b2bd; --accent-ink: #06212a;
       --good: #57c98a; --warn: #e0a955; --bad: #e2707a;
       --field: #0f151c; --result-bg: #13232a;
+      --shadow: 0 3px 8px rgba(0, 0, 0, .34);
     }
+    /* Light text on a dark surface blooms and reads thinner. Compensate on
+       all three axes: a little more leading, a little more tracking, and one
+       step more weight on the low-contrast roles. */
+    body { line-height: 1.6; letter-spacing: .004em; }
+    .primer p, .sub, .note, label, .deriv, .axhint { font-weight: 450; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: .01ms !important; animation-duration: .01ms !important; }
   }
   * { box-sizing: border-box; }
   body {
     margin: 0; background: var(--bg); color: var(--ink);
     font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
-  .wrap { max-width: 860px; margin: 0 auto; padding: 24px 18px 64px; }
-  header.page { margin-bottom: 8px; }
-  h1 { font-size: 1.5rem; margin: 0 0 4px; }
-  .lede { color: var(--muted); margin: 0 0 18px; max-width: 62ch; }
-  .home { display: inline-block; color: var(--accent); text-decoration: none; font-size: .9rem; margin-bottom: 14px; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: var(--s-6) var(--s-4) var(--s-12); }
+  header.page { margin-bottom: var(--s-2); }
+  h1 { font-size: var(--t-h1); margin: 0 0 var(--s-1); letter-spacing: -.018em; }
+  .lede { color: var(--muted); margin: 0 0 var(--s-6); max-width: 62ch; }
+  .home { display: inline-block; color: var(--accent); text-decoration: none; font-size: var(--t-label); margin-bottom: var(--s-4); }
   .home:hover { text-decoration: underline; }
 
   /* ---- ordered tabs ---- */
-  .tabs { display: flex; gap: 6px; margin: 4px 0 18px; flex-wrap: wrap; }
+  .tabs { display: flex; gap: var(--s-2); margin: 0 0 var(--s-6); flex-wrap: wrap; }
   .tab { border: 1px solid var(--line); background: var(--field); color: var(--muted);
-    border-radius: 999px; padding: 7px 15px 7px 8px; font-size: .9rem; cursor: pointer;
-    display: inline-flex; align-items: center; gap: 8px; font-family: inherit; }
+    border-radius: var(--r-pill); padding: var(--s-2) var(--s-4) var(--s-2) var(--s-2); font-size: var(--t-label); cursor: pointer;
+    display: inline-flex; align-items: center; gap: var(--s-2); font-family: inherit; }
   .tab:hover { border-color: var(--accent); color: var(--ink); }
   .tab.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
   .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .tab .n { display: inline-flex; align-items: center; justify-content: center;
     width: 21px; height: 21px; border-radius: 50%; background: var(--line); color: var(--muted);
-    font-size: .78rem; font-weight: 700; flex: none; }
+    font-size: var(--t-meta); font-weight: 700; flex: none; }
   .tab.active .n { background: var(--accent-ink); color: var(--accent); }
 
   section.card {
-    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
-    padding: 18px 18px 20px; margin: 0;
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md);
+    padding: var(--s-6); margin: 0;
   }
   .card[hidden] { display: none; }
-  h2 { font-size: 1.15rem; margin: 0 0 4px; }
-  .sub { color: var(--muted); font-size: .92rem; margin: 0 0 14px; }
+  h2 { font-size: var(--t-h2); margin: 0 0 var(--s-1); letter-spacing: -.012em; }
+  .sub { color: var(--muted); font-size: var(--t-label); margin: 0 0 var(--s-4); }
 
-  /* ---- per-tab primer ("the idea behind the number") ---- */
-  .primer { background: var(--result-bg); border-left: 3px solid var(--accent);
-    border-radius: 8px; padding: 12px 15px; margin: 0 0 18px; }
-  .primer .what { font-weight: 600; margin: 0 0 5px; }
-  .primer p { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.5; }
-  .primer p + p { margin-top: 8px; }
+  /* ---- per-tab primer ("the idea behind the number") ----
+     Hierarchy comes from type and space, not a coloured bar. */
+  .primer { margin: 0 0 var(--s-6); padding: 0 0 var(--s-5); border-bottom: 1px solid var(--line); }
+  .primer .what { font-weight: 600; font-size: var(--t-lead); letter-spacing: -.011em;
+    margin: 0 0 var(--s-2); max-width: 58ch; }
+  .primer p { margin: 0; color: var(--muted); font-size: var(--t-label); line-height: 1.62; max-width: 64ch; }
+  .primer p + p { margin-top: var(--s-3); }
 
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; align-items: end; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--s-3); align-items: end; }
   .grid > div { display: flex; flex-direction: column; }
   .grid > div > input, .grid > div > select { margin-top: auto; }
-  label { display: block; font-size: .85rem; color: var(--muted); margin-bottom: 4px; }
+  label { display: block; font-size: var(--t-label); color: var(--muted); margin-bottom: var(--s-1); }
   input, select {
-    width: 100%; padding: 8px 10px; font-size: 1rem; color: var(--ink);
-    background: var(--field); border: 1px solid var(--line); border-radius: 8px;
+    width: 100%; padding: var(--s-2) var(--s-3); font-size: var(--t-body); color: var(--ink);
+    background: var(--field); border: 1px solid var(--line); border-radius: var(--r-md);
   }
   input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .results { margin-top: 16px; }
-  .row { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+  .results { margin-top: var(--s-5); }
+  .row { display: flex; justify-content: space-between; gap: var(--s-3); padding: var(--s-2) 0; border-bottom: 1px solid var(--line); }
   .row:last-child { border-bottom: 0; }
   .row .k { color: var(--muted); }
   .row .v { font-variant-numeric: tabular-nums; font-weight: 600; }
-  .row .v.big { font-size: 1.05rem; }
-  .callout { background: var(--result-bg); border-radius: 10px; padding: 12px 14px; margin-top: 12px; }
-  .callout.verdict-good { border-left: 3px solid var(--good); }
-  .callout.verdict-warn { border-left: 3px solid var(--warn); }
-  .callout.verdict-bad { border-left: 3px solid var(--bad); }
+  .row .v.big { font-size: var(--t-lead); }
+  .callout { border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-3) var(--s-4); margin-top: var(--s-4); }
+  .callout.verdict-good strong { color: var(--good); }
+  .callout.verdict-warn strong { color: var(--warn); }
+  .callout.verdict-bad strong { color: var(--bad); }
   .err { color: var(--bad); font-weight: 600; }
-  .note { color: var(--muted); font-size: .86rem; }
+  .note { color: var(--muted); font-size: var(--t-label); }
+  #parseMsg { margin-top: var(--s-3); }
 
   /* ---- measurement grid ---- */
-  .dims { display: flex; gap: 18px; align-items: flex-end; flex-wrap: wrap; }
+  .dims { display: flex; gap: var(--s-5); align-items: flex-end; flex-wrap: wrap; }
   .dims .fld { display: flex; flex-direction: column; }
-  .dims label { margin: 0 0 4px; }
-  input[type=number].dim { width: 90px; padding: 8px 10px; font-size: 1rem; color: var(--ink); background: var(--field); border: 1px solid var(--line); border-radius: 8px; }
-  .btns { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
-  .btns button { font: inherit; font-size: .92rem; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--field); color: var(--ink); cursor: pointer; }
+  .dims label { margin: 0 0 var(--s-1); }
+  input[type=number].dim { width: 90px; padding: var(--s-2) var(--s-3); font-size: var(--t-body); color: var(--ink); background: var(--field); border: 1px solid var(--line); border-radius: var(--r-md); }
+  .btns { margin-top: var(--s-4); display: flex; gap: var(--s-2); flex-wrap: wrap; }
+  .btns button { font: inherit; font-size: var(--t-label); padding: var(--s-2) var(--s-4); border-radius: var(--r-md); border: 1px solid var(--line); background: var(--field); color: var(--ink); cursor: pointer; }
   .btns button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
   .btns button:hover { border-color: var(--accent); }
-  .gridwrap { overflow-x: auto; margin-top: 14px; }
-  table.luxgrid { border-collapse: separate; border-spacing: 6px; margin: 0 auto; }
+  .gridwrap { overflow-x: auto; margin-top: var(--s-4); }
+  table.luxgrid { border-collapse: separate; border-spacing: var(--s-2); margin: 0 auto; }
   table.luxgrid td { padding: 0; }
-  table.luxgrid input { width: 66px; padding: 7px 6px; text-align: center; font-size: .95rem;
-    color: var(--ink); background: var(--field); border: 1px solid var(--line); border-radius: 8px; font-variant-numeric: tabular-nums; }
+  table.luxgrid input { width: 66px; padding: var(--s-2); text-align: center; font-size: var(--t-label);
+    color: var(--ink); background: var(--field); border: 1px solid var(--line); border-radius: var(--r-md); font-variant-numeric: tabular-nums; }
   table.luxgrid input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: var(--accent); }
-  .axhint { color: var(--muted); font-size: .8rem; text-align: center; margin-top: 8px; }
+  .axhint { color: var(--muted); font-size: var(--t-meta); text-align: center; margin-top: var(--s-2); }
 
-  canvas { width: 100%; height: auto; display: block; margin: 8px auto 0; }
+  canvas { width: 100%; height: auto; display: block; margin: var(--s-2) auto 0; }
   #heat { max-width: 560px; } #box { max-width: 460px; }
-  .formula { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .86rem;
-    background: var(--result-bg); border-radius: 8px; padding: 10px 12px; margin: 6px 0; overflow-x: auto; }
+  .formula { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: var(--t-label);
+    background: var(--result-bg); border-radius: var(--r-md); padding: var(--s-3); margin: var(--s-2) 0; overflow-x: auto; }
 
-  /* ---- "the maths behind it" panel ---- */
-  details.maths { margin-top: 16px; border-left: 3px solid var(--accent);
-    background: var(--result-bg); border-radius: 8px; padding: 4px 15px; }
-  details.maths[open] { padding-bottom: 12px; }
-  details.maths > summary { cursor: pointer; color: var(--accent); font-size: .9rem;
-    font-weight: 600; padding: 9px 0; list-style: none; }
+  /* ---- "the maths behind it" panel ----
+     A top hairline, not a nested tinted card. */
+  details.maths { margin-top: var(--s-6); border-top: 1px solid var(--line); padding: 0; }
+  details.maths[open] { padding-bottom: var(--s-4); }
+  details.maths > summary { cursor: pointer; color: var(--accent); font-size: var(--t-label);
+    font-weight: 600; padding: var(--s-3) 0; list-style: none; }
   details.maths > summary::-webkit-details-marker { display: none; }
   details.maths > summary::before { content: "▸ "; }
   details.maths[open] > summary::before { content: "▾ "; }
-  details.maths .deriv { color: var(--muted); font-size: .88rem; margin: 8px 0 0; }
+  details.maths .deriv { color: var(--muted); font-size: var(--t-label); margin: var(--s-2) 0 0; }
 
   /* ---- Back / Next ---- */
-  .tabnav { display: flex; justify-content: space-between; margin-top: 20px; gap: 8px; }
+  .tabnav { display: flex; justify-content: space-between; margin-top: var(--s-6); gap: var(--s-2); }
   .tabnav .btn[disabled] { opacity: .35; cursor: default; }
-  .btn { background: var(--accent); color: var(--accent-ink); border: none; border-radius: 8px;
-    padding: 7px 12px; font-size: .88rem; cursor: pointer; font-family: inherit; }
+  .btn { background: var(--accent); color: var(--accent-ink); border: none; border-radius: var(--r-md);
+    padding: var(--s-2) var(--s-3); font-size: var(--t-label); cursor: pointer; font-family: inherit; }
   .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
 
-  footer.page { color: var(--muted); font-size: .82rem; margin-top: 24px; border-top: 1px solid var(--line); padding-top: 14px; }
+  footer.page { color: var(--muted); font-size: var(--t-meta); margin-top: var(--s-8); border-top: 1px solid var(--line); padding-top: var(--s-4); }
 
   /* ---- accessible info popover (replaces native title=) ---- */
   .info-wrap { position: relative; display: inline-block; vertical-align: middle; }
   .info-tip { display: inline-flex; align-items: center; justify-content: center;
-    width: 16px; height: 16px; margin-left: 4px; border-radius: 50%; border: none; padding: 0;
-    background: var(--line); color: var(--muted); font-size: .68rem; font-weight: 700;
+    width: 16px; height: 16px; margin-left: var(--s-1); border-radius: 50%; border: none; padding: 0;
+    background: var(--line); color: var(--muted); font-size: var(--t-glyph); font-weight: 700;
     font-family: inherit; font-style: normal; line-height: 1; cursor: pointer; user-select: none; }
   .info-tip:hover, .info-tip[aria-expanded="true"] { background: var(--accent); color: var(--accent-ink); }
   .info-tip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .popover { position: absolute; z-index: 30; left: 0; bottom: calc(100% + 8px);
     width: max-content; max-width: 250px; background: var(--card); color: var(--ink);
-    border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px;
-    font-size: .82rem; font-weight: 400; line-height: 1.45; text-align: left;
-    box-shadow: 0 6px 22px rgba(0,0,0,.18); }
+    border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-2) var(--s-3);
+    font-size: var(--t-meta); font-weight: 400; line-height: 1.45; text-align: left;
+    box-shadow: var(--shadow); }
   .popover[hidden] { display: none; }
 </style>
 </head>
@@ -157,8 +186,8 @@
   <!-- ===== Tab 1: Readings ===== -->
   <section class="card" role="tabpanel" id="panel-1" aria-labelledby="tab-1" tabindex="0">
     <div class="primer">
-      <p class="what">Uniformity is whether the light is spread evenly across the plane — a different question from whether there is enough on average.</p>
-      <p>The standard measure is the uniformity ratio U<sub>0</sub> = minimum &divide; average illuminance: near 1.0 the darkest spot is almost as bright as the typical one, while a low value means dark patches the mean conceals. A related, stricter ratio is diversity = minimum &divide; maximum. EN 12464-1 expects <strong>U<sub>0</sub> &ge; 0.60</strong> across a task area such as a desk — a space can hit its target average and still feel patchy, which the ratio reveals but the mean hides.</p>
+      <p class="what">Uniformity is whether the light is spread evenly across the plane. That is a different question from whether there is enough on average.</p>
+      <p>The standard measure is the uniformity ratio U<sub>0</sub> = minimum &divide; average illuminance: near 1.0 the darkest spot is almost as bright as the typical one, while a low value means dark patches the mean conceals. A related, stricter ratio is diversity = minimum &divide; maximum. EN 12464-1 expects <strong>U<sub>0</sub> &ge; 0.60</strong> across a task area such as a desk. A space can hit its target average and still feel patchy, which the ratio reveals but the mean hides.</p>
     </div>
     <p class="sub">Set the grid to match how you walked the space (e.g. 4 columns across the desk, 4 rows front-to-back), then type each reading in lux into the cell at that position. Leave a cell blank where you did not take a reading; blanks are ignored in the maths and shown empty on the map.</p>
     <div class="dims">
@@ -171,9 +200,9 @@
     </div>
     <div class="gridwrap"><table class="luxgrid" id="grid"></table></div>
     <div class="axhint">Values are in lux. Grid positions are relative, so orient it however you measured (e.g. top row nearest the window).</div>
-    <div id="parseMsg" class="note" style="margin-top:10px"></div>
-    <div class="results" id="metrics"></div>
-    <div id="verdict"></div>
+    <div id="parseMsg" class="note" role="status" aria-live="polite" aria-atomic="true"></div>
+    <div class="results" id="metrics" role="status" aria-live="polite" aria-atomic="true"></div>
+    <div id="verdict" role="status" aria-live="polite" aria-atomic="true"></div>
     <details class="maths">
       <summary>How these relate to the lighting standards (EN 12464-1)</summary>
       <p class="deriv">The uniformity ratio here, U<sub>0</sub> = minimum &divide; average, is the same quantity EN 12464-1 uses to specify indoor lighting. That standard sets a minimum U<sub>0</sub> on a defined task-area grid: commonly <strong>U<sub>0</sub> &ge; 0.60</strong> for the task area itself (e.g. a desk or workbench) and 0.40 for the immediate surround. AS/NZS 1680 works from the same idea. Two cautions before you quote a number: the standards prescribe a <em>grid spacing and a task area</em> (roughly square cells, sized to the space), so a comparable U<sub>0</sub> needs a reasonably regular grid over the task plane, not a handful of scattered points; and <strong>diversity</strong> (minimum &divide; maximum) is a different, stricter ratio some guides also quote, so name which one you are reporting.</p>
@@ -188,8 +217,8 @@
   <section class="card" role="tabpanel" id="panel-2" aria-labelledby="tab-2" tabindex="0" hidden>
     <div class="primer">
       <p class="what">The same readings as a map, so you can <em>see</em> where the light falls away.</p>
-      <p>Each cell is shaded by its reading (dark = low lux, bright = high lux) and the lowest and highest readings are ringed. This is what the mean cannot show you: not just how much light, but its spatial pattern — a bright patch propping the average up, or a dark corner off the task. Read the map alongside the ratio before you decide what a designer would change.</p>
-      <p><strong>The figure you submit for Assignment 1 must be one you build yourself</strong> — labelled axes with units, a legend where needed, and a caption that tells the reader what to notice — not a screenshot of this tool. Building it is the skill being marked.</p>
+      <p>Each cell is shaded by its reading (dark = low lux, bright = high lux) and the lowest and highest readings are ringed. The mean gives you the amount of light. It cannot show you the spatial pattern: a bright patch propping the average up, or a dark corner off the task. Read the map alongside the ratio before you decide what a designer would change.</p>
+      <p><strong>The figure you submit for Assignment 1 must be one you build yourself</strong>, not a screenshot of this tool: labelled axes with units, a legend where needed, and a caption that tells the reader what to notice. Building it is the skill being marked.</p>
     </div>
     <canvas id="heat" role="img" aria-label="Heatmap of illuminance readings across the measured grid"></canvas>
     <p class="note" id="heatcap"></p>
@@ -208,7 +237,7 @@
   <section class="card" role="tabpanel" id="panel-3" aria-labelledby="tab-3" tabindex="0" hidden>
     <div class="primer">
       <p class="what">What the spread of readings looks like at a glance.</p>
-      <p>The same readings as a box plot: the box spans the middle half (25th to 75th percentile), the line is the median, the whiskers reach the minimum and maximum, and each dot is one reading. It turns the pile of numbers into a shape — tight and symmetric, or stretched by a few dark or bright outliers — which is the distribution a single average lux value flattens away.</p>
+      <p>The same readings as a box plot: the box spans the middle half (25th to 75th percentile), the line is the median, the whiskers reach the minimum and maximum, and each dot is one reading. The shape it makes is the distribution a single average lux value flattens away: tight and symmetric, or stretched by a few dark or bright outliers.</p>
     </div>
     <canvas id="box" role="img" aria-label="Box plot of the illuminance readings"></canvas>
     <p class="note" id="boxcap"></p>

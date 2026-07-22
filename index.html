@@ -6,27 +6,62 @@
 <title>IEQLab tutorial tools</title>
 <style>
   :root {
-    --bg: #f6f7f9; --card: #ffffff; --ink: #1c2430; --muted: #5a6675;
-    --line: #dfe4ea; --accent: #0e7c86;
+    --bg: #f4f6f7; --card: #fcfdfd; --ink: #1c2430; --muted: #5a6675;
+    --line: #dfe4ea; --accent: #0e7c86; --accent-ink: #fbfefe;
+    /* one radius scale, one shadow — do not add values outside these */
+    --r-sm: 3px; --r-md: 8px; --r-pill: 999px;
+    --shadow: 0 3px 8px rgba(20, 38, 46, .12);
+
+    /* Type: roles, not values. ~1.15 ratio. */
+    --t-meta:  .78rem;   /* badges, footer, unit codes */
+    --t-label: .875rem;  /* card descriptions, back links */
+    --t-body:  1rem;
+    --t-lead:  1.125rem;
+    --t-h2:    1.3rem;
+    --t-h1:    1.625rem;
+
+    /* Space: 4px base. Tight inside a group, generous between groups. */
+    --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px;
+    --s-5: 20px; --s-6: 24px; --s-8: 32px; --s-12: 48px;
   }
   @media (prefers-color-scheme: dark) {
-    :root { --bg: #10151b; --card: #171e27; --ink: #e7ecf2; --muted: #9aa7b6; --line: #2a3441; --accent: #38b2bd; }
+    :root {
+      --bg: #10151b; --card: #171e27; --ink: #e7ecf2; --muted: #9aa7b6;
+      --line: #2a3441; --accent: #38b2bd; --accent-ink: #06212a;
+      --shadow: 0 3px 8px rgba(0, 0, 0, .34);
+    }
+    /* Light text on a dark surface blooms and reads thinner. Compensate on
+       all three axes: a little more leading, a little more tracking, and one
+       step more weight on the low-contrast roles. */
+    body { line-height: 1.6; letter-spacing: .004em; }
+    .lede, .unit p, footer { font-weight: 450; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: .01ms !important; animation-duration: .01ms !important; }
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink);
-    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-  .wrap { max-width: 760px; margin: 0 auto; padding: 40px 18px 64px; }
-  h1 { font-size: 1.7rem; margin: 0 0 6px; }
-  .lede { color: var(--muted); margin: 0 0 28px; max-width: 60ch; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: var(--s-8) var(--s-4) var(--s-12); }
+  h1 { font-size: var(--t-h1); margin: 0 0 var(--s-1); letter-spacing: -.018em; }
+  .lede { color: var(--muted); margin: 0 0 var(--s-8); max-width: 60ch; }
+
   a.unit { display: block; text-decoration: none; color: inherit; background: var(--card);
-    border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; margin: 14px 0; transition: border-color .15s; }
+    border: 1px solid var(--line); border-radius: var(--r-md);
+    padding: var(--s-4) var(--s-5); margin: var(--s-4) 0; transition: border-color .15s; }
   a.unit:hover { border-color: var(--accent); }
-  .unit .code { display: inline-block; font-size: .8rem; letter-spacing: .04em; text-transform: uppercase;
-    color: var(--accent); font-weight: 600; }
-  .unit h2 { margin: 2px 0 4px; font-size: 1.2rem; }
-  .unit p { margin: 0; color: var(--muted); font-size: .95rem; }
-  .count { display: inline-block; font-size: .78rem; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 9px; margin-left: 8px; vertical-align: middle; }
-  footer { color: var(--muted); font-size: .82rem; margin-top: 32px; border-top: 1px solid var(--line); padding-top: 14px; }
+  .unit .code { display: inline-block; font-size: var(--t-meta); letter-spacing: .04em;
+    text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .unit h2 { margin: var(--s-1) 0 var(--s-1); font-size: var(--t-h2); letter-spacing: -.012em; }
+  .unit p { margin: 0; color: var(--muted); font-size: var(--t-label); max-width: 66ch; }
+  .count { display: inline-block; font-size: var(--t-meta); color: var(--muted);
+    border: 1px solid var(--line); border-radius: var(--r-pill);
+    padding: 0 var(--s-2); margin-left: var(--s-2); vertical-align: middle; }
+
+  footer { color: var(--muted); font-size: var(--t-meta); margin-top: var(--s-8);
+    border-top: 1px solid var(--line); padding-top: var(--s-4); }
 </style>
 </head>
 <body>

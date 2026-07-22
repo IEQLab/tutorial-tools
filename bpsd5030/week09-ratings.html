@@ -6,11 +6,31 @@
 <title>Game the Rating — BPSD5030</title>
 <style>
   :root {
-    --bg: #f6f7f9; --card: #ffffff; --ink: #1c2430; --muted: #5a6675;
-    --line: #dfe4ea; --accent: #0e7c86; --accent-ink: #ffffff;
-    --good: #1a7f4b; --warn: #b4690e; --bad: #b02a37;
-    --field: #ffffff; --result-bg: #eef6f7;
+    --bg: #f4f6f7; --card: #fcfdfd; --ink: #1c2430; --muted: #5a6675;
+    --line: #dfe4ea; --accent: #0e7c86; --accent-ink: #fbfefe;
+    --good: #1a7f4b; --warn: #9c5a0b; --bad: #b02a37;
+    --field: #fdfefe; --result-bg: #edf4f5;
+    /* local to this tool: meter fills and the star glyph */
     --star: #d9a400; --track: #e7ecef; --real: #1a7f4b; --rating: #b4690e;
+    /* one radius scale, one shadow — do not add values outside these */
+    --r-sm: 3px; --r-md: 8px; --r-pill: 999px;
+    --shadow: 0 3px 8px rgba(20, 38, 46, .12);
+
+    /* Type: roles, ~1.15 ratio. Roles are distinguished by weight and
+       colour as much as size, so sizes never sit closer than one step. */
+    --t-glyph: .68rem;    /* icon characters, not text */
+    --t-glyph-lg: 1.9rem; /* the star row */
+    --t-meta:  .78rem;    /* captions, hints, footer, table headers */
+    --t-label: .875rem;   /* field labels, notes, buttons, summaries */
+    --t-body:  1rem;
+    --t-lead:  1.125rem;  /* primer opening line */
+    --t-h2:    1.3rem;
+    --t-h1:    1.625rem;
+    --t-display: 2.4rem;  /* the headline readout: stars, points */
+
+    /* Space: 4px base. Tight inside a group, generous between groups. */
+    --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px;
+    --s-5: 20px; --s-6: 24px; --s-8: 32px; --s-12: 48px;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -19,158 +39,171 @@
       --good: #57c98a; --warn: #e0a955; --bad: #e2707a;
       --field: #0f151c; --result-bg: #13232a;
       --star: #e9c14a; --track: #22303a; --real: #57c98a; --rating: #e0a955;
+      --shadow: 0 3px 8px rgba(0, 0, 0, .34);
     }
+    /* Light text on a dark surface blooms and reads thinner. Compensate on
+       all three axes: a little more leading, a little more tracking, and one
+       step more weight on the low-contrast roles. */
+    body { line-height: 1.6; letter-spacing: .004em; }
+    .primer p, .sub, .note, label, .deriv, .profile-blurb { font-weight: 450; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: .01ms !important; animation-duration: .01ms !important; }
   }
   * { box-sizing: border-box; }
   body {
     margin: 0; background: var(--bg); color: var(--ink);
     font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
-  .wrap { max-width: 880px; margin: 0 auto; padding: 24px 18px 64px; }
-  header.page { margin-bottom: 8px; }
-  h1 { font-size: 1.5rem; margin: 0 0 4px; }
-  .lede { color: var(--muted); margin: 0 0 18px; max-width: 66ch; }
-  .home { display: inline-block; color: var(--accent); text-decoration: none; font-size: .9rem; margin-bottom: 14px; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: var(--s-6) var(--s-4) var(--s-12); }
+  header.page { margin-bottom: var(--s-2); }
+  h1 { font-size: var(--t-h1); margin: 0 0 var(--s-1); letter-spacing: -.018em; }
+  .lede { color: var(--muted); margin: 0 0 var(--s-6); max-width: 66ch; }
+  .home { display: inline-block; color: var(--accent); text-decoration: none; font-size: var(--t-label); margin-bottom: var(--s-4); }
   .home:hover { text-decoration: underline; }
 
   /* ---- ordered tabs ---- */
-  .tabs { display: flex; gap: 6px; margin: 4px 0 18px; flex-wrap: wrap; }
+  .tabs { display: flex; gap: var(--s-2); margin: 0 0 var(--s-6); flex-wrap: wrap; }
   .tab { border: 1px solid var(--line); background: var(--field); color: var(--muted);
-    border-radius: 999px; padding: 7px 15px 7px 8px; font-size: .9rem; cursor: pointer;
-    display: inline-flex; align-items: center; gap: 8px; font-family: inherit; }
+    border-radius: var(--r-pill); padding: var(--s-2) var(--s-4) var(--s-2) var(--s-2); font-size: var(--t-label); cursor: pointer;
+    display: inline-flex; align-items: center; gap: var(--s-2); font-family: inherit; }
   .tab:hover { border-color: var(--accent); color: var(--ink); }
   .tab.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
   .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .tab .n { display: inline-flex; align-items: center; justify-content: center;
     width: 21px; height: 21px; border-radius: 50%; background: var(--line); color: var(--muted);
-    font-size: .78rem; font-weight: 700; flex: none; }
+    font-size: var(--t-meta); font-weight: 700; flex: none; }
   .tab.active .n { background: var(--accent-ink); color: var(--accent); }
 
   section.card {
-    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
-    padding: 18px 18px 20px; margin: 0;
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md);
+    padding: var(--s-6); margin: 0;
   }
   .card[hidden] { display: none; }
-  h2 { font-size: 1.2rem; margin: 0 0 4px; }
-  h3 { font-size: 1rem; margin: 18px 0 8px; }
-  .sub { color: var(--muted); font-size: .92rem; margin: 0 0 14px; max-width: 68ch; }
+  h2 { font-size: var(--t-h2); margin: 0 0 var(--s-1); letter-spacing: -.012em; }
+  .sub { color: var(--muted); font-size: var(--t-label); margin: 0 0 var(--s-4); max-width: 68ch; }
 
-  /* ---- per-tab primer ("the idea behind the number") ---- */
-  .primer { background: var(--result-bg); border-left: 3px solid var(--accent);
-    border-radius: 8px; padding: 12px 15px; margin: 0 0 18px; }
-  .primer .what { font-weight: 600; margin: 0 0 5px; }
-  .primer p { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.5; }
+  /* ---- per-tab primer ("the idea behind the number") ----
+     Hierarchy comes from type and space, not a coloured bar. */
+  .primer { margin: 0 0 var(--s-6); padding: 0 0 var(--s-5); border-bottom: 1px solid var(--line); }
+  .primer .what { font-weight: 600; font-size: var(--t-lead); letter-spacing: -.011em;
+    margin: 0 0 var(--s-2); max-width: 58ch; }
+  .primer p { margin: 0; color: var(--muted); font-size: var(--t-label); line-height: 1.62; max-width: 64ch; }
 
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; align-items: end; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--s-3); align-items: end; }
   .grid > div { display: flex; flex-direction: column; }
   .grid > div > input, .grid > div > select { margin-top: auto; }
-  label { display: block; font-size: .85rem; color: var(--muted); margin-bottom: 4px; }
+  label { display: block; font-size: var(--t-label); color: var(--muted); margin-bottom: var(--s-1); }
   select, input[type="number"] {
-    width: 100%; padding: 8px 10px; font-size: 1rem; color: var(--ink);
-    background: var(--field); border: 1px solid var(--line); border-radius: 8px;
+    width: 100%; padding: var(--s-2) var(--s-3); font-size: var(--t-body); color: var(--ink);
+    background: var(--field); border: 1px solid var(--line); border-radius: var(--r-md);
   }
   select:focus, input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   input[type="range"] { width: 100%; accent-color: var(--accent); }
   input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; }
 
   /* profile strip */
-  .profile-blurb { color: var(--muted); font-size: .9rem; margin: 8px 0 0; }
-  .strip { display:flex; flex-wrap:wrap; gap:10px 22px; margin: 6px 0 4px; }
-  .strip .item { font-size:.9rem; }
+  .profile-blurb { color: var(--muted); font-size: var(--t-label); margin: var(--s-2) 0 0; max-width: 68ch; }
+  .strip { display:flex; flex-wrap:wrap; gap: var(--s-3) var(--s-6); margin: var(--s-3) 0 var(--s-1); }
+  .strip .item { font-size: var(--t-label); }
   .strip .item b { font-variant-numeric: tabular-nums; }
 
   /* dimension table */
-  table.dims { width:100%; border-collapse: collapse; margin: 8px 0 6px; }
-  table.dims th { text-align:left; color:var(--muted); font-weight:500; font-size:.76rem;
-    text-transform:uppercase; letter-spacing:.03em; padding: 6px 8px; border-bottom:1px solid var(--line); }
-  table.dims td { padding: 10px 8px; border-bottom:1px solid var(--line); vertical-align: middle; }
+  table.dims { width:100%; border-collapse: collapse; margin: var(--s-2) 0 var(--s-2); }
+  table.dims th { text-align:left; color:var(--muted); font-weight:500; font-size: var(--t-meta);
+    padding: var(--s-2); border-bottom:1px solid var(--line); }
+  table.dims td { padding: var(--s-3) var(--s-2); border-bottom:1px solid var(--line); vertical-align: middle; }
   table.dims td.dimname { font-weight:600; }
-  table.dims td.dimname small { display:block; font-weight:400; color:var(--muted); font-size:.78rem; }
-  .rangewrap { display:flex; align-items:center; gap:8px; }
-  .rangeval { min-width: 2.4em; text-align:right; font-variant-numeric: tabular-nums; font-weight:600; font-size:.9rem; }
-  .trick { display:flex; align-items:flex-start; gap:8px; }
-  .trick label { margin:0; color: var(--ink); font-size:.82rem; cursor:pointer; }
-  .trick label .cost { color: var(--muted); }
+  table.dims td.dimname small { display:block; font-weight:400; color:var(--muted); font-size: var(--t-meta); }
+  .rangewrap { display:flex; align-items:center; gap: var(--s-2); }
+  .rangeval { min-width: 2.4em; text-align:right; font-variant-numeric: tabular-nums; font-weight:600; font-size: var(--t-label); }
+  .trick { display:flex; align-items:flex-start; gap: var(--s-2); }
+  .trick label { margin:0; color: var(--ink); font-size: var(--t-label); cursor:pointer; }
+  .cost { color: var(--muted); }
 
-  .globaltrick { display:flex; align-items:center; gap:8px; margin:4px 2px 2px; }
-  .globaltrick label { margin:0; color:var(--ink); font-size:.88rem; cursor:pointer; }
+  .globaltrick { display:flex; align-items:center; gap: var(--s-2); margin: var(--s-1) 0; }
+  .globaltrick label { margin:0; color:var(--ink); font-size: var(--t-label); cursor:pointer; }
 
   /* results block */
-  .results { margin-top: 16px; background: var(--result-bg); border-radius: 10px; padding: 14px 16px; }
-  .stars { font-size: 1.9rem; letter-spacing: 2px; line-height: 1; color: var(--star); }
+  .results { margin-top: var(--s-5); background: var(--result-bg); border-radius: var(--r-md); padding: var(--s-4); }
+  .headline { display:flex; align-items:baseline; gap: var(--s-3); flex-wrap:wrap; }
+  .stars { font-size: var(--t-glyph-lg); letter-spacing: .06em; line-height: 1; color: var(--star); }
   .stars .empty { color: var(--track); }
-  .bignum { font-variant-numeric: tabular-nums; font-weight:700; }
-  .meter { height: 12px; border-radius: 999px; background: var(--track); overflow: hidden; margin: 4px 0 2px; }
-  .meter > span { display:block; height:100%; border-radius:999px; }
+  .bignum { font-size: var(--t-display); letter-spacing: -.022em; line-height: 1;
+    font-variant-numeric: tabular-nums; font-weight:700; }
+  .meter { height: 12px; border-radius: var(--r-pill); background: var(--track); overflow: hidden; margin: var(--s-1) 0 0; }
+  .meter > span { display:block; height:100%; border-radius: var(--r-pill); }
   .meter.real > span { background: var(--real); }
   .meter.rating > span { background: var(--rating); }
   .meter.budget > span { background: var(--accent); }
-  .meterrow { margin: 10px 0; }
-  .meterrow .lab { display:flex; justify-content:space-between; font-size:.86rem; }
+  .meterrow { margin: var(--s-3) 0; }
+  .meterrow .lab { display:flex; justify-content:space-between; gap: var(--s-3); font-size: var(--t-label); }
   .meterrow .lab .k { color: var(--muted); }
   .meterrow .lab .v { font-variant-numeric: tabular-nums; font-weight:600; }
-  .verdict { margin-top: 12px; padding: 12px 14px; border-radius: 10px; font-weight: 600; border: 1px solid var(--line); }
+  .verdict { margin-top: var(--s-4); padding: var(--s-3) var(--s-4); border-radius: var(--r-md); font-weight: 600; border: 1px solid var(--line); }
   .verdict.good { color: var(--good); }
   .verdict.bad  { color: var(--bad); }
   .verdict.warn { color: var(--warn); }
-  .verdict small { display:block; font-weight:400; color:var(--muted); margin-top:4px; }
+  .verdict small { display:block; font-weight:400; color:var(--muted); font-size: var(--t-label); margin-top: var(--s-1); }
 
-  .btn { background: var(--accent); color: var(--accent-ink); border:none; border-radius:8px;
-    padding: 8px 14px; font-size:.9rem; cursor:pointer; font-family: inherit; }
+  .btn { background: var(--accent); color: var(--accent-ink); border:none; border-radius: var(--r-md);
+    padding: var(--s-2) var(--s-3); font-size: var(--t-label); cursor:pointer; font-family: inherit; }
   .btn.ghost { background: transparent; color: var(--accent); border:1px solid var(--line); }
-  .btn-row { display:flex; gap:8px; flex-wrap:wrap; margin-top: 12px; }
-  .recert { margin-top: 12px; padding: 12px 14px; border-radius:10px; border:1px dashed var(--line);
-    background: var(--card); font-size:.92rem; }
+  .btn-row { display:flex; gap: var(--s-2); flex-wrap:wrap; margin-top: var(--s-4); }
+  .recert { margin-top: var(--s-4); padding: var(--s-3) var(--s-4); border-radius: var(--r-md);
+    border:1px dashed var(--line); font-size: var(--t-label); }
   .recert.hidden { display:none; }
 
   /* WELL features */
-  .concept { margin: 12px 0 2px; font-size:.8rem; text-transform:uppercase; letter-spacing:.04em; color: var(--accent); }
-  .feat { display:flex; align-items:flex-start; gap:10px; padding: 7px 6px; border-bottom:1px solid var(--line); }
-  .feat label { margin:0; color:var(--ink); font-size:.9rem; cursor:pointer; flex:1; }
-  .feat .meta { color:var(--muted); font-size:.8rem; }
-  .feat .pts { font-weight:600; color:var(--ink); }
+  .concept { margin: var(--s-5) 0 var(--s-1); font-size: var(--t-meta); text-transform:uppercase;
+    letter-spacing:.04em; font-weight:600; color: var(--accent); }
+  .feat { display:flex; align-items:flex-start; gap: var(--s-3); padding: var(--s-2) var(--s-1); border-bottom:1px solid var(--line); }
+  .feat label { margin:0; color:var(--ink); font-size: var(--t-label); cursor:pointer; flex:1; }
+  .feat .meta { color:var(--muted); font-size: var(--t-meta); }
+  .feat .pts { font-weight:600; color:var(--ink); font-variant-numeric: tabular-nums; }
   .dots { letter-spacing:1px; }
   .dots.high { color: var(--good); }
   .dots.med  { color: var(--warn); }
   .dots.low  { color: var(--muted); }
-  .bandline { display:flex; gap:14px; flex-wrap:wrap; font-size:.84rem; color:var(--muted); margin: 6px 0 2px; }
-  .bandline b { color: var(--ink); }
+  .bandline { display:flex; gap: var(--s-4); flex-wrap:wrap; font-size: var(--t-meta); color:var(--muted); margin: var(--s-2) 0 var(--s-1); }
+  .bandline b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .bandname { color: var(--ink); }
 
-  .note { color: var(--muted); font-size: .84rem; }
-  .formula { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:.84rem;
-    background: var(--result-bg); border-radius:8px; padding:10px 12px; margin:6px 0; overflow-x:auto; }
+  .note { color: var(--muted); font-size: var(--t-label); }
+  .formula { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: var(--t-label);
+    background: var(--result-bg); border-radius: var(--r-md); padding: var(--s-3); margin: var(--s-2) 0; overflow-x:auto; }
 
-  /* ---- "the maths behind it" panel ---- */
-  details.maths { margin-top: 16px; border-left: 3px solid var(--accent);
-    background: var(--result-bg); border-radius: 8px; padding: 4px 15px; }
-  details.maths[open] { padding-bottom: 12px; }
-  details.maths > summary { cursor: pointer; color: var(--accent); font-size: .9rem;
-    font-weight: 600; padding: 9px 0; list-style: none; }
+  /* ---- "the maths behind it" panel ----
+     A top hairline, not a nested tinted card. */
+  details.maths { margin-top: var(--s-6); border-top: 1px solid var(--line); padding: 0; }
+  details.maths[open] { padding-bottom: var(--s-4); }
+  details.maths > summary { cursor: pointer; color: var(--accent); font-size: var(--t-label);
+    font-weight: 600; padding: var(--s-3) 0; list-style: none; }
   details.maths > summary::-webkit-details-marker { display: none; }
   details.maths > summary::before { content: "▸ "; }
   details.maths[open] > summary::before { content: "▾ "; }
-  details.maths .deriv { color: var(--muted); font-size: .88rem; margin: 8px 0 0; }
+  details.maths .deriv { color: var(--muted); font-size: var(--t-label); margin: var(--s-2) 0 0; max-width: 68ch; }
 
   /* ---- Back / Next ---- */
-  .tabnav { display: flex; justify-content: space-between; margin-top: 20px; gap: 8px; }
+  .tabnav { display: flex; justify-content: space-between; margin-top: var(--s-6); gap: var(--s-2); }
   .tabnav .btn[disabled] { opacity: .35; cursor: default; }
 
   /* ---- accessible info popover (replaces native title=) ---- */
   .info-wrap { position: relative; display: inline-block; vertical-align: middle; }
   .info-tip { display: inline-flex; align-items: center; justify-content: center;
-    width: 16px; height: 16px; margin-left: 4px; border-radius: 50%; border: none; padding: 0;
-    background: var(--line); color: var(--muted); font-size: .68rem; font-weight: 700;
+    width: 16px; height: 16px; margin-left: var(--s-1); border-radius: 50%; border: none; padding: 0;
+    background: var(--line); color: var(--muted); font-size: var(--t-glyph); font-weight: 700;
     font-family: inherit; font-style: normal; line-height: 1; cursor: pointer; user-select: none; }
   .info-tip:hover, .info-tip[aria-expanded="true"] { background: var(--accent); color: var(--accent-ink); }
   .info-tip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .popover { position: absolute; z-index: 30; left: 0; bottom: calc(100% + 8px);
     width: max-content; max-width: 250px; background: var(--card); color: var(--ink);
-    border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px;
-    font-size: .82rem; font-weight: 400; line-height: 1.45; text-align: left;
-    box-shadow: 0 6px 22px rgba(0,0,0,.18); }
+    border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-2) var(--s-3);
+    font-size: var(--t-meta); font-weight: 400; line-height: 1.45; text-align: left;
+    box-shadow: var(--shadow); }
   .popover[hidden] { display: none; }
 
-  footer.page { color: var(--muted); font-size: .82rem; margin-top: 24px; border-top:1px solid var(--line); padding-top: 14px; }
+  footer.page { color: var(--muted); font-size: var(--t-meta); margin-top: var(--s-8); border-top:1px solid var(--line); padding-top: var(--s-4); max-width: 74ch; }
 </style>
 </head>
 <body>
@@ -190,7 +223,7 @@
   <!-- ===== Tab 1: Act 1 — NABERS IE ===== -->
   <section class="card" role="tabpanel" id="panel-1" aria-labelledby="tab-1" tabindex="0">
     <div class="primer">
-      <p class="what">A NABERS IE star rates measured performance — five dimensions scored equally, then averaged into one star.</p>
+      <p class="what">A NABERS IE star rates measured performance: five dimensions scored equally, then averaged into one star.</p>
       <p>NABERS weights all five dimensions equally, so the overall star is just their average. You can raise a dimension two ways: a real upgrade that lifts what occupants actually experience, or a measurement tactic that changes when, where, or how you sample so only the reading moves. Because NABERS re-rates every three years with clean, full-period sampling, a rating built on tactics collapses at recertification while one built on real work survives.</p>
     </div>
 
@@ -217,16 +250,16 @@
 
     <div class="globaltrick">
       <input type="checkbox" id="dropDays">
-      <label for="dropDays">Drop the worst 3 days from every dataset <span class="cost" style="color:var(--muted)">(+6 measured on all five, cost 6)</span></label>
+      <label for="dropDays">Drop the worst 3 days from every dataset <span class="cost">(+6 measured on all five, cost 6)</span></label>
     </div>
 
-    <div class="results" id="nabersResults"></div>
+    <div class="results" id="nabersResults" role="status" aria-live="polite" aria-atomic="true"></div>
 
     <div class="btn-row">
       <button type="button" class="btn" id="recertBtn">Trigger a 3-year recertification</button>
       <button type="button" class="btn ghost" id="resetNabers">Reset Act 1</button>
     </div>
-    <div class="recert hidden" id="recertOut"></div>
+    <div class="recert hidden" id="recertOut" role="status" aria-live="polite" aria-atomic="true"></div>
 
     <details class="maths">
       <summary>The maths behind the star</summary>
@@ -246,8 +279,8 @@ overall star = mean of the five dimension stars</div>
   <!-- ===== Tab 2: Act 2 — WELL ===== -->
   <section class="card" role="tabpanel" id="panel-2" aria-labelledby="tab-2" tabindex="0" hidden>
     <div class="primer">
-      <p class="what">WELL certifies by counting credits, not by measuring performance — so the badge depends on which credits you buy.</p>
-      <p>WELL awards points for optional features and certifies once you pass a points threshold (Bronze, Silver, Gold, Platinum). A cheap policy credit — a dress code, a stress-management plan, an air monitor — can be worth the same points as an expensive performance credit like more outdoor air or reverberation control. So two routes reach the same band at very different cost and very different real benefit, and the certificate can run well ahead of what occupants feel. (Same building as Act 1.)</p>
+      <p class="what">WELL certifies by counting credits rather than by measuring performance, so the badge depends on which credits you buy.</p>
+      <p>WELL awards points for optional features and certifies once you pass a points threshold (Bronze, Silver, Gold, Platinum). A cheap policy credit such as a dress code, a stress-management plan or an air monitor can be worth the same points as an expensive performance credit like more outdoor air or reverberation control. So two routes reach the same band at very different cost and very different real benefit, and the certificate can run well ahead of what occupants feel. (Same building as Act 1.)</p>
     </div>
 
     <h2>WELL Credit Round</h2>
@@ -261,7 +294,7 @@ overall star = mean of the five dimension stars</div>
 
     <div id="featList"></div>
 
-    <div class="results" id="wellResults"></div>
+    <div class="results" id="wellResults" role="status" aria-live="polite" aria-atomic="true"></div>
     <div class="btn-row">
       <button type="button" class="btn ghost" id="resetWell">Reset Act 2</button>
     </div>
@@ -471,9 +504,9 @@ overall star = mean of the five dimension stars</div>
 
     var GAIN_MAX = 2.5; // for meter scaling (stars of improvement)
     var html = "";
-    html += '<div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">' +
+    html += '<div class="headline">' +
       '<div class="stars">' + starMarkup(s.measStar) + '</div>' +
-      '<div class="bignum" style="font-size:1.4rem">' + round1(s.measStar) + ' stars</div>' +
+      '<div class="bignum">' + round1(s.measStar) + ' stars</div>' +
       '<div class="note">target ' + round1(target) + ', baseline ' + round1(s.base) + '</div></div>';
 
     html += meterRow("budget", "Budget spent", Math.round(spent) + " / " + P.budget + " pts", spent / P.budget);
@@ -614,9 +647,9 @@ overall star = mean of the five dimension stars</div>
     var BPP_MAX = 1.2;                          // meter scaling (a top-benefit credit is ~1.5/pt)
 
     var html = "";
-    html += '<div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">' +
-      '<div class="bignum" style="font-size:1.4rem">' + pts + ' points</div>' +
-      '<div class="note">band: <b style="color:var(--ink)">' + band + '</b> (target ' + WELL_TARGET + ', ' + targetPts + ')</div></div>';
+    html += '<div class="headline">' +
+      '<div class="bignum">' + pts + ' points</div>' +
+      '<div class="note">band: <b class="bandname">' + band + '</b> (target ' + WELL_TARGET + ', ' + targetPts + ')</div></div>';
     html += meterRow("budget", "Effort spent", effort + " / " + WELL_BUDGET, effort / WELL_BUDGET);
     html += meterRow("real", "Real benefit per point", (pts > 0 ? round1(benPerPt) : "—") + " (index " + round1(ben) + ")", benPerPt / BPP_MAX);
 

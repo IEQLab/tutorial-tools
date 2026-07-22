@@ -6,10 +6,22 @@
 <title>Room Acoustics Calculator — BPSD5030</title>
 <style>
   :root {
-    --bg: #f6f7f9; --card: #ffffff; --ink: #1c2430; --muted: #5a6675;
-    --line: #dfe4ea; --accent: #0e7c86; --accent-ink: #ffffff;
-    --good: #1a7f4b; --warn: #b4690e; --bad: #b02a37;
-    --field: #ffffff; --result-bg: #eef6f7; --hover: #f0f4f5;
+    --bg: #f4f6f7; --card: #fcfdfd; --ink: #1c2430; --muted: #5a6675;
+    --line: #dfe4ea; --accent: #0e7c86; --accent-ink: #fbfefe;
+    --good: #1a7f4b; --warn: #9c5a0b; --bad: #b02a37;
+    --field: #fdfefe; --result-bg: #edf4f5; --hover: #eef2f3;
+    /* one radius scale, one shadow — do not add values outside these */
+    --r-sm: 3px; --r-md: 8px; --r-pill: 999px;
+    --shadow: 0 3px 8px rgba(20, 38, 46, .12);
+
+    /* Type: roles, not values. ~1.15 ratio. */
+    --t-glyph: .68rem; --t-meta: .78rem; --t-label: .875rem;
+    --t-body: 1rem; --t-lead: 1.125rem; --t-h2: 1.3rem; --t-h1: 1.625rem;
+    --t-display: 2.4rem; /* headline numeric readout */
+
+    /* Space: 4px base. Tight inside a group, generous between groups. */
+    --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px;
+    --s-5: 20px; --s-6: 24px; --s-8: 32px; --s-12: 48px;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -22,111 +34,111 @@
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink);
     font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-  .wrap { max-width: 920px; margin: 0 auto; padding: 24px 18px 64px; }
-  h1 { font-size: 1.5rem; margin: 0 0 4px; }
-  .lede { color: var(--muted); margin: 0 0 20px; max-width: 68ch; }
-  .home { display: inline-block; color: var(--accent); text-decoration: none; font-size: .9rem; margin-bottom: 14px; }
+  .wrap { max-width: 920px; margin: 0 auto; padding: var(--s-6) var(--s-5) var(--s-12); }
+  h1 { font-size: var(--t-h1); margin: 0 0 var(--s-1); }
+  .lede { color: var(--muted); margin: 0 0 var(--s-5); max-width: 68ch; }
+  .home { display: inline-block; color: var(--accent); text-decoration: none; font-size: var(--t-label); margin-bottom: var(--s-4); }
   .home:hover { text-decoration: underline; }
-  section.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px 18px 20px; margin: 0; }
+  section.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-5) var(--s-5) var(--s-5); margin: 0; }
   .card[hidden] { display: none; }
-  h2 { font-size: 1.15rem; margin: 0 0 4px; }
-  h3 { font-size: 1rem; margin: 18px 0 6px; }
-  .sub { color: var(--muted); font-size: .92rem; margin: 0 0 14px; }
-  label { display: block; font-size: .85rem; color: var(--muted); margin-bottom: 4px; }
-  input, select { width: 100%; padding: 8px 10px; font-size: 1rem; color: var(--ink); background: var(--field); border: 1px solid var(--line); border-radius: 8px; }
+  /* h2 is a section heading inside a panel here, never a card title, so it
+     carries its own top margin. */
+  h2 { font-size: var(--t-h2); margin: var(--s-5) 0 var(--s-2); letter-spacing: -.012em; }
+  .sub { color: var(--muted); font-size: var(--t-label); margin: 0 0 var(--s-4); }
+  label { display: block; font-size: var(--t-label); color: var(--muted); margin-bottom: var(--s-1); }
+  input, select { width: 100%; padding: var(--s-2) var(--s-3); font-size: var(--t-body); color: var(--ink); background: var(--field); border: 1px solid var(--line); border-radius: var(--r-md); }
   input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; align-items: end; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--s-3); align-items: end; }
   .grid > div { display: flex; flex-direction: column; }
   .grid > div > input, .grid > div > select { margin-top: auto; }
-  .results { margin-top: 14px; background: var(--result-bg); border-radius: 10px; padding: 4px 14px; }
-  .row { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+  .results { margin-top: var(--s-4); background: var(--result-bg); border-radius: var(--r-md); padding: var(--s-1) var(--s-4); }
+  .row { display: flex; justify-content: space-between; gap: var(--s-3); padding: var(--s-2) 0; border-bottom: 1px solid var(--line); }
   .row:last-child { border-bottom: 0; }
   .row .k { color: var(--muted); } .row .v { font-weight: 600; font-variant-numeric: tabular-nums; }
-  .formula { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .86rem; background: var(--result-bg); border-radius: 8px; padding: 10px 12px; margin: 8px 0; overflow-x: auto; }
-  .note { color: var(--muted); font-size: .86rem; }
+  .formula { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: var(--t-label); background: var(--result-bg); border-radius: var(--r-md); padding: var(--s-3) var(--s-3); margin: var(--s-2) 0; overflow-x: auto; }
+  .note { color: var(--muted); font-size: var(--t-label); }
   .band { font-weight: 700; }
-  .flag { border: 1px solid var(--warn); color: var(--warn); border-radius: 8px; padding: 8px 12px; font-size: .86rem; margin-top: 8px; }
-  .big { font-size: 2.4rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; }
-  button { font: inherit; font-size: .9rem; cursor: pointer; border-radius: 8px; padding: 8px 12px; }
+  .flag { border: 1px solid var(--warn); color: var(--warn); border-radius: var(--r-md); padding: var(--s-2) var(--s-3); font-size: var(--t-label); margin-top: var(--s-2); }
+  .big { font-size: var(--t-display); letter-spacing: -.022em; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  button { font: inherit; font-size: var(--t-label); cursor: pointer; border-radius: var(--r-md); padding: var(--s-2) var(--s-3); }
   .btn-primary { border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); font-weight: 600; }
   .btn-ghost { border: 1px solid var(--line); background: var(--field); color: var(--ink); }
-  .btn-sm { padding: 4px 9px; font-size: .82rem; }
-  .btns { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
-  .tablewrap { overflow-x: auto; margin-top: 12px; border: 1px solid var(--line); border-radius: 10px; }
-  table { border-collapse: collapse; width: 100%; font-size: .88rem; }
-  th, td { padding: 6px 9px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+  .btn-sm { padding: var(--s-1) var(--s-2); font-size: var(--t-meta); }
+  .btns { margin-top: var(--s-3); display: flex; gap: var(--s-2); flex-wrap: wrap; }
+  .tablewrap { overflow-x: auto; margin-top: var(--s-3); border: 1px solid var(--line); border-radius: var(--r-md); }
+  table { border-collapse: collapse; width: 100%; font-size: var(--t-label); }
+  th, td { padding: var(--s-2) var(--s-2); text-align: right; white-space: nowrap; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
   th { background: var(--result-bg); position: sticky; top: 0; color: var(--muted); font-weight: 600; }
   td.name, th.name { text-align: left; white-space: normal; min-width: 220px; }
-  td.cat { text-align: left; color: var(--muted); font-size: .8rem; font-style: italic; }
+  td.cat { text-align: left; color: var(--muted); font-size: var(--t-meta); font-style: italic; }
   tbody tr:hover { background: var(--hover); }
-  .bandgrid { display: grid; grid-template-columns: 120px repeat(7, 1fr); gap: 6px; align-items: end; margin-top: 8px; min-width: 640px; }
-  .bandgrid label { margin: 0 0 2px; font-size: .78rem; text-align: center; }
-  .bandgrid .rowlabel { font-size: .82rem; color: var(--muted); align-self: center; padding-right: 6px; }
-  .bandgrid input { padding: 6px 4px; text-align: center; font-size: .9rem; }
+  .bandgrid { display: grid; grid-template-columns: 120px repeat(7, 1fr); gap: var(--s-2); align-items: end; margin-top: var(--s-2); min-width: 640px; }
+  .bandgrid label { margin: 0 0 var(--s-1); font-size: var(--t-meta); text-align: center; }
+  .bandgrid .rowlabel { font-size: var(--t-meta); color: var(--muted); align-self: center; padding-right: var(--s-2); }
+  .bandgrid input { padding: var(--s-2) var(--s-1); text-align: center; font-size: var(--t-label); }
   .scrollx { overflow-x: auto; }
   /* ---- ordered tabs (top-level) ---- */
-  .tabs { display: flex; gap: 6px; margin: 4px 0 18px; flex-wrap: wrap; }
+  .tabs { display: flex; gap: var(--s-2); margin: var(--s-1) 0 var(--s-5); flex-wrap: wrap; }
   .tab { border: 1px solid var(--line); background: var(--field); color: var(--muted);
-    border-radius: 999px; padding: 7px 15px 7px 8px; font-size: .9rem; cursor: pointer;
-    display: inline-flex; align-items: center; gap: 8px; font-family: inherit; }
+    border-radius: var(--r-pill); padding: var(--s-2) var(--s-4) var(--s-2) var(--s-2); font-size: var(--t-label); cursor: pointer;
+    display: inline-flex; align-items: center; gap: var(--s-2); font-family: inherit; }
   .tab:hover { border-color: var(--accent); color: var(--ink); }
   .tab.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
   .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .tab .n { display: inline-flex; align-items: center; justify-content: center;
     width: 21px; height: 21px; border-radius: 50%; background: var(--line); color: var(--muted);
-    font-size: .78rem; font-weight: 700; flex: none; }
+    font-size: var(--t-meta); font-weight: 700; flex: none; }
   .tab.active .n { background: var(--accent-ink); color: var(--accent); }
 
   /* ---- inner material-table pills (nested inside the Material data tab) ---- */
-  .subtabs { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+  .subtabs { display: flex; gap: var(--s-2); margin-bottom: var(--s-3); flex-wrap: wrap; }
   .subtab { border: 1px solid var(--line); background: var(--field); color: var(--muted);
-    border-radius: 999px; padding: 6px 14px; cursor: pointer; font: inherit; font-size: .9rem; }
+    border-radius: var(--r-pill); padding: var(--s-2) var(--s-4); cursor: pointer; font: inherit; font-size: var(--t-label); }
   .subtab.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
 
   /* ---- per-tab primer ("the idea behind the number") ---- */
-  .primer { background: var(--result-bg); border-left: 3px solid var(--accent);
-    border-radius: 8px; padding: 12px 15px; margin: 0 0 18px; }
-  .primer .what { font-weight: 600; margin: 0 0 5px; }
-  .primer p { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.5; }
+  .primer { margin: 0 0 var(--s-6); padding: 0 0 var(--s-5); border-bottom: 1px solid var(--line); }
+  .primer .what { font-weight: 600; font-size: var(--t-lead); letter-spacing: -.011em;
+    margin: 0 0 var(--s-2); max-width: 58ch; }
+  .primer p { margin: 0; color: var(--muted); font-size: var(--t-label); line-height: 1.62; max-width: 64ch; }
 
   /* ---- "the maths behind it" panel ---- */
-  details.maths { margin-top: 16px; border-left: 3px solid var(--accent);
-    background: var(--result-bg); border-radius: 8px; padding: 4px 15px; }
-  details.maths[open] { padding-bottom: 12px; }
-  details.maths > summary { cursor: pointer; color: var(--accent); font-size: .9rem;
-    font-weight: 600; padding: 9px 0; list-style: none; }
+  details.maths { margin-top: var(--s-6); border-top: 1px solid var(--line); padding: 0; }
+  details.maths[open] { padding-bottom: var(--s-3); }
+  details.maths > summary { cursor: pointer; color: var(--accent); font-size: var(--t-label);
+    font-weight: 600; padding: var(--s-3) 0; list-style: none; }
   details.maths > summary::-webkit-details-marker { display: none; }
   details.maths > summary::before { content: "▸ "; }
   details.maths[open] > summary::before { content: "▾ "; }
-  details.maths .deriv { color: var(--muted); font-size: .88rem; margin: 8px 0 0; }
+  details.maths .deriv { color: var(--muted); font-size: var(--t-label); margin: var(--s-2) 0 0; }
 
   /* ---- Back / Next ---- */
-  .tabnav { display: flex; justify-content: space-between; margin-top: 20px; gap: 8px; }
-  .btn { background: var(--accent); color: var(--accent-ink); border: none; border-radius: 8px;
-    padding: 7px 12px; font-size: .88rem; cursor: pointer; font-family: inherit; }
+  .tabnav { display: flex; justify-content: space-between; margin-top: var(--s-5); gap: var(--s-2); }
+  .btn { background: var(--accent); color: var(--accent-ink); border: none; border-radius: var(--r-md);
+    padding: var(--s-2) var(--s-3); font-size: var(--t-label); cursor: pointer; font-family: inherit; }
   .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
   .tabnav .btn[disabled] { opacity: .35; cursor: default; }
 
   /* ---- accessible info popover (replaces native title=) ---- */
   .info-wrap { position: relative; display: inline-block; vertical-align: middle; }
   .info-tip { display: inline-flex; align-items: center; justify-content: center;
-    width: 16px; height: 16px; margin-left: 4px; border-radius: 50%; border: none; padding: 0;
-    background: var(--line); color: var(--muted); font-size: .68rem; font-weight: 700;
+    width: 16px; height: 16px; margin-left: var(--s-1); border-radius: 50%; border: none; padding: 0;
+    background: var(--line); color: var(--muted); font-size: var(--t-glyph); font-weight: 700;
     font-family: inherit; font-style: normal; line-height: 1; cursor: pointer; user-select: none; }
   .info-tip:hover, .info-tip[aria-expanded="true"] { background: var(--accent); color: var(--accent-ink); }
   .info-tip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .popover { position: absolute; z-index: 30; left: 0; bottom: calc(100% + 8px);
     width: max-content; max-width: 250px; background: var(--card); color: var(--ink);
-    border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px;
-    font-size: .82rem; font-weight: 400; line-height: 1.45; text-align: left;
-    box-shadow: 0 6px 22px rgba(0,0,0,.18); }
+    border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-2) var(--s-3);
+    font-size: var(--t-meta); font-weight: 400; line-height: 1.45; text-align: left;
+    box-shadow: var(--shadow); }
   .popover[hidden] { display: none; }
 
-  .surf-row { display: grid; grid-template-columns: 1fr 90px 34px; gap: 8px; margin-bottom: 8px; align-items: center; }
-  .toc { columns: 2; column-gap: 24px; font-size: .9rem; margin: 0 0 8px; padding: 0; list-style: none; }
+  .surf-row { display: grid; grid-template-columns: 1fr 90px 34px; gap: var(--s-2); margin-bottom: var(--s-2); align-items: center; }
+  .toc { columns: 2; column-gap: var(--s-6); font-size: var(--t-label); margin: 0 0 var(--s-2); padding: 0; list-style: none; }
   .toc a { color: var(--accent); text-decoration: none; }
   .toc a:hover { text-decoration: underline; }
-  footer.page { color: var(--muted); font-size: .82rem; margin-top: 28px; border-top: 1px solid var(--line); padding-top: 14px; }
+  footer.page { color: var(--muted); font-size: var(--t-meta); margin-top: var(--s-8); border-top: 1px solid var(--line); padding-top: var(--s-4); }
   @media (max-width: 560px) { .surf-row { grid-template-columns: 1fr 70px 32px; } }
 </style>
 </head>
@@ -162,7 +174,7 @@
         </select>
       </div>
     </div>
-    <div class="results" id="dbResults"></div>
+    <div class="results" id="dbResults" role="status" aria-live="polite" aria-atomic="true"></div>
     <details class="maths">
       <summary>The maths behind combining decibels</summary>
       <div class="formula">Average: L = 10 &middot; log&#8321;&#8320;( (1/n) &middot; &Sigma; 10^(Li/10) )   ·   Combine: L = 10 &middot; log&#8321;&#8320;( &Sigma; 10^(Li/10) )</div>
@@ -190,7 +202,7 @@
       <button id="calcA" class="btn-primary">V and T &rarr; A</button>
       <button id="calcT" class="btn-ghost">V and A &rarr; T</button>
     </div>
-    <div class="results" id="sabResults"></div>
+    <div class="results" id="sabResults" role="status" aria-live="polite" aria-atomic="true"></div>
     <details class="maths">
       <summary>The maths behind Sabine, and benchmarking against AS/NZS&nbsp;2107</summary>
       <div class="formula">A = 0.16 &middot; V / T   ·   T = 0.16 &middot; V / A</div>
@@ -226,13 +238,13 @@
     <div class="grid" style="max-width:320px">
       <div><label for="roomVol">Room volume, V (m&sup3;)</label><input id="roomVol" type="number" step="1" value="200"></div>
     </div>
-    <h3>Surfaces</h3>
+    <h2>Surfaces</h2>
     <div id="surfList"></div>
     <div class="btns">
       <button id="addSurf" class="btn-ghost btn-sm">+ Add surface</button>
       <button id="clearSurf" class="btn-ghost btn-sm">Clear all</button>
     </div>
-    <div class="scrollx"><div id="roomResults"></div></div>
+    <div class="scrollx"><div id="roomResults" role="status" aria-live="polite" aria-atomic="true"></div></div>
     <div class="grid" style="max-width:420px; margin-top:12px">
       <div><label for="measA">Your measured A (optional, m&sup2; sabine)<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About measured A">i</button><span class="popover" role="tooltip" hidden>The absorption you get from running Sabine (Tab 2) on your measured mid-frequency RT60. Entering it lets the builder show how far its surface-by-surface estimate diverges from the real room.</span></span></label><input id="measA" type="number" step="1" placeholder="from Sabine on measured RT60"></div>
     </div>
@@ -258,15 +270,15 @@
       <p>It rolls the two things that wreck intelligibility &mdash; background noise and reverberation &mdash; into a single number. Two routes are offered here, matching the tutorial: a one-line quick read from the speech-to-noise ratio for a first feel in the room, and the full octave-band calculation (IEC&nbsp;60268-16) ported from the class STI workbook. Use the qualitative bands to interpret the score.</p>
     </div>
 
-    <h3>Quick estimate (speech-to-noise)</h3>
+    <h2>Quick estimate (speech-to-noise)</h2>
     <div class="grid">
       <div><label for="sp">Speech level at listener (dBA)</label><input id="sp" type="number" step="1" value="60"></div>
       <div><label for="ns">Background noise level (dBA)</label><input id="ns" type="number" step="1" value="45"></div>
     </div>
-    <div class="results" id="stiResults"></div>
+    <div class="results" id="stiResults" role="status" aria-live="polite" aria-atomic="true"></div>
     <div class="flag">Indicative only. This SNR shortcut ignores reverberation and per-band effects. Use the full octave-band method below for anything you report.</div>
 
-    <h3>Full octave-band STI (IEC 60268-16)</h3>
+    <h2>Full octave-band STI (IEC 60268-16)</h2>
     <p class="note">Enter room volume, talker-to-listener distance, and the octave-band reverberation time and background noise. If you could not measure RT at 125&nbsp;Hz or 8&nbsp;kHz, substitute the 250&nbsp;Hz and 4&nbsp;kHz values respectively and note that you did so.</p>
     <div class="grid" style="margin-bottom:6px">
       <div><label for="stiVol">Room volume, V (m&sup3;)</label><input id="stiVol" type="number" step="1" value="1000"></div>
@@ -283,7 +295,7 @@
       <div class="bandgrid" id="stiBands"></div>
     </div>
     <div class="btns"><button id="calcSTI" class="btn-primary">Calculate STI</button></div>
-    <div class="results" id="stiFullResults"></div>
+    <div class="results" id="stiFullResults" role="status" aria-live="polite" aria-atomic="true"></div>
     <details class="maths">
       <summary>The maths behind the STI</summary>
       <div class="formula">Quick: SNR = Lspeech &minus; Lnoise   ·   STI &asymp; (SNR + 15) / 30   (clamped 0&ndash;1)</div>

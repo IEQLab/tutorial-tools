@@ -6,10 +6,28 @@
 <title>Choose an HVAC System — BPSD6030</title>
 <style>
   :root {
-    --bg: #f6f7f9; --card: #ffffff; --ink: #1c2430; --muted: #5a6675;
-    --line: #dfe4ea; --accent: #0e7c86; --accent-ink: #ffffff;
-    --good: #1a7f4b; --warn: #b4690e; --bad: #b02a37;
-    --field: #ffffff; --result-bg: #eef6f7; --chip: #eef2f5;
+    --bg: #f4f6f7; --card: #fcfdfd; --ink: #1c2430; --muted: #5a6675;
+    --line: #dfe4ea; --accent: #4a52b5; --accent-ink: #fbfcfe;
+    --good: #1a7f4b; --warn: #9c5a0b; --bad: #b02a37;
+    --field: #fdfefe; --result-bg: #eef0f8; --chip: #eef2f5;
+    /* one radius scale, one shadow — do not add values outside these */
+    --r-sm: 3px; --r-md: 8px; --r-pill: 999px;
+    --shadow: 0 3px 8px rgba(26, 28, 62, .12);
+
+    /* Type: six roles, ~1.15 ratio. Roles are distinguished by weight and
+       colour as much as size, so sizes never sit closer than one step. */
+    --t-glyph: .68rem;   /* icon characters, not text */
+    --t-meta:  .78rem;   /* captions, hints, footer, badges */
+    --t-label: .875rem;  /* field labels, notes, buttons, summaries */
+    --t-body:  1rem;
+    --t-lead:  1.125rem; /* primer opening line */
+    --t-h2:    1.3rem;
+    --t-h1:    1.625rem;
+
+    /* Space: 4px base. Tight inside a group, generous between groups. */
+    --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px;
+    --s-5: 20px; --s-6: 24px; --s-8: 32px; --s-12: 48px;
+
     /* schematic legend */
     --heat: #c0392b; --cool: #2472c8; --elec: #d9a400; --gas: #d35400;
     --water: #0e7c86; --air: #8a97a6; --refrig: #7b4bc9;
@@ -18,169 +36,176 @@
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #10151b; --card: #171e27; --ink: #e7ecf2; --muted: #9aa7b6;
-      --line: #2a3441; --accent: #38b2bd; --accent-ink: #06212a;
+      --line: #2a3441; --accent: #99a4ef; --accent-ink: #131635;
       --good: #57c98a; --warn: #e0a955; --bad: #e2707a;
-      --field: #0f151c; --result-bg: #13232a; --chip: #1c2733;
+      --field: #0f151c; --result-bg: #191f33; --chip: #1c2733;
+      --shadow: 0 3px 8px rgba(0, 0, 0, .34);
       --heat: #e2707a; --cool: #6ba7e6; --elec: #e9c14a; --gas: #e08a4e;
       --water: #38b2bd; --air: #7d8b9b; --refrig: #a583e0;
       --plant: #2b3947; --plant-ink: #c4d0dc; --floor: #131c25;
     }
+    /* Light text on a dark surface blooms and reads thinner. Compensate on
+       all three axes: a little more leading, a little more tracking, and one
+       step more weight on the low-contrast roles. */
+    body { line-height: 1.6; letter-spacing: .004em; }
+    .primer p, .sub, .hint, .note, label, .deriv, .sys .blurb, .lever p { font-weight: 450; }
   }
   * { box-sizing: border-box; }
   body {
     margin: 0; background: var(--bg); color: var(--ink);
     font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
-  .wrap { max-width: 900px; margin: 0 auto; padding: 24px 18px 64px; }
-  a.home { display: inline-block; color: var(--accent); text-decoration: none; font-size: .9rem; margin-bottom: 14px; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: var(--s-6) var(--s-4) var(--s-12); }
+  a.home { display: inline-block; color: var(--accent); text-decoration: none; font-size: var(--t-label); margin-bottom: var(--s-4); }
   a.home:hover { text-decoration: underline; }
-  header.page { margin-bottom: 8px; }
-  h1 { font-size: 1.5rem; margin: 0 0 4px; }
-  .lede { color: var(--muted); margin: 0 0 18px; max-width: 70ch; }
+  header.page { margin-bottom: var(--s-2); }
+  h1 { font-size: var(--t-h1); margin: 0 0 var(--s-1); letter-spacing: -.018em; }
+  .lede { color: var(--muted); margin: 0 0 var(--s-6); max-width: 70ch; }
 
   /* stepper — numbered ordered tabs (visual style copied verbatim from the approved reference) */
-  .stepper { display: flex; gap: 6px; margin: 4px 0 18px; flex-wrap: wrap; }
+  .stepper { display: flex; gap: var(--s-2); margin: 0 0 var(--s-6); flex-wrap: wrap; }
   .tab { border: 1px solid var(--line); background: var(--field); color: var(--muted);
-    border-radius: 999px; padding: 7px 15px 7px 8px; font-size: .9rem; cursor: pointer;
-    display: inline-flex; align-items: center; gap: 8px; font-family: inherit; }
+    border-radius: var(--r-pill); padding: var(--s-2) var(--s-4) var(--s-2) var(--s-2); font-size: var(--t-label); cursor: pointer;
+    display: inline-flex; align-items: center; gap: var(--s-2); font-family: inherit; }
   .tab:hover { border-color: var(--accent); color: var(--ink); }
   .tab.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
   .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .tab .n { display: inline-flex; align-items: center; justify-content: center;
     width: 21px; height: 21px; border-radius: 50%; background: var(--line); color: var(--muted);
-    font-size: .78rem; font-weight: 700; flex: none; }
+    font-size: var(--t-meta); font-weight: 700; flex: none; }
   .tab.active .n { background: var(--accent-ink); color: var(--accent); }
   /* completed steps: muted text but a progress-marked badge */
   .tab.done { color: var(--ink); }
   .tab.done .n { background: var(--result-bg); color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
 
   section.card {
-    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
-    padding: 18px 18px 20px; margin: 16px 0;
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md);
+    padding: var(--s-6); margin: 0;
   }
   .step { display: none; }
   .step.active { display: block; }
-  h2 { font-size: 1.2rem; margin: 0 0 4px; }
-  h3 { font-size: 1rem; margin: 18px 0 8px; }
-  .sub { color: var(--muted); font-size: .92rem; margin: 0 0 14px; max-width: 72ch; }
+  h2 { font-size: var(--t-h2); margin: 0 0 var(--s-1); letter-spacing: -.012em; }
+  h3 { font-size: var(--t-body); margin: var(--s-5) 0 var(--s-2); }
+  .sub { color: var(--muted); font-size: var(--t-label); margin: 0 0 var(--s-4); max-width: 72ch; }
 
-  label { display: block; font-size: .85rem; color: var(--muted); margin-bottom: 4px; }
-  .fieldrow { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; margin-bottom: 6px; }
+  label { display: block; font-size: var(--t-label); color: var(--muted); margin-bottom: var(--s-1); }
+  .fieldrow { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-4) var(--s-5); margin-bottom: var(--s-2); }
   @media (max-width: 620px) { .fieldrow { grid-template-columns: 1fr; } }
   select, input[type="number"], input[type="text"], textarea {
-    width: 100%; padding: 8px 10px; font-size: 1rem; color: var(--ink);
-    background: var(--field); border: 1px solid var(--line); border-radius: 8px; font-family: inherit;
+    width: 100%; padding: var(--s-2) var(--s-3); font-size: var(--t-body); color: var(--ink);
+    background: var(--field); border: 1px solid var(--line); border-radius: var(--r-md); font-family: inherit;
   }
   select:focus, input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .hint { color: var(--muted); font-size: .82rem; margin: 4px 0 0; }
+  .hint { color: var(--muted); font-size: var(--t-meta); margin: var(--s-1) 0 0; }
 
   /* radio / choice groups */
-  .choices { display: flex; flex-wrap: wrap; gap: 8px; margin: 2px 0 4px; }
+  .choices { display: flex; flex-wrap: wrap; gap: var(--s-2); margin: var(--s-1) 0; }
   .choice { flex: 1 1 auto; min-width: 130px; }
   .choice input { position: absolute; opacity: 0; pointer-events: none; }
-  .choice label { display: block; margin: 0; padding: 9px 12px; border: 1px solid var(--line);
-    border-radius: 9px; cursor: pointer; color: var(--ink); font-size: .9rem; background: var(--field); }
-  .choice label small { display: block; color: var(--muted); font-size: .78rem; font-weight: 400; margin-top: 2px; }
+  .choice label { display: block; margin: 0; padding: var(--s-2) var(--s-3); border: 1px solid var(--line);
+    border-radius: var(--r-md); cursor: pointer; color: var(--ink); font-size: var(--t-label); background: var(--field); }
+  .choice label small { display: block; color: var(--muted); font-size: var(--t-meta); font-weight: 400; margin-top: var(--s-1); }
   .choice input:checked + label { border-color: var(--accent); background: var(--result-bg); box-shadow: inset 0 0 0 1px var(--accent); }
   .choice input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 1px; }
 
   /* system option cards */
-  .sysgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .sysgrid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-3); }
   @media (max-width: 620px) { .sysgrid { grid-template-columns: 1fr; } }
   .sys { position: relative; }
   .sys input { position: absolute; opacity: 0; pointer-events: none; }
-  .sys label { display: block; margin: 0; padding: 12px 14px; border: 1px solid var(--line);
-    border-radius: 10px; cursor: pointer; background: var(--field); height: 100%; }
+  .sys label { display: block; margin: 0; padding: var(--s-3) var(--s-4); border: 1px solid var(--line);
+    border-radius: var(--r-md); cursor: pointer; background: var(--field); height: 100%; }
   .sys input:checked + label { border-color: var(--accent); background: var(--result-bg); box-shadow: inset 0 0 0 1px var(--accent); }
   .sys input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .sys .name { font-weight: 600; font-size: .96rem; color: var(--ink); }
-  .sys .fam { display: block; font-size: .74rem; text-transform: uppercase; letter-spacing: .04em; color: var(--accent); margin-bottom: 3px; }
-  .sys .blurb { color: var(--muted); font-size: .84rem; margin: 4px 0 0; }
-  .fit { display: inline-block; font-size: .74rem; border-radius: 999px; padding: 1px 8px; margin-top: 8px; border: 1px solid var(--line); }
+  .sys .name { font-weight: 600; font-size: var(--t-body); color: var(--ink); }
+  .sys .fam { display: block; font-size: var(--t-meta); text-transform: uppercase; letter-spacing: .04em; color: var(--accent); margin-bottom: var(--s-1); }
+  .sys .blurb { color: var(--muted); font-size: var(--t-label); margin: var(--s-1) 0 0; }
+  .fit { display: inline-block; font-size: var(--t-meta); border-radius: var(--r-pill); padding: var(--s-1) var(--s-3); margin-top: var(--s-2); border: 1px solid var(--line); }
   .fit.good { color: var(--good); } .fit.warn { color: var(--warn); } .fit.bad { color: var(--bad); }
-  .proscons { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 14px; margin-top: 8px; font-size: .82rem; }
+  .proscons { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-1) var(--s-4); margin-top: var(--s-2); font-size: var(--t-meta); }
   .proscons .p { color: var(--good); } .proscons .c { color: var(--warn); }
-  .proscons ul { margin: 2px 0 0; padding-left: 16px; } .proscons li { margin: 1px 0; }
+  .proscons ul { margin: var(--s-1) 0 0; padding-left: var(--s-4); } .proscons li { margin: 0 0 var(--s-1); }
 
   /* nav */
-  .nav { display: flex; justify-content: space-between; gap: 8px; margin-top: 18px; }
-  .btn { background: var(--accent); color: var(--accent-ink); border: none; border-radius: 8px;
-    padding: 9px 16px; font-size: .92rem; cursor: pointer; }
+  .nav { display: flex; justify-content: space-between; gap: var(--s-2); margin-top: var(--s-6); }
+  .btn { background: var(--accent); color: var(--accent-ink); border: none; border-radius: var(--r-md);
+    padding: var(--s-2) var(--s-4); font-size: var(--t-label); cursor: pointer; font-family: inherit; }
   .btn:disabled { opacity: .45; cursor: not-allowed; }
   .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
 
   /* schematic */
-  .schematic { background: var(--result-bg); border-radius: 10px; padding: 12px; margin: 4px 0 8px; overflow-x: auto; }
+  .schematic { background: var(--result-bg); border-radius: var(--r-md); padding: var(--s-3); margin: var(--s-1) 0 var(--s-2); overflow-x: auto; }
   .schematic svg { display: block; width: 100%; height: auto; min-width: 560px; }
-  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 8px 2px 0; font-size: .8rem; color: var(--muted); }
-  .legend span { display: inline-flex; align-items: center; gap: 5px; }
-  .legend i { width: 16px; height: 3px; border-radius: 2px; display: inline-block; }
-  .swatch { width: 11px; height: 11px; border-radius: 2px; }
+  .legend { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-4); margin: var(--s-2) 0 0; font-size: var(--t-meta); color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: var(--s-1); }
+  .legend i { width: 16px; height: 3px; border-radius: var(--r-sm); display: inline-block; }
+  .swatch { width: 11px; height: 11px; border-radius: var(--r-sm); }
 
-  .explain { margin-top: 10px; }
-  .explain p { margin: 8px 0; }
-  .explain .part { display: flex; gap: 8px; align-items: baseline; margin: 6px 0; font-size: .92rem; }
-  .explain .part .dot { width: 10px; height: 10px; border-radius: 3px; flex: 0 0 auto; margin-top: 5px; }
+  .explain { margin-top: var(--s-4); }
+  .explain p { margin: var(--s-2) 0; }
+  .explain .part { display: flex; gap: var(--s-2); align-items: baseline; margin: var(--s-2) 0; font-size: var(--t-label); }
+  .explain .part .dot { width: 10px; height: 10px; border-radius: var(--r-sm); flex: 0 0 auto; margin-top: var(--s-1); }
 
   /* decarbonisation */
-  .badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 12px; }
-  .badge { font-size: .82rem; border-radius: 999px; padding: 3px 11px; border: 1px solid var(--line); background: var(--chip); }
+  .badges { display: flex; flex-wrap: wrap; gap: var(--s-2); margin: var(--s-2) 0 var(--s-3); }
+  .badge { font-size: var(--t-meta); border-radius: var(--r-pill); padding: var(--s-1) var(--s-3); border: 1px solid var(--line); background: var(--chip); }
   .badge.good { color: var(--good); } .badge.warn { color: var(--warn); } .badge.bad { color: var(--bad); }
-  .lever { border: 1px solid var(--line); border-radius: 10px; padding: 11px 13px; margin: 8px 0; background: var(--field); }
-  .lever .top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
-  .lever .lname { font-weight: 600; font-size: .95rem; }
-  .lever .imp { font-size: .74rem; border-radius: 999px; padding: 1px 8px; border: 1px solid var(--line); white-space: nowrap; }
+  .lever { border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-3); margin: var(--s-2) 0; background: var(--field); }
+  .lever .top { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s-3); }
+  .lever .lname { font-weight: 600; font-size: var(--t-label); }
+  .lever .imp { font-size: var(--t-meta); border-radius: var(--r-pill); padding: var(--s-1) var(--s-2); border: 1px solid var(--line); white-space: nowrap; }
   .lever .imp.high { color: var(--good); } .lever .imp.med { color: var(--warn); } .lever .imp.low { color: var(--muted); }
-  .lever p { margin: 5px 0 0; color: var(--muted); font-size: .87rem; }
+  .lever p { margin: var(--s-1) 0 0; color: var(--muted); font-size: var(--t-label); }
 
-  .results { margin-top: 8px; background: var(--result-bg); border-radius: 10px; padding: 14px 16px; }
-  .summary-box { font-size: .92rem; }
-  .summary-box .row { display: flex; gap: 8px; padding: 3px 0; border-bottom: 1px dashed var(--line); }
+  .results { margin-top: var(--s-5); background: var(--result-bg); border-radius: var(--r-md); padding: var(--s-3) var(--s-4); }
+  .summary-box { font-size: var(--t-label); }
+  .summary-box .row { display: flex; gap: var(--s-2); padding: var(--s-1) 0; border-bottom: 1px solid var(--line); }
   .summary-box .row:last-child { border-bottom: none; }
   .summary-box .k { color: var(--muted); flex: 0 0 42%; }
-  .summary-box .v { font-weight: 600; }
+  .summary-box .v { font-weight: 600; font-variant-numeric: tabular-nums; }
   textarea { min-height: 92px; resize: vertical; }
-  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-  .carry { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .8rem;
-    white-space: pre-wrap; background: var(--result-bg); border-radius: 8px; padding: 10px 12px; margin-top: 8px; }
+  .btn-row { display: flex; gap: var(--s-2); flex-wrap: wrap; margin-top: var(--s-3); }
+  .carry { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: var(--t-meta);
+    white-space: pre-wrap; background: var(--result-bg); border-radius: var(--r-md); padding: var(--s-3); margin-top: var(--s-2); }
 
-  details { margin-top: 12px; }
-  summary { cursor: pointer; color: var(--accent); font-size: .9rem; }
-  details .inner { margin-top: 8px; font-size: .9rem; }
-  .note { color: var(--muted); font-size: .84rem; }
-  footer.page { color: var(--muted); font-size: .82rem; margin-top: 28px; border-top: 1px solid var(--line); padding-top: 14px; }
+  details { margin-top: var(--s-3); }
+  summary { cursor: pointer; color: var(--accent); font-size: var(--t-label); }
+  details .inner { margin-top: var(--s-2); font-size: var(--t-label); }
+  .note { color: var(--muted); font-size: var(--t-label); }
+  footer.page { color: var(--muted); font-size: var(--t-meta); margin-top: var(--s-8); border-top: 1px solid var(--line); padding-top: var(--s-4); }
   footer.page a { color: var(--accent); }
 
-  /* ---- per-step primer ("the idea behind the choice") ---- */
-  .primer { background: var(--result-bg); border-left: 3px solid var(--accent);
-    border-radius: 8px; padding: 12px 15px; margin: 0 0 18px; }
-  .primer .what { font-weight: 600; margin: 0 0 5px; }
-  .primer p { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.5; }
+  /* ---- per-step primer ("the idea behind the choice") ----
+     Hierarchy comes from type and space, not a coloured bar. */
+  .primer { margin: 0 0 var(--s-6); padding: 0 0 var(--s-5); border-bottom: 1px solid var(--line); }
+  .primer .what { font-weight: 600; font-size: var(--t-lead); letter-spacing: -.011em;
+    margin: 0 0 var(--s-2); max-width: 58ch; }
+  .primer p { margin: 0; color: var(--muted); font-size: var(--t-label); line-height: 1.62; max-width: 64ch; }
 
-  /* ---- "the maths behind it" panel ---- */
-  details.maths { margin-top: 16px; border-left: 3px solid var(--accent);
-    background: var(--result-bg); border-radius: 8px; padding: 4px 15px; }
-  details.maths[open] { padding-bottom: 12px; }
-  details.maths > summary { cursor: pointer; color: var(--accent); font-size: .9rem;
-    font-weight: 600; padding: 9px 0; list-style: none; }
+  /* ---- "the maths behind it" panel ----
+     A top hairline, not a nested tinted card. */
+  details.maths { margin-top: var(--s-6); border-top: 1px solid var(--line); padding: 0; }
+  details.maths[open] { padding-bottom: var(--s-4); }
+  details.maths > summary { cursor: pointer; color: var(--accent); font-size: var(--t-label);
+    font-weight: 600; padding: var(--s-3) 0; list-style: none; }
   details.maths > summary::-webkit-details-marker { display: none; }
   details.maths > summary::before { content: "▸ "; }
   details.maths[open] > summary::before { content: "▾ "; }
-  details.maths .deriv { color: var(--muted); font-size: .88rem; margin: 8px 0 0; }
+  details.maths .deriv { color: var(--muted); font-size: var(--t-label); margin: var(--s-2) 0 0; }
 
   /* ---- accessible info popover (replaces native title=) ---- */
   .info-wrap { position: relative; display: inline-block; vertical-align: middle; }
   .info-tip { display: inline-flex; align-items: center; justify-content: center;
-    width: 16px; height: 16px; margin-left: 4px; border-radius: 50%; border: none; padding: 0;
-    background: var(--line); color: var(--muted); font-size: .68rem; font-weight: 700;
+    width: 16px; height: 16px; margin-left: var(--s-1); border-radius: 50%; border: none; padding: 0;
+    background: var(--line); color: var(--muted); font-size: var(--t-glyph); font-weight: 700;
     font-family: inherit; font-style: normal; line-height: 1; cursor: pointer; user-select: none; }
   .info-tip:hover, .info-tip[aria-expanded="true"] { background: var(--accent); color: var(--accent-ink); }
   .info-tip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .popover { position: absolute; z-index: 30; left: 0; bottom: calc(100% + 8px);
     width: max-content; max-width: 250px; background: var(--card); color: var(--ink);
-    border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px;
-    font-size: .82rem; font-weight: 400; line-height: 1.45; text-align: left;
-    box-shadow: 0 6px 22px rgba(0,0,0,.18); }
+    border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-2) var(--s-3);
+    font-size: var(--t-meta); font-weight: 400; line-height: 1.45; text-align: left;
+    box-shadow: var(--shadow); }
   .popover[hidden] { display: none; }
 </style>
 </head>
@@ -228,7 +253,7 @@
 
       <div class="fieldrow">
         <div>
-          <label for="zone">NCC climate zone (from your building's location)<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About NCC climate zones">i</button><span class="popover" role="tooltip" hidden>Australia's National Construction Code splits the country into eight climate zones, from hot-humid tropical (1) to alpine (8). It sets the climate context the system is judged against — it does not size anything; your loads come from DesignBuilder.</span></span></label>
+          <label for="zone">NCC climate zone (from your building's location)<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About NCC climate zones">i</button><span class="popover" role="tooltip" hidden>Australia's National Construction Code splits the country into eight climate zones, from hot-humid tropical (1) to alpine (8). It sets the climate context the system is judged against. It does not size anything; your loads come from DesignBuilder.</span></span></label>
           <select id="zone"></select>
           <p class="hint" id="zoneHint"></p>
         </div>
@@ -260,7 +285,7 @@
       <p class="sub">How the building brings in outdoor air is the first structural decision. It separates buildings that mix fresh air and conditioning in one air stream from those that supply fresh air on its own and condition the space some other way.</p>
 
       <div class="primer">
-        <p class="what">How outdoor air reaches the space — the first structural fork.</p>
+        <p class="what">How outdoor air reaches the space: the first structural fork.</p>
         <p>Ventilation can ride along in the same air stream that heats and cools (an all-air system), or arrive on its own through a dedicated outdoor-air unit while a separate system conditions the space. This one choice splits the whole taxonomy: "mixed with conditioning" leads to VAV or CAV, while DOAS leads to a water or refrigerant terminal system in the next steps.</p>
       </div>
 
@@ -290,7 +315,7 @@
 
       <div class="primer">
         <p class="what">What the building actually needs active plant to do.</p>
-        <p>Most Australian commercial climates need both heating and cooling, but a warm-humid or mild-marine site can tip the balance toward one side. This decides how hard each half of the plant works and where the carbon sits. Your DesignBuilder peak loads are the evidence — this step is the framing, not the number.</p>
+        <p>Most Australian commercial climates need both heating and cooling, but a warm-humid or mild-marine site can tip the balance toward one side. This decides how hard each half of the plant works and where the carbon sits. Your DesignBuilder peak loads are the evidence. This step is the framing, not the number.</p>
       </div>
 
       <div class="choices" id="condChoices">
@@ -313,7 +338,7 @@
 
       <div class="primer">
         <p class="what">Pick the system family you will justify.</p>
-        <p>The options differ mainly in what medium carries the conditioning — all-air, air-plus-water, or refrigerant — and so in what occupies the building. The fit badge weighs your climate, program and fresh-air choice to surface likely candidates, but it ranks rather than decides. Read the pros and cons and choose the case you can defend.</p>
+        <p>The options differ mainly in what medium carries the conditioning, and so in what occupies the building: all-air, air-plus-water, or refrigerant. The fit badge weighs your climate, program and fresh-air choice to surface likely candidates, but it ranks rather than decides. Read the pros and cons and choose the case you can defend.</p>
       </div>
 
       <div class="sysgrid" id="sysGrid"></div>
@@ -349,7 +374,7 @@
 
       <div class="primer">
         <p class="what">Read your system as a diagram, then build the low-carbon argument.</p>
-        <p>The schematic draws your choices as a labelled concept diagram, and the notes below explain each part from fresh air through to the plant. The carbon section then ranks the levers that would lower its emissions. It is a reasoning scaffold: it does not size plant or declare a winner — that judgement, and the loads, stay yours.</p>
+        <p>The schematic draws your choices as a labelled concept diagram, and the notes below explain each part from fresh air through to the plant. The carbon section then ranks the levers that would lower its emissions. It is a reasoning scaffold: it does not size plant or declare a winner. That judgement, and the loads, stay yours.</p>
       </div>
 
       <div class="schematic" id="schematic"></div>
@@ -368,7 +393,7 @@
       <textarea id="notes" placeholder="This building is a [program] in NCC zone [x]. I chose [system] because... The main carbon lever is... I would trade off... against..."></textarea>
 
       <div class="results">
-        <div class="summary-box" id="summaryBox"></div>
+        <div class="summary-box" id="summaryBox" role="status" aria-live="polite" aria-atomic="true"></div>
       </div>
       <div class="btn-row">
         <button type="button" class="btn" id="buildCarry">Build a summary to copy</button>

@@ -6,11 +6,28 @@
 <title>Paired-Data Analysis Helper — BPSD5030 (A2)</title>
 <style>
   :root {
-    --bg: #f6f7f9; --card: #ffffff; --ink: #1c2430; --muted: #5a6675;
-    --line: #dfe4ea; --accent: #0e7c86; --accent-ink: #ffffff;
-    --good: #1a7f4b; --warn: #b4690e; --bad: #b02a37;
-    --field: #ffffff; --result-bg: #eef6f7;
-    --serA: #0e7c86; --serB: #b4690e;
+    --bg: #f4f6f7; --card: #fcfdfd; --ink: #1c2430; --muted: #5a6675;
+    --line: #dfe4ea; --accent: #0e7c86; --accent-ink: #fbfefe;
+    --good: #1a7f4b; --warn: #9c5a0b; --bad: #b02a37;
+    --field: #fdfefe; --result-bg: #edf4f5;
+    --serA: #0e7c86; --serB: #b4690e;   /* bar fills in the figure */
+    /* one radius scale, one shadow — do not add values outside these */
+    --r-sm: 3px; --r-md: 8px; --r-pill: 999px;
+    --shadow: 0 3px 8px rgba(20, 38, 46, .12);
+
+    /* Type: seven roles, ~1.15 ratio. Roles are distinguished by weight and
+       colour as much as size, so sizes never sit closer than one step. */
+    --t-glyph: .68rem;   /* icon characters, not text */
+    --t-meta:  .78rem;   /* table headers, footer, popovers */
+    --t-label: .875rem;  /* field labels, notes, buttons, summaries */
+    --t-body:  1rem;
+    --t-lead:  1.125rem; /* primer opening line */
+    --t-h2:    1.3rem;
+    --t-h1:    1.625rem;
+
+    /* Space: 4px base. Tight inside a group, generous between groups. */
+    --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px;
+    --s-5: 20px; --s-6: 24px; --s-8: 32px; --s-12: 48px;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -19,128 +36,150 @@
       --good: #57c98a; --warn: #e0a955; --bad: #e2707a;
       --field: #0f151c; --result-bg: #13232a;
       --serA: #38b2bd; --serB: #e0a955;
+      --shadow: 0 3px 8px rgba(0, 0, 0, .34);
     }
+    /* Light text on a dark surface blooms and reads thinner. Compensate on
+       all three axes: a little more leading, a little more tracking, and one
+       step more weight on the low-contrast roles. */
+    body { line-height: 1.6; letter-spacing: .004em; }
+    .primer p, .sub, .note, label, details.maths .body { font-weight: 450; }
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink);
     font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-  .wrap { max-width: 860px; margin: 0 auto; padding: 24px 18px 64px; }
-  h1 { font-size: 1.5rem; margin: 0 0 4px; }
-  .lede { color: var(--muted); margin: 0 0 18px; max-width: 62ch; }
-  .home { display: inline-block; color: var(--accent); text-decoration: none; font-size: .9rem; margin-bottom: 14px; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: var(--s-6) var(--s-4) var(--s-12); }
+  header.page { margin-bottom: var(--s-2); }
+  h1 { font-size: var(--t-h1); margin: 0 0 var(--s-1); letter-spacing: -.018em; }
+  .lede { color: var(--muted); margin: 0 0 var(--s-6); max-width: 62ch; }
+  .home { display: inline-block; color: var(--accent); text-decoration: none; font-size: var(--t-label); margin-bottom: var(--s-4); }
   .home:hover { text-decoration: underline; }
 
   /* ---- ordered tabs ---- */
-  .tabs { display: flex; gap: 6px; margin: 4px 0 18px; flex-wrap: wrap; }
+  .tabs { display: flex; gap: var(--s-2); margin: 0 0 var(--s-6); flex-wrap: wrap; }
   .tab { border: 1px solid var(--line); background: var(--field); color: var(--muted);
-    border-radius: 999px; padding: 7px 15px 7px 8px; font-size: .9rem; cursor: pointer;
-    display: inline-flex; align-items: center; gap: 8px; font-family: inherit; }
+    border-radius: var(--r-pill); padding: var(--s-2) var(--s-4) var(--s-2) var(--s-2); font-size: var(--t-label); cursor: pointer;
+    display: inline-flex; align-items: center; gap: var(--s-2); font-family: inherit; }
   .tab:hover { border-color: var(--accent); color: var(--ink); }
   .tab.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
   .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .tab .n { display: inline-flex; align-items: center; justify-content: center;
     width: 21px; height: 21px; border-radius: 50%; background: var(--line); color: var(--muted);
-    font-size: .78rem; font-weight: 700; flex: none; }
+    font-size: var(--t-meta); font-weight: 700; flex: none; }
   .tab.active .n { background: var(--accent-ink); color: var(--accent); }
 
   section.card {
-    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
-    padding: 18px 18px 20px; margin: 0;
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md);
+    padding: var(--s-6); margin: 0;
   }
   .card[hidden] { display: none; }
-  h2 { font-size: 1.15rem; margin: 0 0 4px; }
-  h3 { font-size: 1rem; margin: 16px 0 4px; }
-  .sub { color: var(--muted); font-size: .92rem; margin: 0 0 14px; }
+  h2 { font-size: var(--t-h2); margin: 0 0 var(--s-1); letter-spacing: -.012em; }
+  h3 { font-size: var(--t-body); margin: var(--s-8) 0 var(--s-1); }
+  .sub { color: var(--muted); font-size: var(--t-label); margin: 0 0 var(--s-4); }
 
-  /* ---- per-tab primer ("the idea behind the number") ---- */
-  .primer { background: var(--result-bg); border-left: 3px solid var(--accent);
-    border-radius: 8px; padding: 12px 15px; margin: 0 0 18px; }
-  .primer .what { font-weight: 600; margin: 0 0 5px; }
-  .primer p { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.5; }
+  /* ---- per-tab primer ("the idea behind the number") ----
+     Hierarchy comes from type and space, not a coloured bar. */
+  .primer { margin: 0 0 var(--s-6); padding: 0 0 var(--s-5); border-bottom: 1px solid var(--line); }
+  .primer .what { font-weight: 600; font-size: var(--t-lead); letter-spacing: -.011em;
+    margin: 0 0 var(--s-2); max-width: 58ch; }
+  .primer p { margin: 0; color: var(--muted); font-size: var(--t-label); line-height: 1.62; max-width: 64ch; }
 
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; align-items: end; }
-  .grid > div { display: flex; flex-direction: column; }
-  .grid > div > input, .grid > div > select { margin-top: auto; }
+  ul.terms { margin: 0; padding-left: var(--s-5); }
+  ul.terms li { margin-bottom: var(--s-1); }
+  ul.terms li:last-child { margin-bottom: 0; }
 
-  label { display: block; font-size: .85rem; color: var(--muted); margin: 8px 0 4px; }
-  input[type=text] { width: 100%; padding: 8px 10px; font-size: 1rem; color: var(--ink); background: var(--field); border: 1px solid var(--line); border-radius: 8px; }
-  textarea { width: 100%; min-height: 150px; padding: 10px; font: .95rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    color: var(--ink); background: var(--field); border: 1px solid var(--line); border-radius: 8px; resize: vertical; }
-  .btns { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
-  button { font: inherit; font-size: .92rem; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--field); color: var(--ink); cursor: pointer; }
+  label { display: block; font-size: var(--t-label); color: var(--muted); margin: var(--s-2) 0 var(--s-1); }
+  input[type=text] { width: 100%; padding: var(--s-2) var(--s-3); font-size: var(--t-body); color: var(--ink);
+    background: var(--field); border: 1px solid var(--line); border-radius: var(--r-md); }
+  textarea { width: 100%; min-height: 150px; padding: var(--s-3);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: var(--t-label);
+    color: var(--ink); background: var(--field); border: 1px solid var(--line); border-radius: var(--r-md); resize: vertical; }
+  input[type=text]:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .btns { margin-top: var(--s-3); display: flex; gap: var(--s-2); flex-wrap: wrap; }
+  button { font: inherit; font-size: var(--t-label); padding: var(--s-2) var(--s-4); border-radius: var(--r-md);
+    border: 1px solid var(--line); background: var(--field); color: var(--ink); cursor: pointer; }
   button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
   button:hover { border-color: var(--accent); }
-  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .results { margin-top: 8px; }
-  table { width: 100%; border-collapse: collapse; margin: 8px 0; font-variant-numeric: tabular-nums; }
-  th, td { text-align: right; padding: 7px 8px; border-bottom: 1px solid var(--line); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-3); }
+  .results { margin-top: var(--s-4); }
+  table { width: 100%; border-collapse: collapse; margin: var(--s-2) 0 var(--s-4); font-variant-numeric: tabular-nums; }
+  th, td { text-align: right; padding: var(--s-2); border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 500; font-size: var(--t-meta); }
   th:first-child, td:first-child { text-align: left; }
-  .row { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+  .row { display: flex; justify-content: space-between; gap: var(--s-3); padding: var(--s-2) 0; border-bottom: 1px solid var(--line); }
   .row:last-child { border-bottom: 0; }
-  .row .k { color: var(--muted); } .row .v { font-weight: 600; font-variant-numeric: tabular-nums; }
-  .callout { background: var(--result-bg); border-radius: 10px; padding: 12px 14px; margin-top: 12px; }
+  .row .k { color: var(--muted); }
+  .row .v { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .callout { background: var(--result-bg); border-radius: var(--r-md); padding: var(--s-3) var(--s-4); margin-top: var(--s-4); }
   .sig { font-weight: 700; }
   .err { color: var(--bad); font-weight: 600; }
-  .flag { border-left: 3px solid var(--warn); background: var(--result-bg); padding: 10px 14px; border-radius: 6px; margin: 12px 0; }
-  canvas { width: 100%; max-width: 460px; height: auto; display: block; margin: 8px auto 0; }
-  .note { color: var(--muted); font-size: .86rem; }
-  .modelprose { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; margin: 8px 0; color: var(--ink); }
-  .modelprose.bad { border-left-color: var(--bad); }
-  .modelprose ul { margin: 4px 0; padding-left: 18px; }
-  footer.page { color: var(--muted); font-size: .82rem; margin-top: 24px; border-top: 1px solid var(--line); padding-top: 14px; }
+  .flag { background: var(--result-bg); border-radius: var(--r-md); padding: var(--s-4);
+    margin: var(--s-6) 0; font-size: var(--t-label); }
+  .flag > strong:first-child { color: var(--warn); }
+  canvas { width: 100%; max-width: 460px; height: auto; display: block; margin: var(--s-4) auto 0; }
+  .note { color: var(--muted); font-size: var(--t-label); }
+  .modelprose { background: var(--result-bg); border-radius: var(--r-md);
+    padding: var(--s-3) var(--s-4); margin: var(--s-3) 0 0; color: var(--ink); }
+  .modelprose.bad { background: transparent; border: 1px dashed var(--bad); }
+  .modelprose ul { margin: var(--s-1) 0; padding-left: var(--s-5); }
+  footer.page { color: var(--muted); font-size: var(--t-meta); margin-top: var(--s-8); border-top: 1px solid var(--line); padding-top: var(--s-4); }
 
-  /* ---- "the maths behind it" panel ---- */
-  details.maths { margin-top: 16px; border-left: 3px solid var(--accent);
-    background: var(--result-bg); border-radius: 8px; padding: 4px 15px; }
-  details.maths[open] { padding-bottom: 12px; }
-  details.maths > summary { cursor: pointer; color: var(--accent); font-size: .9rem;
-    font-weight: 600; padding: 9px 0; list-style: none; }
+  /* ---- "the maths behind it" panel ----
+     A top hairline, not a nested tinted card. */
+  details.maths { margin-top: var(--s-6); border-top: 1px solid var(--line); padding: 0; }
+  details.maths[open] { padding-bottom: var(--s-4); }
+  details.maths > summary { cursor: pointer; color: var(--accent); font-size: var(--t-label);
+    font-weight: 600; padding: var(--s-3) 0; list-style: none; }
   details.maths > summary::-webkit-details-marker { display: none; }
   details.maths > summary::before { content: "▸ "; }
   details.maths[open] > summary::before { content: "▾ "; }
-  details.maths .deriv { color: var(--muted); font-size: .88rem; margin: 8px 0 0; }
-  details.maths .body { margin-top: 8px; font-size: .92rem; }
-  details.maths .body p { margin: 6px 0; }
-  details.maths code, .modelprose code, .sub code { font: .85em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    background: color-mix(in srgb, var(--ink) 8%, transparent); padding: 1px 5px; border-radius: 4px; }
-  .work { font: .9rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin: 6px 0; overflow-x: auto; }
-  .work .step { display: block; padding: 2px 0; }
-  ul.checklist { list-style: none; padding-left: 0; margin: 8px 0; }
+  details.maths > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  details.maths .body { margin-top: var(--s-2); font-size: var(--t-label); }
+  details.maths .body p { margin: var(--s-2) 0; }
+  details.maths code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .9em;
+    background: color-mix(in srgb, var(--ink) 8%, transparent); padding: .1em .35em; border-radius: var(--r-sm); }
+  .work { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: var(--t-label);
+    margin: var(--s-2) 0; overflow-x: auto; }
+  .work .step { display: block; padding: var(--s-1) 0; }
+  ul.checklist { list-style: none; padding-left: 0; margin: var(--s-2) 0 0; }
   ul.checklist li { border-bottom: 1px solid var(--line); }
   ul.checklist li:last-child { border-bottom: 0; }
-  ul.checklist label { display: flex; gap: 11px; align-items: flex-start; padding: 9px 2px; cursor: pointer; }
-  ul.checklist input[type=checkbox] { width: 18px; height: 18px; margin: 2px 0 0; flex: none; accent-color: var(--accent); cursor: pointer; }
+  ul.checklist label { display: flex; gap: var(--s-3); align-items: flex-start;
+    margin: 0; padding: var(--s-3) var(--s-1); color: var(--ink); cursor: pointer; }
+  ul.checklist input[type=checkbox] { width: 18px; height: 18px; margin: var(--s-1) 0 0; flex: none; accent-color: var(--accent); cursor: pointer; }
   ul.checklist input:checked + span { color: var(--muted); text-decoration: line-through; }
-  .checkprogress { margin-top: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .checkprogress { margin-top: var(--s-4); font-weight: 600; font-variant-numeric: tabular-nums; }
 
   /* ---- Back / Next ---- */
-  .tabnav { display: flex; justify-content: space-between; margin-top: 20px; gap: 8px; }
-  .btn { background: var(--accent); color: var(--accent-ink); border: none; border-radius: 8px;
-    padding: 7px 12px; font-size: .88rem; cursor: pointer; font-family: inherit; }
+  .tabnav { display: flex; justify-content: space-between; margin-top: var(--s-6); gap: var(--s-2); }
+  .btn { background: var(--accent); color: var(--accent-ink); border: none; border-radius: var(--r-md);
+    padding: var(--s-2) var(--s-3); font-size: var(--t-label); cursor: pointer; font-family: inherit; }
   .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
   .tabnav .btn[disabled] { opacity: .35; cursor: default; }
 
   /* ---- accessible info popover (replaces native title=) ---- */
   .info-wrap { position: relative; display: inline-block; vertical-align: middle; }
   .info-tip { display: inline-flex; align-items: center; justify-content: center;
-    width: 16px; height: 16px; margin-left: 4px; border-radius: 50%; border: none; padding: 0;
-    background: var(--line); color: var(--muted); font-size: .68rem; font-weight: 700;
+    width: 16px; height: 16px; margin-left: var(--s-1); border-radius: 50%; border: none; padding: 0;
+    background: var(--line); color: var(--muted); font-size: var(--t-glyph); font-weight: 700;
     font-family: inherit; font-style: normal; line-height: 1; cursor: pointer; user-select: none; }
   .info-tip:hover, .info-tip[aria-expanded="true"] { background: var(--accent); color: var(--accent-ink); }
   .info-tip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .popover { position: absolute; z-index: 30; left: 0; bottom: calc(100% + 8px);
     width: max-content; max-width: 250px; background: var(--card); color: var(--ink);
-    border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px;
-    font-size: .82rem; font-weight: 400; line-height: 1.45; text-align: left;
-    box-shadow: 0 6px 22px rgba(0,0,0,.18); }
+    border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-2) var(--s-3);
+    font-size: var(--t-meta); font-weight: 400; line-height: 1.45; text-align: left;
+    box-shadow: var(--shadow); }
   .popover[hidden] { display: none; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <a class="home" href="index.html">&larr; BPSD5030 tutorial tools</a>
-  <h1>Paired-Data Analysis Helper</h1>
-  <p class="lede">Your Assignment 2 analysis companion: paste two paired conditions and it describes the data, runs one appropriate test, shows the working, and models the write-up — one step at a time.</p>
+  <header class="page">
+    <h1>Paired-Data Analysis Helper</h1>
+    <p class="lede">Your Assignment 2 analysis companion. Paste two paired conditions and it describes the data, runs one appropriate test, shows the working, and models the write-up, one step at a time.</p>
+  </header>
 
   <!-- ===== Tabs ===== -->
   <div class="tabs" role="tablist" aria-label="Paired-data analysis steps">
@@ -156,18 +195,18 @@
   <section class="card" role="tabpanel" id="panel-1" aria-labelledby="tab-1" tabindex="0">
     <div class="primer">
       <p class="what">Name the comparison before you touch the numbers.</p>
-      <p>The independent variable is what you deliberately changed (say noise: quiet vs noisy); the dependent variable is what you measured (say problems answered correctly). Just as decisive is whether the same people appear in both conditions — a paired, within-subjects design — or whether two different groups are compared, because that single choice fixes which test is correct.</p>
+      <p>The independent variable is what you deliberately changed (say noise: quiet vs noisy); the dependent variable is what you measured (say problems answered correctly). The other decisive question is whether the same people appear in both conditions, which is a paired, within-subjects design, or whether two different groups are compared. That single choice fixes which test is correct.</p>
     </div>
     <h2>Name your design first</h2>
     <p class="sub">Before you paste anything, write down what you are comparing. This decides which test is correct, so it comes before the numbers.</p>
-    <ul style="margin:0; padding-left:18px;">
-      <li><strong>Research question</strong> — the one difference you are testing (e.g. "Does background noise lower math-task scores at a fixed temperature?").</li>
-      <li><strong>Independent variable</strong> — what you changed (e.g. noise: quiet vs noisy). Anything held constant is not a variable.</li>
-      <li><strong>Dependent variable</strong> — what you measured (e.g. problems answered correctly).</li>
-      <li><strong>Design</strong> — paired or independent? See the flag below; it is the most common mistake in this assignment.</li>
+    <ul class="terms">
+      <li><strong>Research question:</strong> the one difference you are testing (e.g. "Does background noise lower math-task scores at a fixed temperature?").</li>
+      <li><strong>Independent variable:</strong> what you changed (e.g. noise: quiet vs noisy). Anything held constant is not a variable.</li>
+      <li><strong>Dependent variable:</strong> what you measured (e.g. problems answered correctly).</li>
+      <li><strong>Design:</strong> paired or independent? See the flag below; it is the most common mistake in this assignment.</li>
     </ul>
     <div class="flag">
-      <strong>This tool is for paired (within-subjects) data only:</strong> one row = one person measured in <em>both</em> conditions (e.g. the same participant tested quiet <em>and</em> noisy). If your A2 angle compares <em>different people</em> — for example noisy scores split by gender or by age group — that is an <strong>independent-samples</strong> comparison and needs a different test (an independent-samples t-test or Mann–Whitney). Pasting unpaired groups here will produce a number, but the wrong one. Match the test to your design.
+      <strong>This tool is for paired (within-subjects) data only:</strong> one row = one person measured in <em>both</em> conditions (e.g. the same participant tested quiet <em>and</em> noisy). If your A2 angle compares <em>different people</em>, for example noisy scores split by gender or by age group, that is an <strong>independent-samples</strong> comparison and needs a different test (an independent-samples t-test or Mann–Whitney). Pasting unpaired groups here will produce a number, but the wrong one. Match the test to your design.
     </div>
     <details class="maths">
       <summary>Paired vs independent, in one line</summary>
@@ -200,7 +239,7 @@
       <button id="example">Load worked example</button>
       <button id="clear">Clear</button>
     </div>
-    <div id="parseMsg" class="note"></div>
+    <div id="parseMsg" class="note" role="status" aria-live="polite" aria-atomic="true"></div>
     <div class="tabnav">
       <button type="button" class="btn ghost" data-nav="prev">&larr; Back</button>
       <button type="button" class="btn" data-nav="next">Next: Descriptives &rarr;</button>
@@ -211,10 +250,10 @@
   <section class="card" role="tabpanel" id="panel-3" aria-labelledby="tab-3" tabindex="0" hidden>
     <div class="primer">
       <p class="what">Describe the data before you test it.</p>
-      <p>The mean is the typical score in a condition; the standard deviation is how much scores scatter around that mean. Report both — a gap between two means means little until you know whether scores already vary by one point or by ten. Look hard at the figure before running any test.</p>
+      <p>The mean is the typical score in a condition; the standard deviation is how much scores scatter around that mean. Report both. A gap between two means means little until you know whether scores already vary by one point or by ten. Look hard at the figure before running any test.</p>
     </div>
     <h2>Describe before you test</h2>
-    <p class="note" data-ph>Paste your two conditions on the Data step and choose Analyse — the descriptive statistics and figure appear here.</p>
+    <p class="note" data-ph>Paste your two conditions on the Data step and choose Analyse. The descriptive statistics and figure appear here.</p>
     <div class="results" data-res hidden>
       <table id="descTable"></table>
       <canvas id="chart" width="460" height="320" role="img" aria-label="Mean of each condition with standard-deviation error bars"></canvas>
@@ -236,13 +275,13 @@
   <section class="card" role="tabpanel" id="panel-4" aria-labelledby="tab-4" tabindex="0" hidden>
     <div class="primer">
       <p class="what">One defensible test on one clear comparison.</p>
-      <p>A paired t-test asks whether the average difference is larger than the scatter in those differences would lead you to expect by chance; the Wilcoxon signed-rank is its rank-based counterpart for ordinal or skewed data such as Likert ratings. A p-value only says how surprising the gap would be if the conditions truly had no effect — it does not say how big the effect is. Cohen's d<sub>z</sub> reports that size, so always give both.</p>
+      <p>A paired t-test asks whether the average difference is larger than the scatter in those differences would lead you to expect by chance; the Wilcoxon signed-rank is its rank-based counterpart for ordinal or skewed data such as Likert ratings. A p-value only says how surprising the gap would be if the conditions truly had no effect. It does not say how big the effect is. Cohen's d<sub>z</sub> reports that size, so always give both.</p>
     </div>
     <h2>Test one difference</h2>
     <p class="sub">A <strong>paired-samples t-test</strong> is the default for paired numeric data. If your data are ordinal or clearly skewed (e.g. Likert comfort ratings), use the <strong>Wilcoxon signed-rank</strong><span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About the Wilcoxon signed-rank test">i</button><span class="popover" role="tooltip" hidden>Use the Wilcoxon result when the outcome is ordinal (like a 1–5 Likert rating) or clearly skewed, where the t-test's assumptions do not hold. It compares the ranks of the differences rather than their sizes.</span></span> result instead.</p>
-    <p class="note" data-ph>Paste your two conditions on the Data step and choose Analyse — the test statistics and working appear here.</p>
+    <p class="note" data-ph>Paste your two conditions on the Data step and choose Analyse. The test statistics and working appear here.</p>
     <div data-res hidden>
-      <div id="testResults"></div>
+      <div id="testResults" role="status" aria-live="polite" aria-atomic="true"></div>
       <details class="maths">
         <summary>The maths behind the paired t-test (on your numbers)</summary>
         <div class="body" id="tWork"></div>
@@ -268,7 +307,7 @@
   <section class="card" role="tabpanel" id="panel-5" aria-labelledby="tab-5" tabindex="0" hidden>
     <div class="primer">
       <p class="what">Turn the numbers into paper-ready prose.</p>
-      <p>IMRaD Results state what you found in a sentence or two — the direction of the difference, its size, and the test statistic — and point to your figure. Methods describe your protocol so another researcher could reproduce it: prose that names the conditions, sample, instruments and the test, not a bullet list of ingredients.</p>
+      <p>IMRaD Results state what you found in a sentence or two, giving the direction of the difference, its size, and the test statistic, then point to your figure. Methods describe your protocol so another researcher could reproduce it: prose that names the conditions, sample, instruments and the test, rather than a bullet list of ingredients.</p>
     </div>
     <h2>Report it (IMRaD style)</h2>
     <p class="sub">A model Results sentence built from your numbers. Edit it into your own words; do not paste verbatim.</p>
@@ -304,10 +343,10 @@
   <section class="card" role="tabpanel" id="panel-6" aria-labelledby="tab-6" tabindex="0" hidden>
     <div class="primer">
       <p class="what">Check it holds together before you submit.</p>
-      <p>A strong submission names its design, reports means with their spread, shows one well-labelled figure, runs one test matched to the design, gives the effect size beside the p-value, and writes Methods as reproducible prose. Acknowledge and validate any AI you used along the way.</p>
+      <p>A strong submission names its design and reports means with their spread. It shows one well-labelled figure, runs one test matched to the design, and gives the effect size beside the p-value. Methods are written as reproducible prose. Acknowledge and validate any AI you used along the way.</p>
     </div>
     <h2>Before you submit A2</h2>
-    <p class="sub">Tick each item as you confirm it. Nothing is saved &mdash; it resets on reload.</p>
+    <p class="sub">Tick each item as you confirm it. Nothing is saved; the list resets on reload.</p>
     <ul class="checklist" id="a2check">
       <li><label><input type="checkbox"><span>Research question and IV/DV stated clearly, and the right variable labelled as which.</span></label></li>
       <li><label><input type="checkbox"><span>Means <strong>and</strong> SDs (or equivalent spread) reported for each condition, not means alone.</span></label></li>
