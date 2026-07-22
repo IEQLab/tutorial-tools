@@ -29,13 +29,22 @@
       --line: #2a3441; --accent: #38b2bd; --accent-ink: #06212a;
       --good: #57c98a; --warn: #e0a955; --bad: #e2707a;
       --field: #0f151c; --result-bg: #13232a; --hover: #1c2733;
+      --shadow: 0 3px 8px rgba(0, 0, 0, .34);
     }
+    /* Light text on a dark surface blooms and reads thinner. Compensate on
+       all three axes: a little more leading, a little more tracking, and one
+       step more weight on the low-contrast roles. */
+    body { line-height: 1.6; letter-spacing: .004em; }
+    .primer p, .sub, .note, label, .deriv { font-weight: 450; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: .01ms !important; animation-duration: .01ms !important; scroll-behavior: auto !important; }
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink);
     font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
   .wrap { max-width: 920px; margin: 0 auto; padding: var(--s-6) var(--s-5) var(--s-12); }
-  h1 { font-size: var(--t-h1); margin: 0 0 var(--s-1); }
+  h1 { font-size: var(--t-h1); margin: 0 0 var(--s-1); letter-spacing: -.018em; }
   .lede { color: var(--muted); margin: 0 0 var(--s-5); max-width: 68ch; }
   .home { display: inline-block; color: var(--accent); text-decoration: none; font-size: var(--t-label); margin-bottom: var(--s-4); }
   .home:hover { text-decoration: underline; }
@@ -146,7 +155,8 @@
 <div class="wrap">
   <a class="home" href="index.html">&larr; BPSD5030 tutorial tools</a>
   <h1>Room Acoustics Calculator</h1>
-  <p class="lede">Combine decibels, work the Sabine relationship, build a room's absorption, estimate speech intelligibility, and browse the material data &mdash; the routine Week 6 acoustics arithmetic in one place, so your time goes to measurement and interpretation.</p>
+  <p class="lede">Combine decibels, work the Sabine relationship, build a room's absorption, estimate speech intelligibility, and browse the material data: the routine Week 6 acoustics arithmetic in one place, so your time goes to measurement and interpretation.</p>
+  <p class="note">Each tab opens with example values so you can see it working; replace them with your own readings.</p>
 
   <!-- ===== Tabs ===== -->
   <div class="tabs" role="tablist" aria-label="Room acoustics tools">
@@ -161,7 +171,7 @@
   <section class="card" role="tabpanel" id="s-db" aria-labelledby="tab-1" tabindex="0">
     <div class="primer">
       <p class="what">Decibels measure sound energy on a logarithmic scale, so you cannot average or add them with plain arithmetic.</p>
-      <p>LAeq is the equivalent continuous level &mdash; the single steady level carrying the same energy as a fluctuating signal &mdash; and the "A" weighting discounts very low and very high frequencies to track how the ear hears, so a dBA figure is close to perceived loudness. Because the scale is logarithmic, two equal levels combine to just 3 dB above one of them, while a source 10 dB quieter adds almost nothing. Enter your levels separated by commas or spaces, then energy-average repeated readings of one source or combine independent sources into a total.</p>
+      <p>LAeq is the equivalent continuous level (the single steady level carrying the same energy as a fluctuating signal), and the "A" weighting discounts very low and very high frequencies to track how the ear hears, so a dBA figure is close to perceived loudness. Because the scale is logarithmic, two equal levels combine to just 3 dB above one of them, while a source 10 dB quieter adds almost nothing. Enter your levels separated by commas or spaces, then energy-average repeated readings of one source or combine independent sources into a total.</p>
     </div>
     <label for="levels">Levels (dB)</label>
     <input id="levels" type="text" value="60, 63, 66">
@@ -178,7 +188,7 @@
     <details class="maths">
       <summary>The maths behind combining decibels</summary>
       <div class="formula">Average: L = 10 &middot; log&#8321;&#8320;( (1/n) &middot; &Sigma; 10^(Li/10) )   ·   Combine: L = 10 &middot; log&#8321;&#8320;( &Sigma; 10^(Li/10) )</div>
-      <p class="deriv">The calculator converts each level back to sound energy (10^(Li/10)), averages or sums the energies, then returns to decibels. Because the scale is logarithmic the answer is always pulled toward the louder reading rather than the arithmetic midpoint &mdash; doubling the energy is only +3 dB &mdash; which is why averaging dB values directly would mislead.</p>
+      <p class="deriv">The calculator converts each level back to sound energy (10^(Li/10)), averages or sums the energies, then returns to decibels. Because the scale is logarithmic the answer is always pulled toward the louder reading rather than the arithmetic midpoint (doubling the energy is only +3 dB), which is why averaging dB values directly would mislead.</p>
       <p class="deriv">LAeq differs from the statistical levels a meter may also show: LA90 (exceeded 90% of the time) tracks the steady background floor, while LA10 (exceeded only 10% of the time) captures the louder intermittent peaks; LAeq sits between them.</p>
     </details>
     <div class="tabnav">
@@ -190,8 +200,8 @@
   <!-- ===== Tab 2: Reverberation (Sabine) ===== -->
   <section class="card" role="tabpanel" id="s-sabine" aria-labelledby="tab-2" tabindex="0" hidden>
     <div class="primer">
-      <p class="what">Reverberation time (RT60) is how long a sound takes to decay by 60 dB after the source stops &mdash; the "tail" you hear in a hard, empty room.</p>
-      <p>It is the single most telling descriptor of a room's acoustic character, and the Sabine equation ties it to the room's size and its total sound absorption: A = 0.16&middot;V/T. Absorption and reverberation are inversely related &mdash; roughly double the absorbing area and the reverberation time halves. Enter the volume plus one of T or A and the tool returns the other.</p>
+      <p class="what">Reverberation time (RT60) is how long a sound takes to decay by 60 dB after the source stops: the "tail" you hear in a hard, empty room.</p>
+      <p>It is the single most telling descriptor of a room's acoustic character, and the Sabine equation ties it to the room's size and its total sound absorption: A = 0.16&middot;V/T. Absorption and reverberation are inversely related: roughly double the absorbing area and the reverberation time halves. Enter the volume plus one of T or A and the tool returns the other.</p>
     </div>
     <div class="grid">
       <div><label for="vol">Room volume, V (m&sup3;)</label><input id="vol" type="number" step="1" value="200"></div>
@@ -207,7 +217,7 @@
       <summary>The maths behind Sabine, and benchmarking against AS/NZS&nbsp;2107</summary>
       <div class="formula">A = 0.16 &middot; V / T   ·   T = 0.16 &middot; V / A</div>
       <p class="deriv">With V the room volume in m&sup3; and T the average RT60 at 500&nbsp;Hz and 1000&nbsp;Hz. The 0.16 constant (&asymp; 24&middot;ln(10)/c) carries the speed of sound c, which is why it is specific to metric units. Sabine assumes a diffuse, well-mixed sound field, so it is only approximate in very live or very dead rooms, or where the absorption is bunched on one surface rather than spread evenly around.</p>
-      <p class="deriv">Measurements become design evidence once judged against a benchmark. AS/NZS&nbsp;2107:2016 gives recommended design sound levels and reverberation times per interior type &mdash; find the closest category, then check that your energy-averaged LAeq and your mid-frequency RT60 (the 500&nbsp;Hz and 1&nbsp;kHz average) sit within range. These are indicative figures for orientation; the standard gives satisfactory-to-maximum ranges that vary with room size, so consult AS/NZS&nbsp;2107:2016 for design work.</p>
+      <p class="deriv">Measurements become design evidence once judged against a benchmark. AS/NZS&nbsp;2107:2016 gives recommended design sound levels and reverberation times per interior type: find the closest category, then check that your energy-averaged LAeq and your mid-frequency RT60 (the 500&nbsp;Hz and 1&nbsp;kHz average) sit within range. These are indicative figures for orientation; the standard gives satisfactory-to-maximum ranges that vary with room size, so consult AS/NZS&nbsp;2107:2016 for design work.</p>
       <div class="tablewrap">
         <table>
           <thead><tr><th class="name">Space type</th><th>LAeq (dBA)</th><th>Mid-freq RT60 (s)</th></tr></thead>
@@ -233,7 +243,7 @@
   <section class="card" role="tabpanel" id="s-room" aria-labelledby="tab-3" tabindex="0" hidden>
     <div class="primer">
       <p class="what">Build a room's total absorption surface by surface, to see where the acoustics come from.</p>
-      <p>A room reverberates the way it does because of its size, its surfaces, and its occupancy &mdash; people are strong absorbers. Add each major surface (ceiling, walls, floor, glazing, furniture, seating), pick its material, and enter its area in m&sup2;; the tool sums the octave-band absorption A = &Sigma;(S&middot;&alpha;) and predicts the reverberation time per band. Compare that against the RT60 you measured: where they diverge, the difference is usually people, furniture, or geometry the generic table cannot capture.</p>
+      <p>A room reverberates the way it does because of its size, its surfaces, and its occupancy: people are strong absorbers. Add each major surface (ceiling, walls, floor, glazing, furniture, seating), pick its material, and enter its area in m&sup2;; the tool sums the octave-band absorption A = &Sigma;(S&middot;&alpha;) and predicts the reverberation time per band. Compare that against the RT60 you measured: where they diverge, the difference is usually people, furniture, or geometry the generic table cannot capture.</p>
     </div>
     <div class="grid" style="max-width:320px">
       <div><label for="roomVol">Room volume, V (m&sup3;)</label><input id="roomVol" type="number" step="1" value="200"></div>
@@ -254,7 +264,7 @@
     <details class="maths">
       <summary>The maths behind surface absorption</summary>
       <div class="formula">A = &Sigma;(S&middot;&alpha;)   ·   Predicted RT60 = 0.16 &middot; V / A  (per band)</div>
-      <p class="deriv">A = &Sigma;(S&middot;&alpha;) adds up each surface's area S (m&sup2;) times its absorption coefficient &alpha; &mdash; the fraction of incident sound energy the surface soaks up rather than reflects (0 = perfectly reflective, 1 = a fully open window). &alpha; is strongly frequency-dependent: soft, porous materials like carpet and acoustic tile absorb the highs well but little bass, whereas low frequencies are usually tamed by panel or membrane absorbers. That is why the tool works band by band, and why a room can end up bright or boomy rather than uniformly live or dead.</p>
+      <p class="deriv">A = &Sigma;(S&middot;&alpha;) adds up each surface's area S (m&sup2;) times its absorption coefficient &alpha;: the fraction of incident sound energy the surface soaks up rather than reflects (0 = perfectly reflective, 1 = a fully open window). &alpha; is strongly frequency-dependent: soft, porous materials like carpet and acoustic tile absorb the highs well but little bass, whereas low frequencies are usually tamed by panel or membrane absorbers. That is why the tool works band by band, and why a room can end up bright or boomy rather than uniformly live or dead.</p>
       <p class="deriv">Absorption coefficients are per m&sup2; of surface; seating/audience values are per m&sup2; of floor area they occupy. Predicted RT uses T = 0.16&middot;V/A in each band and will differ from measurement because the table is generic and does not model geometry.</p>
     </details>
     <div class="tabnav">
@@ -267,7 +277,7 @@
   <section class="card" role="tabpanel" id="s-sti" aria-labelledby="tab-4" tabindex="0" hidden>
     <div class="primer">
       <p class="what">The Speech Transmission Index scores how well the detail of speech survives its passage across a room, on a scale from 0 (unintelligible) to 1 (excellent).</p>
-      <p>It rolls the two things that wreck intelligibility &mdash; background noise and reverberation &mdash; into a single number. Two routes are offered here, matching the tutorial: a one-line quick read from the speech-to-noise ratio for a first feel in the room, and the full octave-band calculation (IEC&nbsp;60268-16) ported from the class STI workbook. Use the qualitative bands to interpret the score.</p>
+      <p>It rolls the two things that wreck intelligibility (background noise and reverberation) into a single number. Two routes are offered here, matching the tutorial: a one-line quick read from the speech-to-noise ratio for a first feel in the room, and the full octave-band calculation (IEC&nbsp;60268-16) ported from the class STI workbook. Use the qualitative bands to interpret the score.</p>
     </div>
 
     <h2>Quick estimate (speech-to-noise)</h2>
@@ -279,6 +289,7 @@
     <div class="flag">Indicative only. This SNR shortcut ignores reverberation and per-band effects. Use the full octave-band method below for anything you report.</div>
 
     <h2>Full octave-band STI (IEC 60268-16)</h2>
+    <p class="note">This method reproduces the BPSD5030 STI workbook developed by <strong>Densil Cabrera</strong> (School of Architecture, Design and Planning, University of Sydney), verified cell-for-cell against the original spreadsheet.</p>
     <p class="note">Enter room volume, talker-to-listener distance, and the octave-band reverberation time and background noise. If you could not measure RT at 125&nbsp;Hz or 8&nbsp;kHz, substitute the 250&nbsp;Hz and 4&nbsp;kHz values respectively and note that you did so.</p>
     <div class="grid" style="margin-bottom:6px">
       <div><label for="stiVol">Room volume, V (m&sup3;)</label><input id="stiVol" type="number" step="1" value="1000"></div>
@@ -299,7 +310,7 @@
     <details class="maths">
       <summary>The maths behind the STI</summary>
       <div class="formula">Quick: SNR = Lspeech &minus; Lnoise   ·   STI &asymp; (SNR + 15) / 30   (clamped 0&ndash;1)</div>
-      <p class="deriv">The quick estimate maps the A-weighted speech-to-noise ratio straight onto the STI scale &mdash; fast, but it sees neither reverberation nor the per-band structure of noise. The full method reproduces the class STI workbook: a statistical room-acoustics model (IEC&nbsp;60268-16, with auditory masking) that computes the modulation transfer index in each octave band from the room volume, talker distance, reverberation time and background-noise spectrum, then weights the bands into one index.</p>
+      <p class="deriv">The quick estimate maps the A-weighted speech-to-noise ratio straight onto the STI scale: fast, but it sees neither reverberation nor the per-band structure of noise. The full method reproduces the class STI workbook: a statistical room-acoustics model (IEC&nbsp;60268-16, with auditory masking) that computes the modulation transfer index in each octave band from the room volume, talker distance, reverberation time and background-noise spectrum, then weights the bands into one index.</p>
       <p class="deriv">Qualitative bands used here (as in the spreadsheet): &lt;0.20 none &middot; 0.20&ndash;0.40 poor &middot; 0.40&ndash;0.60 fair &middot; 0.60&ndash;0.80 good &middot; &gt;0.80 excellent.</p>
     </details>
     <div class="tabnav">
@@ -312,7 +323,7 @@
   <section class="card" role="tabpanel" id="s-data" aria-labelledby="tab-5" tabindex="0" hidden>
     <div class="primer">
       <p class="what">The octave-band data behind the calculators: absorption coefficients for finishes and sound reduction indices for constructions.</p>
-      <p>Read a row across the octave bands (63&nbsp;Hz&ndash;8&nbsp;kHz) to see how a material behaves with frequency &mdash; a carpet soaks up highs but little bass, a masonry wall does the reverse. Switch between the two tables with the pills, and search or filter by category to find a material. On any absorption row, click <strong>+</strong> to push that material straight into the room-absorption builder in the Room absorption tab.</p>
+      <p>Read a row across the octave bands (63&nbsp;Hz&ndash;8&nbsp;kHz) to see how a material behaves with frequency: a carpet soaks up highs but little bass, a masonry wall does the reverse. Switch between the two tables with the pills, and search or filter by category to find a material. On any absorption row, click <strong>+</strong> to push that material straight into the room-absorption builder in the Room absorption tab.</p>
     </div>
     <div class="subtabs">
       <button class="subtab active" data-tab="abs">Absorption coefficients</button>
@@ -327,7 +338,7 @@
     <p class="note" id="matHint">Tip: click <strong>+</strong> on an absorption row to add it to the room-absorption builder in the Room absorption tab.</p>
     <details class="maths">
       <summary>How to read these tables</summary>
-      <p class="deriv">Absorption coefficient &alpha; is the fraction of incident sound energy a surface soaks up (0 = perfectly reflective, 1 = a fully open window); it feeds A = &Sigma;(S&middot;&alpha;) in the Room absorption tab. Sound reduction index R (dB) is how much airborne sound a construction blocks per octave band, with Rw a single-number rating. All values are indicative generic data (BB93 / Adrian James), for rough calculations only &mdash; not for Building-Control submissions.</p>
+      <p class="deriv">Absorption coefficient &alpha; is the fraction of incident sound energy a surface soaks up (0 = perfectly reflective, 1 = a fully open window); it feeds A = &Sigma;(S&middot;&alpha;) in the Room absorption tab. Sound reduction index R (dB) is how much airborne sound a construction blocks per octave band, with Rw a single-number rating. All values are indicative generic data (BB93 / Adrian James), for rough calculations only, not for Building-Control submissions.</p>
     </details>
     <div class="tabnav">
       <button type="button" class="btn ghost" data-nav="prev">&larr; Back</button>
@@ -336,7 +347,7 @@
   </section>
 
   <footer class="page">
-    Sabine and logarithmic level arithmetic are exact; the octave-band STI reproduces the BPSD5030 STI workbook (Cabrera, rev. 2019) using the IEC&nbsp;60268-16 statistical method with masking. Material data are indicative generic values (BB93 / Adrian James data). Teaching aid for BPSD5030; benchmark results against AS/NZS&nbsp;2107:2016 and confirm against measurement software.
+    Sabine and logarithmic level arithmetic are exact; the octave-band STI reproduces the BPSD5030 STI workbook developed by Densil Cabrera (rev. 2019) using the IEC&nbsp;60268-16 statistical method with masking. Material data are indicative generic values (BB93 / Adrian James data). Teaching aid for BPSD5030; benchmark results against AS/NZS&nbsp;2107:2016 and confirm against measurement software.
   </footer>
 </div>
 
@@ -386,7 +397,7 @@ var MAT = {"ab":[["MASONRY WALLS","Rough concrete","",null,0.02,0.03,0.03,0.03,0
     b.addEventListener("click", function () {
       if (b.disabled) return;
       activate(current + (b.getAttribute("data-nav") === "next" ? 1 : -1), false);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
     });
   });
 
@@ -531,7 +542,7 @@ var MAT = {"ab":[["MASONRY WALLS","Rough concrete","",null,0.02,0.03,0.03,0.03,0
   function stiColor(s) { return s < 0.40 ? "var(--bad)" : s < 0.60 ? "var(--warn)" : "var(--good)"; }
 
   // ---------- 4b. Full octave-band STI (IEC 60268-16), ported from the class workbook ----------
-  // Verified cell-for-cell against STI_spreadsheet.xls (Cabrera, rev. 2019).
+  // Verified cell-for-cell against STI_spreadsheet.xls (Densil Cabrera, rev. 2019).
   var STI = (function () {
     var Ls = [58, 60.5, 62, 56, 50, 45, 40];                 // male voice spectrum, 1 m free field
     var DI = [1.3, 2.9, 1.8, 1.5, 4.0, 5.0, 5.1];            // ISO 3382-3 talker directivity index
@@ -655,7 +666,7 @@ var MAT = {"ab":[["MASONRY WALLS","Rough concrete","",null,0.02,0.03,0.03,0.03,0
         btn.addEventListener("click", function () {
           addSurface(parseInt(this.getAttribute("data-add"), 10), undefined);
           activate(2, false);
-          window.scrollTo({ top: 0, behavior: "smooth" });
+          window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
         });
       });
       $("matHint").style.display = "";
@@ -697,7 +708,7 @@ var MAT = {"ab":[["MASONRY WALLS","Rough concrete","",null,0.02,0.03,0.03,0.03,0
       if (isFinite(v)) $("vol").value = fmt(v, 0);
       calcT();
       activate(1, false);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
     }
   });
 

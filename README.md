@@ -27,7 +27,7 @@ To add a unit, create a `{unit}/` directory, drop its `weekNN-*.html` tools in, 
 
 | File | Tutorial | What it does |
 |------|----------|--------------|
-| `bpsd5030/week04-lighting.html` | Week 4 | Enter illuminance readings as a spatial grid; renders a heatmap of the working plane and computes the uniformity ratio (min ÷ avg), diversity (min ÷ max), and a box plot of the spread. In-class exploratory aid; the submitted figure stays the student's own build. |
+| `bpsd5030/week04-lighting.html` | Week 4 | Enter illuminance readings as a spatial grid; renders a heatmap of the working plane and computes the uniformity ratio (min ÷ avg), diversity (min ÷ max), and a box plot of the spread. Also benchmarks the average against the AS/NZS 1680.2 maintained-illuminance target for a chosen space type (the Week 4 brief's conform / doesn't-conform judgement). In-class exploratory aid; the submitted figure stays the student's own build. |
 | `bpsd5030/week06-acoustics.html` | Week 6 | Energy-averaging and combining sound levels (dB); Sabine equation both directions (absorption ↔ reverberation time); quick speech-intelligibility (STI) estimate from speech-to-noise ratio. |
 | `bpsd5030/week08-iaq.html` | Week 8 | Required outdoor airflow (ASHRAE 62.1 Ventilation Rate Procedure); actual ventilation from measured CO₂ (steady-state mass balance); ACH; occupancy scenario explorer with a CO₂-vs-occupancy chart. |
 | `bpsd5030/week09-ratings.html` | Week 9 | Two-act challenge on building rating systems. Act 1: take a building to a target NABERS IE star rating on a fixed budget via real upgrades or measurement tactics, with a recertification that collapses gamed ratings. Act 2: certify the same building under WELL by buying credits (real per-feature points from the WELL v2 scorecard), exposing how cheap policy credits score the same as expensive performance credits. Six built-in building profiles. |
@@ -88,7 +88,7 @@ Note: some Canvas instances restrict iframe embeds to an allow-listed set of dom
 
 - ASHRAE 62.1 and Sabine calculations are exact implementations of the standard formulas.
 - The paired t-test p-value uses the regularised incomplete beta function (Student's t distribution). The Wilcoxon p-value uses the normal approximation with continuity and tie corrections; for very small samples, confirm against exact tables or statistical software.
-- The STI figure is a speech-to-noise approximation for a quick read only; use the full IEC 60268-16 method for anything reported.
+- The quick STI figure is a speech-to-noise approximation for a quick read only; use the full IEC 60268-16 method for anything reported. That full octave-band STI method reproduces the BPSD5030 STI workbook developed by Densil Cabrera (School of Architecture, Design and Planning, University of Sydney), verified cell-for-cell against the original spreadsheet.
 
 ## Licence
 

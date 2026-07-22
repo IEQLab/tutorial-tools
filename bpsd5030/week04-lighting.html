@@ -173,7 +173,7 @@
   <a class="home" href="index.html">&larr; BPSD5030 tutorial tools</a>
   <header class="page">
     <h1>Lighting Uniformity Explorer</h1>
-    <p class="lede">Map the illuminance readings you took across a working plane as a grid, see the unevenness a single average hides, and read off the uniformity ratio for Assignment 1.</p>
+    <p class="lede">Map the illuminance readings you took across a working plane as a grid, check the average against the AS/NZS 1680.2 target for the space, see the unevenness a single average hides, and read off the uniformity ratio for Assignment 1.</p>
   </header>
 
   <!-- ===== Tabs ===== -->
@@ -186,11 +186,31 @@
   <!-- ===== Tab 1: Readings ===== -->
   <section class="card" role="tabpanel" id="panel-1" aria-labelledby="tab-1" tabindex="0">
     <div class="primer">
-      <p class="what">Uniformity is whether the light is spread evenly across the plane. That is a different question from whether there is enough on average.</p>
-      <p>The standard measure is the uniformity ratio U<sub>0</sub> = minimum &divide; average illuminance: near 1.0 the darkest spot is almost as bright as the typical one, while a low value means dark patches the mean conceals. A related, stricter ratio is diversity = minimum &divide; maximum. EN 12464-1 expects <strong>U<sub>0</sub> &ge; 0.60</strong> across a task area such as a desk. A space can hit its target average and still feel patchy, which the ratio reveals but the mean hides.</p>
+      <p class="what">A lit space raises two questions: is there enough light on average, and is it spread evenly? They are different, and a space can pass one while failing the other.</p>
+      <p>For the amount, compare your average illuminance against the maintained-illuminance target AS/NZS 1680.2 recommends for the space type. For the evenness, use the uniformity ratio U<sub>0</sub> = minimum &divide; average: near 1.0 the darkest spot is almost as bright as the typical one, while a low value means dark patches the mean conceals. EN 12464-1 (and AS/NZS 1680) expect <strong>U<sub>0</sub> &ge; 0.60</strong> across a task area such as a desk; a related, stricter ratio is diversity = minimum &divide; maximum. A space can hit its target average and still feel patchy, which the ratio reveals but the mean hides.</p>
     </div>
-    <p class="sub">Set the grid to match how you walked the space (e.g. 4 columns across the desk, 4 rows front-to-back), then type each reading in lux into the cell at that position. Leave a cell blank where you did not take a reading; blanks are ignored in the maths and shown empty on the map.</p>
+    <p class="sub">Pick your space type to load its target, then set the grid to match how you walked the space (e.g. 4 columns across the desk, 4 rows front-to-back) and type each reading in lux into the cell at that position. Leave a cell blank where you did not take a reading; blanks are ignored in the maths and shown empty on the map.</p>
     <div class="dims">
+      <div class="fld" style="flex:1 1 260px">
+        <label for="spacetype">Space type — target from AS/NZS 1680.2<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About the illuminance target">i</button><span class="popover" role="tooltip" hidden>Maintained-illuminance targets from the Week 4 brief (AS/NZS 1680.2). The tool checks your average against this range: below it, on it, or over it. Consult the standard for design work.</span></span></label>
+        <select id="spacetype">
+          <option value="" selected>Select your space type…</option>
+          <option value="40,80" data-name="a circulation space">Circulation (hallway, stairway) — 40–80 lux</option>
+          <option value="80,160" data-name="a bathroom">Bathroom — 80–160 lux</option>
+          <option value="160,160" data-name="a social space">Socialising (lounge, foyer) — 160 lux</option>
+          <option value="150,200" data-name="an ATM / self-service point">ATM / self-service — 150–200 lux</option>
+          <option value="100,200" data-name="library stacks">Library stacks — 100–200 lux</option>
+          <option value="50,200" data-name="an art gallery">Art gallery — 50–200 lux</option>
+          <option value="200,300" data-name="a fast-food counter">Fast-food counter — 200–300 lux</option>
+          <option value="200,400" data-name="a retail display">Retail display — 200–400 lux</option>
+          <option value="240,320" data-name="a classroom / lecture hall">Classroom / lecture hall — 240–320 lux</option>
+          <option value="320,320" data-name="a computer workstation">Computer workstation — 320 lux</option>
+          <option value="300,400" data-name="a study space">Study space (reading, writing) — 300–400 lux</option>
+          <option value="400,600" data-name="a studio / workshop">Studio / workshop — 400–600 lux</option>
+        </select>
+      </div>
+    </div>
+    <div class="dims" style="margin-top:var(--s-3)">
       <div class="fld"><label for="cols">Columns (across)</label><input id="cols" class="dim" type="number" min="2" max="8" step="1" value="4"></div>
       <div class="fld"><label for="rows">Rows (deep)</label><input id="rows" class="dim" type="number" min="2" max="8" step="1" value="4"></div>
     </div>
@@ -202,10 +222,12 @@
     <div class="axhint">Values are in lux. Grid positions are relative, so orient it however you measured (e.g. top row nearest the window).</div>
     <div id="parseMsg" class="note" role="status" aria-live="polite" aria-atomic="true"></div>
     <div class="results" id="metrics" role="status" aria-live="polite" aria-atomic="true"></div>
+    <div id="levelVerdict" role="status" aria-live="polite" aria-atomic="true"></div>
     <div id="verdict" role="status" aria-live="polite" aria-atomic="true"></div>
     <details class="maths">
-      <summary>How these relate to the lighting standards (EN 12464-1)</summary>
-      <p class="deriv">The uniformity ratio here, U<sub>0</sub> = minimum &divide; average, is the same quantity EN 12464-1 uses to specify indoor lighting. That standard sets a minimum U<sub>0</sub> on a defined task-area grid: commonly <strong>U<sub>0</sub> &ge; 0.60</strong> for the task area itself (e.g. a desk or workbench) and 0.40 for the immediate surround. AS/NZS 1680 works from the same idea. Two cautions before you quote a number: the standards prescribe a <em>grid spacing and a task area</em> (roughly square cells, sized to the space), so a comparable U<sub>0</sub> needs a reasonably regular grid over the task plane, not a handful of scattered points; and <strong>diversity</strong> (minimum &divide; maximum) is a different, stricter ratio some guides also quote, so name which one you are reporting.</p>
+      <summary>How these relate to the lighting standards (AS/NZS 1680, EN 12464-1)</summary>
+      <p class="deriv"><strong>Amount.</strong> AS/NZS 1680.2 sets a maintained illuminance per space type (the targets in the space-type list, from the Week 4 brief); the tool reports whether your average sits below, on, or above that range. It allows a 20% margin above the top of the range before flagging "above target", since a little headroom is normal, and reads any average below the bottom of the range as falling short. Overshoot is not a failure, but note it: over-lighting wastes energy and can add glare.</p>
+      <p class="deriv"><strong>Evenness.</strong> The uniformity ratio here, U<sub>0</sub> = minimum &divide; average, is the same quantity EN 12464-1 uses to specify indoor lighting, and AS/NZS 1680 works from the same idea: a minimum U<sub>0</sub> on a defined task-area grid, commonly <strong>U<sub>0</sub> &ge; 0.60</strong> for the task area itself (e.g. a desk or workbench) and 0.40 for the immediate surround. Two cautions before you quote a number: the standards prescribe a <em>grid spacing and a task area</em> (roughly square cells, sized to the space), so a comparable U<sub>0</sub> needs a reasonably regular grid over the task plane, not a handful of scattered points; and <strong>diversity</strong> (minimum &divide; maximum) is a different, stricter ratio some guides also quote, so name which one you are reporting.</p>
     </details>
     <div class="tabnav">
       <button type="button" class="btn ghost" data-nav="prev" disabled>&larr; Back</button>
@@ -253,8 +275,8 @@
   </section>
 
   <footer class="page">
-    Uniformity ratio U<sub>0</sub> = minimum &divide; average illuminance; diversity = minimum &divide; maximum. Statistics are computed over the cells you filled in.
-    Teaching aid for BPSD5030; a comparable, standards-quotable uniformity figure needs a regular measurement grid over the task area (see the EN 12464-1 note). Validate against the source standard before reporting.
+    Uniformity ratio U<sub>0</sub> = minimum &divide; average illuminance; diversity = minimum &divide; maximum. Illuminance targets are the maintained-illuminance figures from AS/NZS 1680.2 (Week 4 brief). Statistics are computed over the cells you filled in.
+    Teaching aid for BPSD5030; a comparable, standards-quotable uniformity figure needs a regular measurement grid over the task area (see the standards note), and the illuminance targets are indicative. Validate against the source standard before reporting.
   </footer>
 </div>
 
@@ -300,7 +322,7 @@
     b.addEventListener("click", function () {
       if (b.disabled) return;
       activate(current + (b.getAttribute("data-nav") === "next" ? 1 : -1), false);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
     });
   });
 
@@ -421,11 +443,39 @@
   function redrawHeat() { if (lastG) drawHeat(lastG, lastMn, lastMx); }
   function redrawBox() { if (lastG) drawBox(lastG.vals); }
 
+  // Level check: average illuminance against the AS/NZS 1680.2 target for the
+  // chosen space type. Ordered above the U0 verdict because the brief treats the
+  // conform / doesn't-conform judgement as the core Assignment 1 evidence.
+  function renderLevelCheck(avg) {
+    var el = $("levelVerdict");
+    var sel = $("spacetype"), raw = sel.value;
+    if (!raw) {
+      el.innerHTML = '<p class="note" style="margin-top:var(--s-4)">Pick your space type above to check the average against its AS/NZS 1680.2 target.</p>';
+      return;
+    }
+    var p = raw.split(","), lo = parseFloat(p[0]), hi = parseFloat(p[1]);
+    var name = sel.options[sel.selectedIndex].getAttribute("data-name") || "this space";
+    var target = lo === hi ? fmt(lo, 0) + " lux" : fmt(lo, 0) + "–" + fmt(hi, 0) + " lux";
+    var vClass, vText;
+    if (avg < lo) {
+      vClass = "verdict-bad";
+      vText = "<strong>Below target (average " + fmt(avg, 0) + " lux vs " + target + ").</strong> The plane does not reach the maintained illuminance AS/NZS 1680.2 recommends for " + name + ". This is the conform / doesn't-conform judgement Assignment 1 asks for: report it, and say what a designer would change.";
+    } else if (avg > hi * 1.2) {
+      vClass = "verdict-warn";
+      vText = "<strong>Above target (average " + fmt(avg, 0) + " lux vs " + target + ").</strong> Comfortably over the recommended level for " + name + ". Not a failure, but worth a word on glare and the energy wasted by over-lighting.";
+    } else {
+      vClass = "verdict-good";
+      vText = "<strong>On target (average " + fmt(avg, 0) + " lux vs " + target + ").</strong> The average sits at the maintained illuminance AS/NZS 1680.2 recommends for " + name + ". Now read the uniformity below: enough light on average can still be unevenly spread.";
+    }
+    el.innerHTML = '<div class="callout ' + vClass + '" style="margin-top:var(--s-4)">' + vText + "</div>";
+  }
+
   function recompute() {
     var g = readGrid();
     if (g.vals.length < 2) {
       lastG = null;
       $("metrics").innerHTML = "";
+      $("levelVerdict").innerHTML = "";
       $("verdict").innerHTML = "";
       $("heatcap").innerHTML = "";
       $("boxcap").innerHTML = "";
@@ -460,6 +510,8 @@
     else { vClass = "verdict-bad";
       vText = "<strong>Very uneven (U<sub>0</sub> = " + fmt(u0, 2) + ").</strong> The darkest reading is under 40% of the average. This is exactly the case the average hides: report the uniformity ratio alongside the mean, or a reader would never know how uneven the plane is."; }
     $("verdict").innerHTML = '<div class="callout ' + vClass + '">' + vText + "</div>";
+
+    renderLevelCheck(m);
 
     lastG = g; lastMn = mn; lastMx = mx;
 
@@ -600,6 +652,7 @@
 
   // ---- events ----
   $("grid").addEventListener("input", recompute);
+  $("spacetype").addEventListener("change", recompute);
   $("cols").addEventListener("change", buildGrid);
   $("rows").addEventListener("change", buildGrid);
   $("clear").addEventListener("click", function () {

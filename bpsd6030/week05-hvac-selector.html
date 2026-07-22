@@ -50,6 +50,9 @@
     body { line-height: 1.6; letter-spacing: .004em; }
     .primer p, .sub, .hint, .note, label, .deriv, .sys .blurb, .lever p { font-weight: 450; }
   }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: .01ms !important; animation-duration: .01ms !important; scroll-behavior: auto !important; }
+  }
   * { box-sizing: border-box; }
   body {
     margin: 0; background: var(--bg); color: var(--ink);
@@ -585,7 +588,7 @@
     renderStepper();
     if (step === 4) renderPlant();
     if (step === 5) renderResult();
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
   }
 
   // ---------- step 1 ----------

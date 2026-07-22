@@ -30,6 +30,7 @@
       --line: #2a3441; --accent: #38b2bd; --accent-ink: #06212a;
       --shadow: 0 3px 8px rgba(0, 0, 0, .34);
     }
+    a.unit.u6030 { --accent: #99a4ef; }
     /* Light text on a dark surface blooms and reads thinner. Compensate on
        all three axes: a little more leading, a little more tracking, and one
        step more weight on the low-contrast roles. */
@@ -52,6 +53,8 @@
     border: 1px solid var(--line); border-radius: var(--r-md);
     padding: var(--s-4) var(--s-5); margin: var(--s-4) 0; transition: border-color .15s; }
   a.unit:hover { border-color: var(--accent); }
+  /* Each unit keeps its own accent, matching its tool pages. */
+  a.unit.u6030 { --accent: #4a52b5; }
   .unit .code { display: inline-block; font-size: var(--t-meta); letter-spacing: .04em;
     text-transform: uppercase; color: var(--accent); font-weight: 600; }
   .unit h2 { margin: var(--s-1) 0 var(--s-1); font-size: var(--t-h2); letter-spacing: -.012em; }
@@ -75,7 +78,7 @@
     <p>Lighting uniformity, room acoustics, IAQ &amp; ventilation, rating systems, and paired-data analysis, arranged by tutorial week.</p>
   </a>
 
-  <a class="unit" href="bpsd6030/index.html">
+  <a class="unit u6030" href="bpsd6030/index.html">
     <span class="code">BPSD6030</span><span class="count">1 tool</span>
     <h2>Building Systems</h2>
     <p>HVAC system selection across the Australian commercial families, with a schematic and a decarbonisation pathway to support the design assignments.</p>

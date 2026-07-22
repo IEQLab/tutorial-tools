@@ -44,6 +44,9 @@
     body { line-height: 1.6; letter-spacing: .004em; }
     .primer p, .sub, .note, label, details.maths .body { font-weight: 450; }
   }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: .01ms !important; animation-duration: .01ms !important; scroll-behavior: auto !important; }
+  }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink);
     font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
@@ -211,7 +214,7 @@
     <details class="maths">
       <summary>Paired vs independent, in one line</summary>
       <div class="body">
-        <p><em>Paired: every row is one person, and the two columns are the same people under two conditions, so you analyse each person's <code>A − B</code> difference. Independent: the two groups are different people, so there are no per-row differences to take and you compare the two group means directly. Counterbalancing condition order (some people quiet-first, some noisy-first) keeps a paired design valid; it does not make two separate groups paired.</em></p>
+        <p>Paired: every row is one person, and the two columns are the same people under two conditions, so you analyse each person's <code>A − B</code> difference. Independent: the two groups are different people, so there are no per-row differences to take and you compare the two group means directly. Counterbalancing condition order (some people quiet-first, some noisy-first) keeps a paired design valid; it does not make two separate groups paired.</p>
       </div>
     </details>
     <div class="tabnav">
@@ -262,7 +265,7 @@
     <details class="maths">
       <summary>The maths behind the mean and SD</summary>
       <div class="body">
-        <p><em>The mean is the typical score: add the values and divide by <code>n</code>. The standard deviation is how far scores sit from that mean on average: <code>SD = sqrt( sum of (value − mean)² / (n − 1) )</code>. The <code>n − 1</code> (not <code>n</code>) is the sample correction. Report the mean <em>and</em> the SD for each condition, never the mean alone: a 3-point gap means little until you know whether scores already vary by 1 point or by 10.</em></p>
+        <p>The mean is the typical score: add the values and divide by <code>n</code>. The standard deviation is how far scores sit from that mean on average: <code>SD = sqrt( sum of (value − mean)² / (n − 1) )</code>. The <code>n − 1</code> (not <code>n</code>) is the sample correction. Report the mean <em>and</em> the SD for each condition, never the mean alone: a 3-point gap means little until you know whether scores already vary by 1 point or by 10.</p>
       </div>
     </details>
     <div class="tabnav">
@@ -290,11 +293,11 @@
     <details class="maths">
       <summary>Prefer a spreadsheet, R, Python, or AI?</summary>
       <div class="body">
-        <p><em>Any of these gives the same paired result, so use whichever you know:</em></p>
-        <p><em><strong>Excel:</strong> <code>=T.TEST(A_range, B_range, 2, 1)</code> returns the two-tailed paired p-value (the <code>2</code> = two tails, the <code>1</code> = paired). The Data Analysis add-in's "t-Test: Paired Two Sample for Means" gives the full table.</em></p>
-        <p><em><strong>R:</strong> <code>t.test(A, B, paired = TRUE)</code> &nbsp;·&nbsp; ordinal/skewed: <code>wilcox.test(A, B, paired = TRUE)</code></em></p>
-        <p><em><strong>Python:</strong> <code>scipy.stats.ttest_rel(A, B)</code> &nbsp;·&nbsp; ordinal/skewed: <code>scipy.stats.wilcoxon(A, B)</code></em></p>
-        <p><em><strong>AI-assisted:</strong> you can ask an AI tool to run it, but then check the output yourself: is it a paired test, are the columns in the right order, is the p-value in a plausible range? Under the unit's Lane 2 AI stance any tool can run the test, but you own the result, not the tool.</em></p>
+        <p>Any of these gives the same paired result, so use whichever you know:</p>
+        <p><strong>Excel:</strong> <code>=T.TEST(A_range, B_range, 2, 1)</code> returns the two-tailed paired p-value (the <code>2</code> = two tails, the <code>1</code> = paired). The Data Analysis add-in's "t-Test: Paired Two Sample for Means" gives the full table.</p>
+        <p><strong>R:</strong> <code>t.test(A, B, paired = TRUE)</code> &nbsp;·&nbsp; ordinal/skewed: <code>wilcox.test(A, B, paired = TRUE)</code></p>
+        <p><strong>Python:</strong> <code>scipy.stats.ttest_rel(A, B)</code> &nbsp;·&nbsp; ordinal/skewed: <code>scipy.stats.wilcoxon(A, B)</code></p>
+        <p><strong>AI-assisted:</strong> you can ask an AI tool to run it, but then check the output yourself: is it a paired test, are the columns in the right order, is the p-value in a plausible range? Under the unit's Lane 2 AI stance any tool can run the test, but you own the result, not the tool.</p>
       </div>
     </details>
     <div class="tabnav">
@@ -414,7 +417,7 @@
     b.addEventListener("click", function () {
       if (b.disabled) return;
       activate(current + (b.getAttribute("data-nav") === "next" ? 1 : -1), false);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
     });
   });
 
@@ -607,7 +610,7 @@
     var n = diffs.length;
     var list = diffs.map(function (d) { return fmt(d, 2); }).join(", ");
     var ss = 0; for (var i = 0; i < n; i++) ss += (diffs[i] - mD) * (diffs[i] - mD);
-    return '<p><em>There is no magic in the t-test. It runs on the per-participant differences (' + esc(labA) + ' &minus; ' + esc(labB) + '):</em></p>' +
+    return '<p>There is no magic in the t-test. It runs on the per-participant differences (' + esc(labA) + ' &minus; ' + esc(labB) + '):</p>' +
       '<div class="work">' +
       '<span class="step">1. differences (d): ' + esc(list) + '</span>' +
       '<span class="step">2. mean difference (d&#772;) = sum(d) / n = ' + fmt(mD * n, 2) + " / " + n + " = <strong>" + fmt(mD, 3) + "</strong></span>" +
@@ -616,7 +619,7 @@
       '<span class="step">5. t = d&#772; / SE = ' + fmt(mD, 3) + " / " + fmt(se, 3) + " = <strong>" + fmt(t, 2) + "</strong>, &nbsp; df = n &minus; 1 = <strong>" + df + "</strong></span>" +
       '<span class="step">6. two-tailed p for t(' + df + ") = " + fmt(t, 2) + " &rarr; <strong>p " + pval(p) + "</strong></span>" +
       '</div>' +
-      '<p><em>A large t means the mean difference is large relative to how much the differences scatter. The p-value converts that into: how often a gap this big would appear if the two conditions truly had the same effect.</em></p>';
+      '<p>A large t means the mean difference is large relative to how much the differences scatter. The p-value converts that into: how often a gap this big would appear if the two conditions truly had the same effect.</p>';
   }
 
   function interpret(p, mA, mB, mD, pct, labA, labB) {

@@ -119,7 +119,7 @@
   .rangeval { min-width: 2.4em; text-align:right; font-variant-numeric: tabular-nums; font-weight:600; font-size: var(--t-label); }
   .trick { display:flex; align-items:flex-start; gap: var(--s-2); }
   .trick label { margin:0; color: var(--ink); font-size: var(--t-label); cursor:pointer; }
-  .cost { color: var(--muted); }
+  .cost { display: block; color: var(--muted); font-size: var(--t-meta); margin-top: var(--s-1); }
 
   .globaltrick { display:flex; align-items:center; gap: var(--s-2); margin: var(--s-1) 0; }
   .globaltrick label { margin:0; color:var(--ink); font-size: var(--t-label); cursor:pointer; }
@@ -362,7 +362,7 @@ overall star = mean of the five dimension stars</div>
     b.addEventListener("click", function () {
       if (b.disabled) return;
       activate(current + (b.getAttribute("data-nav") === "next" ? 1 : -1), false);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
     });
   });
 
