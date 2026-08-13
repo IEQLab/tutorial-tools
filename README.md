@@ -12,9 +12,9 @@ Tools are organised one directory per unit, with each tutorial's tool named by i
 index.html                       Top-level directory: one card per unit
 bpsd5030/
   index.html                     Unit page: BPSD5030 tools, arranged by week
-  week04-lighting.html
+  week04-iaq.html
   week06-acoustics.html
-  week08-iaq.html
+  week08-lighting.html
   week09-ratings.html
   week10-stats.html
 ```
@@ -27,11 +27,13 @@ To add a unit, create a `{unit}/` directory, drop its `weekNN-*.html` tools in, 
 
 | File | Tutorial | What it does |
 |------|----------|--------------|
-| `bpsd5030/week04-lighting.html` | Week 4 | Enter illuminance readings as a spatial grid; renders a heatmap of the working plane and computes the uniformity ratio (min ÷ avg), diversity (min ÷ max), and a box plot of the spread. Also benchmarks the average against the AS/NZS 1680.2 maintained-illuminance target for a chosen space type (the Week 4 brief's conform / doesn't-conform judgement). In-class exploratory aid; the submitted figure stays the student's own build. |
+| `bpsd5030/week04-iaq.html` | Week 4 | Required outdoor airflow (ASHRAE 62.1 Ventilation Rate Procedure); actual ventilation from measured CO₂ (steady-state mass balance); ACH; occupancy scenario explorer with a CO₂-vs-occupancy chart. |
 | `bpsd5030/week06-acoustics.html` | Week 6 | Energy-averaging and combining sound levels (dB); Sabine equation both directions (absorption ↔ reverberation time); quick speech-intelligibility (STI) estimate from speech-to-noise ratio. |
-| `bpsd5030/week08-iaq.html` | Week 8 | Required outdoor airflow (ASHRAE 62.1 Ventilation Rate Procedure); actual ventilation from measured CO₂ (steady-state mass balance); ACH; occupancy scenario explorer with a CO₂-vs-occupancy chart. |
+| `bpsd5030/week08-lighting.html` | Week 8 | Enter illuminance readings as a spatial grid; renders a heatmap of the working plane and computes the uniformity ratio (min ÷ avg), diversity (min ÷ max), and a box plot of the spread. Also benchmarks the average against the AS/NZS 1680.2 maintained-illuminance target for a chosen space type (the Week 8 brief's conform / doesn't-conform judgement). In-class exploratory aid; the submitted figure stays the student's own build. |
 | `bpsd5030/week09-ratings.html` | Week 9 | Two-act challenge on building rating systems. Act 1: take a building to a target NABERS IE star rating on a fixed budget via real upgrades or measurement tactics, with a recertification that collapses gamed ratings. Act 2: certify the same building under WELL by buying credits (real per-feature points from the WELL v2 scorecard), exposing how cheap policy credits score the same as expensive performance credits. Six built-in building profiles. |
 | `bpsd5030/week10-stats.html` | Week 10 / Assignment 2 | Full A2 analysis companion. Names the design (with a paired-vs-independent warning), computes descriptive statistics, paired-samples t-test, Wilcoxon signed-rank, and Cohen's dz effect size with the working shown on the student's own data, then models the Results sentence and Methods paragraph and carries a pre-submission checklist. Absorbs the former standalone A2 worked-example handout. |
+
+Note on week order: from Semester 2, 2026 the BPSD5030 IAQ tutorial runs in Week 4 and lighting in Week 8, having previously been the other way around. Both files were renamed to follow their week, so the old `week04-lighting.html` and `week08-iaq.html` URLs no longer resolve; anything pointing at them (Canvas pages, saved links) needs updating. Filename week numbers are the contract here, so a future change in week order means another rename.
 
 ### BPSD6030 — Building Systems
 
@@ -47,7 +49,7 @@ To add a unit, create a `{unit}/` directory, drop its `weekNN-*.html` tools in, 
 
 ## Layout convention
 
-To keep cognitive load manageable for students meeting these calculations for the first time, every tool follows one shared, tabbed layout. `bpsd5030/week08-iaq.html` is the reference implementation — copy its CSS/JS blocks and markup structure when building or updating a tool.
+To keep cognitive load manageable for students meeting these calculations for the first time, every tool follows one shared, tabbed layout. `bpsd5030/week04-iaq.html` is the reference implementation — copy its CSS/JS blocks and markup structure when building or updating a tool.
 
 - **One thing at a time, in tabs.** Each distinct piece of functionality lives on its own tab (`role="tablist"`/`tab`/`tabpanel`, numbered pills, keyboard-navigable with arrow/Home/End keys and a Back/Next row). Tools whose steps build on each other use the tabs as an **ordered stepper** (IAQ, stats, ratings); the HVAC selector keeps its existing wizard logic, restyled to the same numbered-pill look. Tools with independent calculators use **free-navigation tabs** (acoustics, lighting).
 - **A primer per tab.** Each tab opens with a short `.primer` — a one-line statement of purpose plus 2–3 sentences on "the idea behind the number." Written to stand alone (companion to, not dependent on, the tutorial), with no hard links back to Canvas.
@@ -64,9 +66,9 @@ Pages is configured under **Settings → Pages → Build and deployment → Depl
 
 - `https://ieqlab.github.io/tutorial-tools/` (all units)
 - `https://ieqlab.github.io/tutorial-tools/bpsd5030/` (BPSD5030 tools)
-- `https://ieqlab.github.io/tutorial-tools/bpsd5030/week04-lighting.html`
+- `https://ieqlab.github.io/tutorial-tools/bpsd5030/week04-iaq.html`
 - `https://ieqlab.github.io/tutorial-tools/bpsd5030/week06-acoustics.html`
-- `https://ieqlab.github.io/tutorial-tools/bpsd5030/week08-iaq.html`
+- `https://ieqlab.github.io/tutorial-tools/bpsd5030/week08-lighting.html`
 - `https://ieqlab.github.io/tutorial-tools/bpsd5030/week09-ratings.html`
 - `https://ieqlab.github.io/tutorial-tools/bpsd5030/week10-stats.html`
 - `https://ieqlab.github.io/tutorial-tools/bpsd6030/` (BPSD6030 tools)
@@ -79,7 +81,7 @@ Pages is configured under **Settings → Pages → Build and deployment → Depl
 Link out to a tool, or embed with an iframe in the Rich Content Editor's HTML view:
 
 ```html
-<iframe src="https://ieqlab.github.io/tutorial-tools/bpsd5030/week08-iaq.html" width="100%" height="900" style="border:1px solid #ccc;border-radius:8px"></iframe>
+<iframe src="https://ieqlab.github.io/tutorial-tools/bpsd5030/week04-iaq.html" width="100%" height="900" style="border:1px solid #ccc;border-radius:8px"></iframe>
 ```
 
 Note: some Canvas instances restrict iframe embeds to an allow-listed set of domains. If the embed does not render, use a plain link (opens in a new tab) instead.

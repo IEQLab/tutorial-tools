@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lighting Uniformity Explorer — BPSD5030 (Week 4)</title>
+<title>Lighting Uniformity Explorer — BPSD5030 (Week 8)</title>
 <style>
   :root {
     --bg: #f4f6f7; --card: #fcfdfd; --ink: #1c2430; --muted: #5a6675;
@@ -192,7 +192,7 @@
     <p class="sub">Pick your space type to load its target, then set the grid to match how you walked the space (e.g. 4 columns across the desk, 4 rows front-to-back) and type each reading in lux into the cell at that position. Leave a cell blank where you did not take a reading; blanks are ignored in the maths and shown empty on the map.</p>
     <div class="dims">
       <div class="fld" style="flex:1 1 260px">
-        <label for="spacetype">Space type — target from AS/NZS 1680.2<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About the illuminance target">i</button><span class="popover" role="tooltip" hidden>Maintained-illuminance targets from the Week 4 brief (AS/NZS 1680.2). The tool checks your average against this range: below it, on it, or over it. Consult the standard for design work.</span></span></label>
+        <label for="spacetype">Space type — target from AS/NZS 1680.2<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About the illuminance target">i</button><span class="popover" role="tooltip" hidden>Maintained-illuminance targets from the Week 8 brief (AS/NZS 1680.2). The tool checks your average against this range: below it, on it, or over it. Consult the standard for design work.</span></span></label>
         <select id="spacetype">
           <option value="" selected>Select your space type…</option>
           <option value="40,80" data-name="a circulation space">Circulation (hallway, stairway) — 40–80 lux</option>
@@ -226,7 +226,7 @@
     <div id="verdict" role="status" aria-live="polite" aria-atomic="true"></div>
     <details class="maths">
       <summary>How these relate to the lighting standards (AS/NZS 1680, EN 12464-1)</summary>
-      <p class="deriv"><strong>Amount.</strong> AS/NZS 1680.2 sets a maintained illuminance per space type (the targets in the space-type list, from the Week 4 brief); the tool reports whether your average sits below, on, or above that range. It allows a 20% margin above the top of the range before flagging "above target", since a little headroom is normal, and reads any average below the bottom of the range as falling short. Overshoot is not a failure, but note it: over-lighting wastes energy and can add glare.</p>
+      <p class="deriv"><strong>Amount.</strong> AS/NZS 1680.2 sets a maintained illuminance per space type (the targets in the space-type list, from the Week 8 brief); the tool reports whether your average sits below, on, or above that range. It allows a 20% margin above the top of the range before flagging "above target", since a little headroom is normal, and reads any average below the bottom of the range as falling short. Overshoot is not a failure, but note it: over-lighting wastes energy and can add glare.</p>
       <p class="deriv"><strong>Evenness.</strong> The uniformity ratio here, U<sub>0</sub> = minimum &divide; average, is the same quantity EN 12464-1 uses to specify indoor lighting, and AS/NZS 1680 works from the same idea: a minimum U<sub>0</sub> on a defined task-area grid, commonly <strong>U<sub>0</sub> &ge; 0.60</strong> for the task area itself (e.g. a desk or workbench) and 0.40 for the immediate surround. Two cautions before you quote a number: the standards prescribe a <em>grid spacing and a task area</em> (roughly square cells, sized to the space), so a comparable U<sub>0</sub> needs a reasonably regular grid over the task plane, not a handful of scattered points; and <strong>diversity</strong> (minimum &divide; maximum) is a different, stricter ratio some guides also quote, so name which one you are reporting.</p>
     </details>
     <div class="tabnav">
@@ -275,7 +275,7 @@
   </section>
 
   <footer class="page">
-    Uniformity ratio U<sub>0</sub> = minimum &divide; average illuminance; diversity = minimum &divide; maximum. Illuminance targets are the maintained-illuminance figures from AS/NZS 1680.2 (Week 4 brief). Statistics are computed over the cells you filled in.
+    Uniformity ratio U<sub>0</sub> = minimum &divide; average illuminance; diversity = minimum &divide; maximum. Illuminance targets are the maintained-illuminance figures from AS/NZS 1680.2 (Week 8 brief). Statistics are computed over the cells you filled in.
     Teaching aid for BPSD5030; a comparable, standards-quotable uniformity figure needs a regular measurement grid over the task area (see the standards note), and the illuminance targets are indicative. Validate against the source standard before reporting.
   </footer>
 </div>
