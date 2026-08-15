@@ -7,6 +7,7 @@
 <style>
   /* Tutorial tools · unit index · IEQ Lab · rev. 2026-08 */
   :root {
+    color-scheme: light;
     --bg: #f4f6f7; --card: #fcfdfd; --ink: #1c2430; --muted: #5a6675;
     --line: #dfe4ea; --accent: #0e7c86; --accent-ink: #fbfefe;
     /* one radius scale, one shadow — do not add values outside these */
@@ -27,19 +28,23 @@
     --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px;
     --s-5: 20px; --s-6: 24px; --s-8: 32px; --s-12: 48px;
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #10151b; --card: #171e27; --ink: #e7ecf2; --muted: #9aa7b6;
-      --line: #2a3441; --accent: #38b2bd; --accent-ink: #06212a;
-      --shadow: 0 3px 8px rgba(0, 0, 0, .34);
-    }
-    a.unit.u6030 { --accent: #99a4ef; }
-    /* Light text on a dark surface blooms and reads thinner. Compensate on
-       all three axes: a little more leading, a little more tracking, and one
-       step more weight on the low-contrast roles. */
-    body { line-height: 1.6; letter-spacing: .004em; }
-    .lede, .unit p, footer { font-weight: 450; }
+
+  /* ---- dark theme ----
+     JS resolves system/light/dark and writes data-theme on <html> before
+     first paint, so the dark values live in exactly one place instead of
+     being duplicated across a media query and a selector. */
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #10151b; --card: #171e27; --ink: #e7ecf2; --muted: #9aa7b6;
+    --line: #2a3441; --accent: #38b2bd; --accent-ink: #06212a;
+    --shadow: 0 3px 8px rgba(0, 0, 0, .34);
   }
+  :root[data-theme="dark"] :is(a.unit.u6030) { --accent: #99a4ef; }
+  /* Light text on a dark surface blooms and reads thinner. Compensate on
+     all three axes: a little more leading, a little more tracking, and one
+     step more weight on the low-contrast roles. */
+  :root[data-theme="dark"] :is(body) { line-height: 1.6; letter-spacing: .004em; }
+  :root[data-theme="dark"] :is(.lede, .unit p, footer) { font-weight: 450; }
   @media (prefers-reduced-motion: reduce) {
     * { transition-duration: .01ms !important; animation-duration: .01ms !important; }
   }
@@ -69,10 +74,59 @@
   footer { color: var(--muted); font-size: var(--t-meta); margin-top: var(--s-8);
     border-top: 1px solid var(--line); padding-top: var(--s-4); }
   footer a { color: var(--accent); }
+
+  /* ---- theme control ----
+     Native radios wearing the same pills as the tabs, so the set keeps one
+     affordance vocabulary. The span is styled rather than the label, which keeps
+     the checked state on a plain sibling selector. */
+  .toprow { display: flex; align-items: center; gap: var(--s-3);
+    flex-wrap: wrap; margin-bottom: var(--s-4); }
+  .toprow .home { margin-bottom: 0; }
+  .themepick { margin-left: auto; border: 0; padding: 0; min-width: 0;
+    display: inline-flex; gap: var(--s-1); }
+  .themepick label { margin: 0; }
+  .themepick input { position: absolute; width: 1px; height: 1px;
+    opacity: 0; pointer-events: none; }
+  .themepick span { display: inline-block; cursor: pointer;
+    border: 1px solid var(--line); border-radius: var(--r-pill);
+    padding: var(--s-1) var(--s-3); background: var(--field);
+    color: var(--muted); font-size: var(--t-meta); }
+  .themepick span:hover { border-color: var(--accent); color: var(--ink); }
+  .themepick input:checked + span { background: var(--accent);
+    border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .themepick input:focus-visible + span { outline: 2px solid var(--accent);
+    outline-offset: 2px; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px;
+    padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 </style>
+<script>
+  /* Resolve the colour theme before first paint, so a reader who has chosen one
+     never sees the other flash. Storage is wrapped in try/catch on purpose: a
+     Canvas iframe with third-party storage blocked will throw here, and the tool
+     has to keep working when it does — it just forgets the choice. */
+  (function () {
+    var pref = "system";
+    try {
+      var v = localStorage.getItem("tt-theme");
+      if (v === "light" || v === "dark") pref = v;
+    } catch (e) {}
+    window.__ttPref = pref;
+    var dark = pref === "dark" ||
+      (pref === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+  })();
+</script>
 </head>
 <body>
 <div class="wrap">
+  <div class="toprow">
+    <fieldset class="themepick" id="themePick">
+    <legend class="visually-hidden">Colour theme</legend>
+    <label><input type="radio" name="theme" value="system"><span>System</span></label>
+    <label><input type="radio" name="theme" value="light"><span>Light</span></label>
+    <label><input type="radio" name="theme" value="dark"><span>Dark</span></label>
+    </fieldset>
+  </div>
   <h1>Tutorial tools</h1>
   <p class="lede">Small, self-contained web calculators for University of Sydney units in the School of Architecture, Design and Planning. Each does the routine arithmetic that used to eat tutorial time, so students can spend class on interpretation. Pick a unit.</p>
 
@@ -93,5 +147,36 @@
     Revised August 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.
   </footer>
 </div>
+<script>
+  /* Theme control. The head script has already resolved and applied the theme;
+     this only reflects it in the radios and handles changes. */
+  (function () {
+    var group = document.getElementById("themePick");
+    if (!group) return;
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    var pref = window.__ttPref || "system";
+
+    function apply() {
+      var dark = pref === "dark" || (pref === "system" && mq.matches);
+      document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+      /* Canvas and the SVG schematic read their colours from the token block at
+         draw time, so a theme change has to be redrawn. Pages with no raster
+         output leave __ttRedraw undefined and restyle through CSS alone. */
+      if (window.__ttRedraw) window.__ttRedraw();
+    }
+
+    var sel = group.querySelector('input[value="' + pref + '"]');
+    if (sel) sel.checked = true;
+
+    group.addEventListener("change", function (e) {
+      if (e.target.name !== "theme") return;
+      pref = e.target.value;
+      try { localStorage.setItem("tt-theme", pref); } catch (err) {}
+      apply();
+    });
+    /* Following the system means following it live, not only at load. */
+    mq.addEventListener("change", function () { if (pref === "system") apply(); });
+  })();
+</script>
 </body>
 </html>

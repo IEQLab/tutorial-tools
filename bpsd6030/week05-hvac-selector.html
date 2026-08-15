@@ -7,6 +7,7 @@
 <style>
   /* BPSD6030 Building Systems · indigo accent · IEQ Lab · rev. 2026-08 */
   :root {
+    color-scheme: light;
     --bg: #f4f6f7; --card: #fcfdfd; --ink: #1c2430; --muted: #5a6675;
     --line: #dfe4ea; --accent: #4a52b5; --accent-ink: #fbfcfe;
     --good: #1a7f4b; --warn: #9c5a0b; --bad: #b02a37;
@@ -36,23 +37,27 @@
     --water: #0e7c86; --air: #8a97a6; --refrig: #7b4bc9;
     --plant: #cfd8e0; --plant-ink: #33414f; --floor: #f1f4f7;
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #10151b; --card: #171e27; --ink: #e7ecf2; --muted: #9aa7b6;
-      --line: #2a3441; --accent: #99a4ef; --accent-ink: #131635;
-      --good: #57c98a; --warn: #e0a955; --bad: #e2707a;
-      --field: #0f151c; --result-bg: #191f33; --chip: #1c2733;
-      --shadow: 0 3px 8px rgba(0, 0, 0, .34);
-      --heat: #e2707a; --cool: #6ba7e6; --elec: #e9c14a; --gas: #e08a4e;
-      --water: #38b2bd; --air: #7d8b9b; --refrig: #a583e0;
-      --plant: #2b3947; --plant-ink: #c4d0dc; --floor: #131c25;
-    }
-    /* Light text on a dark surface blooms and reads thinner. Compensate on
-       all three axes: a little more leading, a little more tracking, and one
-       step more weight on the low-contrast roles. */
-    body { line-height: 1.6; letter-spacing: .004em; }
-    .primer p, .sub, .hint, .note, label, .deriv, .sys .blurb, .lever p { font-weight: 450; }
+
+  /* ---- dark theme ----
+     JS resolves system/light/dark and writes data-theme on <html> before
+     first paint, so the dark values live in exactly one place instead of
+     being duplicated across a media query and a selector. */
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #10151b; --card: #171e27; --ink: #e7ecf2; --muted: #9aa7b6;
+    --line: #2a3441; --accent: #99a4ef; --accent-ink: #131635;
+    --good: #57c98a; --warn: #e0a955; --bad: #e2707a;
+    --field: #0f151c; --result-bg: #191f33; --chip: #1c2733;
+    --shadow: 0 3px 8px rgba(0, 0, 0, .34);
+    --heat: #e2707a; --cool: #6ba7e6; --elec: #e9c14a; --gas: #e08a4e;
+    --water: #38b2bd; --air: #7d8b9b; --refrig: #a583e0;
+    --plant: #2b3947; --plant-ink: #c4d0dc; --floor: #131c25;
   }
+  /* Light text on a dark surface blooms and reads thinner. Compensate on
+     all three axes: a little more leading, a little more tracking, and one
+     step more weight on the low-contrast roles. */
+  :root[data-theme="dark"] :is(body) { line-height: 1.6; letter-spacing: .004em; }
+  :root[data-theme="dark"] :is(.primer p, .sub, .hint, .note, label, .deriv, .sys .blurb, .lever p) { font-weight: 450; }
   @media (prefers-reduced-motion: reduce) {
     * { transition-duration: .01ms !important; animation-duration: .01ms !important; scroll-behavior: auto !important; }
   }
@@ -217,11 +222,60 @@
     font-size: var(--t-meta); font-weight: 400; line-height: 1.45; text-align: left;
     box-shadow: var(--shadow); }
   .popover[hidden] { display: none; }
+
+  /* ---- theme control ----
+     Native radios wearing the same pills as the tabs, so the set keeps one
+     affordance vocabulary. The span is styled rather than the label, which keeps
+     the checked state on a plain sibling selector. */
+  .toprow { display: flex; align-items: center; gap: var(--s-3);
+    flex-wrap: wrap; margin-bottom: var(--s-4); }
+  .toprow .home { margin-bottom: 0; }
+  .themepick { margin-left: auto; border: 0; padding: 0; min-width: 0;
+    display: inline-flex; gap: var(--s-1); }
+  .themepick label { margin: 0; }
+  .themepick input { position: absolute; width: 1px; height: 1px;
+    opacity: 0; pointer-events: none; }
+  .themepick span { display: inline-block; cursor: pointer;
+    border: 1px solid var(--line); border-radius: var(--r-pill);
+    padding: var(--s-1) var(--s-3); background: var(--field);
+    color: var(--muted); font-size: var(--t-meta); }
+  .themepick span:hover { border-color: var(--accent); color: var(--ink); }
+  .themepick input:checked + span { background: var(--accent);
+    border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .themepick input:focus-visible + span { outline: 2px solid var(--accent);
+    outline-offset: 2px; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px;
+    padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 </style>
+<script>
+  /* Resolve the colour theme before first paint, so a reader who has chosen one
+     never sees the other flash. Storage is wrapped in try/catch on purpose: a
+     Canvas iframe with third-party storage blocked will throw here, and the tool
+     has to keep working when it does — it just forgets the choice. */
+  (function () {
+    var pref = "system";
+    try {
+      var v = localStorage.getItem("tt-theme");
+      if (v === "light" || v === "dark") pref = v;
+    } catch (e) {}
+    window.__ttPref = pref;
+    var dark = pref === "dark" ||
+      (pref === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+  })();
+</script>
 </head>
 <body>
 <div class="wrap">
-  <a class="home" href="index.html">&larr; BPSD6030 tutorial tools</a>
+  <div class="toprow">
+    <a class="home" href="index.html">&larr; BPSD6030 tutorial tools</a>
+    <fieldset class="themepick" id="themePick">
+    <legend class="visually-hidden">Colour theme</legend>
+    <label><input type="radio" name="theme" value="system"><span>System</span></label>
+    <label><input type="radio" name="theme" value="light"><span>Light</span></label>
+    <label><input type="radio" name="theme" value="dark"><span>Dark</span></label>
+    </fieldset>
+  </div>
   <header class="page">
     <h1>Choose an HVAC System</h1>
     <p class="lede">Walk your building through the choices that fix an HVAC concept: how it gets fresh air, how it heats and cools, and what plant sits behind that. The tool draws the resulting system as a schematic and explains each part, then helps you reason about its carbon and a low-carbon pathway. It does not pick a winner or a size for you: that judgement, and the loads from your DesignBuilder model, stay yours. Use it to structure the argument you will make in Assignment 2 and defend in Week 11.</p>
@@ -1187,7 +1241,42 @@
   condNote();
   renderSystems();
   renderStepper();
+  /* The chart colours were read from the token block when it was drawn, so a
+     theme change has to be redrawn. This also fixes a case that already existed:
+     changing the OS theme with a tool open left stale colours in the chart. */
+  window.__ttRedraw = function () { if (step === 5) renderResult(); };
 })();
+</script>
+<script>
+  /* Theme control. The head script has already resolved and applied the theme;
+     this only reflects it in the radios and handles changes. */
+  (function () {
+    var group = document.getElementById("themePick");
+    if (!group) return;
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    var pref = window.__ttPref || "system";
+
+    function apply() {
+      var dark = pref === "dark" || (pref === "system" && mq.matches);
+      document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+      /* Canvas and the SVG schematic read their colours from the token block at
+         draw time, so a theme change has to be redrawn. Pages with no raster
+         output leave __ttRedraw undefined and restyle through CSS alone. */
+      if (window.__ttRedraw) window.__ttRedraw();
+    }
+
+    var sel = group.querySelector('input[value="' + pref + '"]');
+    if (sel) sel.checked = true;
+
+    group.addEventListener("change", function (e) {
+      if (e.target.name !== "theme") return;
+      pref = e.target.value;
+      try { localStorage.setItem("tt-theme", pref); } catch (err) {}
+      apply();
+    });
+    /* Following the system means following it live, not only at load. */
+    mq.addEventListener("change", function () { if (pref === "system") apply(); });
+  })();
 </script>
 </body>
 </html>
