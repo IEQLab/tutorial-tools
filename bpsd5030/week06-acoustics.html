@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Room Acoustics Calculator — BPSD5030</title>
 <style>
+  /* BPSD5030 Indoor Environments · teal accent · IEQ Lab · rev. 2026-08 */
   :root {
     --bg: #f4f6f7; --card: #fcfdfd; --ink: #1c2430; --muted: #5a6675;
     --line: #dfe4ea; --accent: #0e7c86; --accent-ink: #fbfefe;
@@ -13,6 +14,8 @@
     /* one radius scale, one shadow — do not add values outside these */
     --r-sm: 3px; --r-md: 8px; --r-pill: 999px;
     --shadow: 0 3px 8px rgba(20, 38, 46, .12);
+    /* motion: one easing, one duration; 150ms sits in the 150-250ms band */
+    --ease-out: cubic-bezier(.2, 0, 0, 1); --dur: 150ms;
 
     /* Type: roles, not values. ~1.15 ratio. */
     --t-glyph: .68rem; --t-meta: .78rem; --t-label: .875rem;
@@ -42,7 +45,7 @@
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink);
-    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
   .wrap { max-width: 920px; margin: 0 auto; padding: var(--s-6) var(--s-5) var(--s-12); }
   h1 { font-size: var(--t-h1); margin: 0 0 var(--s-1); letter-spacing: -.018em; }
   .lede { color: var(--muted); margin: 0 0 var(--s-5); max-width: 68ch; }
@@ -125,8 +128,12 @@
   .tabnav { display: flex; justify-content: space-between; margin-top: var(--s-5); gap: var(--s-2); }
   .btn { background: var(--accent); color: var(--accent-ink); border: none; border-radius: var(--r-md);
     padding: var(--s-2) var(--s-3); font-size: var(--t-label); cursor: pointer; font-family: inherit; }
+  /* States: every control declares focus, active and disabled, not only the
+     tabs. The browser default ring is too low-contrast on a filled accent button. */
+  .btn:focus-visible, .btn.ghost:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled, .btn[disabled] { opacity: .45; cursor: not-allowed; transform: none; }
   .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
-  .tabnav .btn[disabled] { opacity: .35; cursor: default; }
 
   /* ---- accessible info popover (replaces native title=) ---- */
   .info-wrap { position: relative; display: inline-block; vertical-align: middle; }
@@ -148,6 +155,7 @@
   .toc a { color: var(--accent); text-decoration: none; }
   .toc a:hover { text-decoration: underline; }
   footer.page { color: var(--muted); font-size: var(--t-meta); margin-top: var(--s-8); border-top: 1px solid var(--line); padding-top: var(--s-4); }
+  footer.page a { color: var(--accent); }
   @media (max-width: 560px) { .surf-row { grid-template-columns: 1fr 70px 32px; } }
 </style>
 </head>
@@ -347,7 +355,9 @@
   </section>
 
   <footer class="page">
-    Sabine and logarithmic level arithmetic are exact; the octave-band STI reproduces the BPSD5030 STI workbook developed by Densil Cabrera (rev. 2019) using the IEC&nbsp;60268-16 statistical method with masking. Material data are indicative generic values (BB93 / Adrian James data). Teaching aid for BPSD5030; benchmark results against AS/NZS&nbsp;2107:2016 and confirm against measurement software.
+    Sabine and logarithmic level arithmetic are exact; the octave-band STI reproduces the BPSD5030 STI workbook developed by Densil Cabrera (rev. 2019) using the IEC&nbsp;60268-16 statistical method with masking. Material data are indicative generic values (BB93 / Adrian James data). Benchmark results against AS/NZS&nbsp;2107:2016 and confirm against measurement software.
+    Built for the BPSD5030 Week 6 tutorial by the IEQ Lab, Sydney School of Architecture, Design and Planning, because the Sabine and decibel arithmetic used to take most of the session.
+    Revised August 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.
   </footer>
 </div>
 

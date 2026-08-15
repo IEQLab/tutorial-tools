@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Choose an HVAC System — BPSD6030</title>
 <style>
+  /* BPSD6030 Building Systems · indigo accent · IEQ Lab · rev. 2026-08 */
   :root {
     --bg: #f4f6f7; --card: #fcfdfd; --ink: #1c2430; --muted: #5a6675;
     --line: #dfe4ea; --accent: #4a52b5; --accent-ink: #fbfcfe;
@@ -13,6 +14,8 @@
     /* one radius scale, one shadow — do not add values outside these */
     --r-sm: 3px; --r-md: 8px; --r-pill: 999px;
     --shadow: 0 3px 8px rgba(26, 28, 62, .12);
+    /* motion: one easing, one duration; 150ms sits in the 150-250ms band */
+    --ease-out: cubic-bezier(.2, 0, 0, 1); --dur: 150ms;
 
     /* Type: six roles, ~1.15 ratio. Roles are distinguished by weight and
        colour as much as size, so sizes never sit closer than one step. */
@@ -56,7 +59,7 @@
   * { box-sizing: border-box; }
   body {
     margin: 0; background: var(--bg); color: var(--ink);
-    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
   }
   .wrap { max-width: 900px; margin: 0 auto; padding: var(--s-6) var(--s-4) var(--s-12); }
   a.home { display: inline-block; color: var(--accent); text-decoration: none; font-size: var(--t-label); margin-bottom: var(--s-4); }
@@ -133,7 +136,11 @@
   .nav { display: flex; justify-content: space-between; gap: var(--s-2); margin-top: var(--s-6); }
   .btn { background: var(--accent); color: var(--accent-ink); border: none; border-radius: var(--r-md);
     padding: var(--s-2) var(--s-4); font-size: var(--t-label); cursor: pointer; font-family: inherit; }
-  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  /* States: every control declares focus, active and disabled, not only the
+     tabs. The browser default ring is too low-contrast on a filled accent button. */
+  .btn:focus-visible, .btn.ghost:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled, .btn[disabled] { opacity: .45; cursor: not-allowed; transform: none; }
   .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
 
   /* schematic */
@@ -421,7 +428,9 @@
   </form>
 
   <footer class="page">
-    A teaching aid for BPSD6030 Week 5. The system taxonomy follows the unit's key terminology and the Australian commercial market; the schematic is a stylised concept diagram, not a construction drawing. Wizard structure and the fresh-air / conditioning framing adapt the openly published <a href="https://doi.org/10.5281/zenodo.10711959">HVAC System Selector</a> (Irani, Reinhard &amp; Reinhart, 2023, MIT Sustainable Design Lab, CC&nbsp;BY) to Australian systems, metric units, NCC climate zones, and a decarbonisation focus. Self-contained, open-source, no tracking. Not the output of a load or energy simulation.
+    The system taxonomy follows the unit's key terminology and the Australian commercial market; the schematic is a stylised concept diagram, not a construction drawing. Wizard structure and the fresh-air / conditioning framing adapt the openly published <a href="https://doi.org/10.5281/zenodo.10711959">HVAC System Selector</a> (Irani, Reinhard &amp; Reinhart, 2023, MIT Sustainable Design Lab, CC&nbsp;BY) to Australian systems, metric units, NCC climate zones, and a decarbonisation focus. Not the output of a load or energy simulation.
+    Built for the BPSD6030 Week 5 tutorial and the Assignment 2 system choice by the IEQ Lab, Sydney School of Architecture, Design and Planning. It deliberately stops short of sizing plant, because that is DesignBuilder's job and the choice of family is the one worth arguing about in class. Self-contained, open-source, no tracking.
+    Revised August 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.
   </footer>
 </div>
 

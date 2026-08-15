@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lighting Uniformity Explorer — BPSD5030 (Week 8)</title>
 <style>
+  /* BPSD5030 Indoor Environments · teal accent · IEQ Lab · rev. 2026-08 */
   :root {
     --bg: #f4f6f7; --card: #fcfdfd; --ink: #1c2430; --muted: #5a6675;
     --line: #dfe4ea; --accent: #0e7c86; --accent-ink: #fbfefe;
@@ -13,6 +14,8 @@
     /* one radius scale, one shadow — do not add values outside these */
     --r-sm: 3px; --r-md: 8px; --r-pill: 999px;
     --shadow: 0 3px 8px rgba(20, 38, 46, .12);
+    /* motion: one easing, one duration; 150ms sits in the 150-250ms band */
+    --ease-out: cubic-bezier(.2, 0, 0, 1); --dur: 150ms;
 
     /* Type: six roles, ~1.15 ratio. Roles are distinguished by weight and
        colour as much as size, so sizes never sit closer than one step. */
@@ -49,7 +52,7 @@
   * { box-sizing: border-box; }
   body {
     margin: 0; background: var(--bg); color: var(--ink);
-    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
   }
   .wrap { max-width: 860px; margin: 0 auto; padding: var(--s-6) var(--s-4) var(--s-12); }
   header.page { margin-bottom: var(--s-2); }
@@ -145,12 +148,17 @@
 
   /* ---- Back / Next ---- */
   .tabnav { display: flex; justify-content: space-between; margin-top: var(--s-6); gap: var(--s-2); }
-  .tabnav .btn[disabled] { opacity: .35; cursor: default; }
   .btn { background: var(--accent); color: var(--accent-ink); border: none; border-radius: var(--r-md);
     padding: var(--s-2) var(--s-3); font-size: var(--t-label); cursor: pointer; font-family: inherit; }
+  /* States: every control declares focus, active and disabled, not only the
+     tabs. The browser default ring is too low-contrast on a filled accent button. */
+  .btn:focus-visible, .btn.ghost:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled, .btn[disabled] { opacity: .45; cursor: not-allowed; transform: none; }
   .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
 
   footer.page { color: var(--muted); font-size: var(--t-meta); margin-top: var(--s-8); border-top: 1px solid var(--line); padding-top: var(--s-4); }
+  footer.page a { color: var(--accent); }
 
   /* ---- accessible info popover (replaces native title=) ---- */
   .info-wrap { position: relative; display: inline-block; vertical-align: middle; }
@@ -276,7 +284,9 @@
 
   <footer class="page">
     Uniformity ratio U<sub>0</sub> = minimum &divide; average illuminance; diversity = minimum &divide; maximum. Illuminance targets are the maintained-illuminance figures from AS/NZS 1680.2 (Week 8 brief). Statistics are computed over the cells you filled in.
-    Teaching aid for BPSD5030; a comparable, standards-quotable uniformity figure needs a regular measurement grid over the task area (see the standards note), and the illuminance targets are indicative. Validate against the source standard before reporting.
+    A comparable, standards-quotable uniformity figure needs a regular measurement grid over the task area (see the standards note), and the illuminance targets are indicative. Validate against the source standard before reporting.
+    Built for the BPSD5030 Week 8 tutorial by the IEQ Lab, Sydney School of Architecture, Design and Planning, so the grid statistics come back fast enough to test more than one layout in class. The figure you submit stays your own build.
+    Revised August 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.
   </footer>
 </div>
 
@@ -561,7 +571,7 @@
         // value label, contrast by luminance
         var lum = 0.2126 * col3[0] + 0.7152 * col3[1] + 0.0722 * col3[2];
         ctx.fillStyle = lum > 150 ? "#1c2430" : "#ffffff";
-        ctx.font = "600 " + Math.max(11, Math.round(cell * 0.24)) + "px -apple-system, Segoe UI, Roboto, sans-serif";
+        ctx.font = "600 " + Math.max(11, Math.round(cell * 0.24)) + "px -apple-system, Segoe UI, sans-serif";
         ctx.textAlign = "center"; ctx.textBaseline = "middle";
         ctx.fillText(fmt(v, 0), x + cell / 2, y + cell / 2);
         if (v === mn && !minCell) minCell = {x: x, y: y};
@@ -573,7 +583,7 @@
       if (!pos) return;
       ctx.strokeStyle = colour; ctx.lineWidth = 3;
       roundRect(ctx, pos.x + 1.5, pos.y + 1.5, cell - 3, cell - 3, 6); ctx.stroke();
-      ctx.fillStyle = colour; ctx.font = "600 10px -apple-system, Segoe UI, Roboto, sans-serif";
+      ctx.fillStyle = colour; ctx.font = "600 10px -apple-system, Segoe UI, sans-serif";
       ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.fillText(tag, pos.x + 4, pos.y + 3);
     }
     ring(maxCell, css.getPropertyValue("--warn").trim(), "max");
@@ -582,7 +592,7 @@
     var ly = gridH + 12, lw = Math.min(gridW, 240), lx = 0, lh = 10;
     for (var i = 0; i < lw; i++) { ctx.fillStyle = rgb(ramp(i / (lw - 1))); ctx.fillRect(lx + i, ly, 1, lh); }
     ctx.strokeStyle = css.getPropertyValue("--line").trim(); ctx.lineWidth = 1; ctx.strokeRect(lx + 0.5, ly + 0.5, lw - 1, lh - 1);
-    ctx.fillStyle = muted; ctx.font = "11px -apple-system, Segoe UI, Roboto, sans-serif";
+    ctx.fillStyle = muted; ctx.font = "11px -apple-system, Segoe UI, sans-serif";
     ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.fillText(fmt(mn, 0) + " lux", lx, ly + lh + 3);
     ctx.textAlign = "right"; ctx.fillText(fmt(mx, 0) + " lux", lx + lw, ly + lh + 3);
   }
@@ -614,7 +624,7 @@
     // axis + gridlines
     ctx.strokeStyle = line; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, Hc - padB); ctx.lineTo(Wc - padR, Hc - padB); ctx.stroke();
-    ctx.fillStyle = muted; ctx.font = "12px -apple-system, Segoe UI, Roboto, sans-serif";
+    ctx.fillStyle = muted; ctx.font = "12px -apple-system, Segoe UI, sans-serif";
     ctx.textAlign = "right"; ctx.textBaseline = "middle";
     var step = Math.max(50, Math.round(yMax / 5 / 50) * 50);
     for (var v = 0; v <= yMax; v += step) {

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Paired-Data Analysis Helper — BPSD5030 (A2)</title>
 <style>
+  /* BPSD5030 Indoor Environments · teal accent · IEQ Lab · rev. 2026-08 */
   :root {
     --bg: #f4f6f7; --card: #fcfdfd; --ink: #1c2430; --muted: #5a6675;
     --line: #dfe4ea; --accent: #0e7c86; --accent-ink: #fbfefe;
@@ -14,6 +15,8 @@
     /* one radius scale, one shadow — do not add values outside these */
     --r-sm: 3px; --r-md: 8px; --r-pill: 999px;
     --shadow: 0 3px 8px rgba(20, 38, 46, .12);
+    /* motion: one easing, one duration; 150ms sits in the 150-250ms band */
+    --ease-out: cubic-bezier(.2, 0, 0, 1); --dur: 150ms;
 
     /* Type: seven roles, ~1.15 ratio. Roles are distinguished by weight and
        colour as much as size, so sizes never sit closer than one step. */
@@ -49,7 +52,7 @@
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink);
-    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
   .wrap { max-width: 860px; margin: 0 auto; padding: var(--s-6) var(--s-4) var(--s-12); }
   header.page { margin-bottom: var(--s-2); }
   h1 { font-size: var(--t-h1); margin: 0 0 var(--s-1); letter-spacing: -.018em; }
@@ -126,6 +129,7 @@
   .modelprose.bad { background: transparent; border: 1px dashed var(--bad); }
   .modelprose ul { margin: var(--s-1) 0; padding-left: var(--s-5); }
   footer.page { color: var(--muted); font-size: var(--t-meta); margin-top: var(--s-8); border-top: 1px solid var(--line); padding-top: var(--s-4); }
+  footer.page a { color: var(--accent); }
 
   /* ---- "the maths behind it" panel ----
      A top hairline, not a nested tinted card. */
@@ -157,8 +161,12 @@
   .tabnav { display: flex; justify-content: space-between; margin-top: var(--s-6); gap: var(--s-2); }
   .btn { background: var(--accent); color: var(--accent-ink); border: none; border-radius: var(--r-md);
     padding: var(--s-2) var(--s-3); font-size: var(--t-label); cursor: pointer; font-family: inherit; }
+  /* States: every control declares focus, active and disabled, not only the
+     tabs. The browser default ring is too low-contrast on a filled accent button. */
+  .btn:focus-visible, .btn.ghost:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled, .btn[disabled] { opacity: .45; cursor: not-allowed; transform: none; }
   .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
-  .tabnav .btn[disabled] { opacity: .35; cursor: default; }
 
   /* ---- accessible info popover (replaces native title=) ---- */
   .info-wrap { position: relative; display: inline-block; vertical-align: middle; }
@@ -369,7 +377,9 @@
   <footer class="page">
     Paired t-test p-value from Student's t distribution (regularised incomplete beta). Wilcoxon p-value from the
     normal approximation with continuity and tie corrections (for small samples, confirm against exact tables or software).
-    Effect size is Cohen's d<sub>z</sub> = mean difference / SD of differences. Teaching aid for BPSD5030; validate against software before relying on it.
+    Effect size is Cohen's d<sub>z</sub> = mean difference / SD of differences. Validate against software before relying on it.
+    Built for the BPSD5030 Week 10 tutorial and Assignment 2 by the IEQ Lab, Sydney School of Architecture, Design and Planning. It shows the working at each step, because Assignment 2 is marked on how you read the test.
+    Revised August 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.
   </footer>
 </div>
 
@@ -644,7 +654,7 @@
     // axis
     ctx.strokeStyle = line; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, H - padB); ctx.lineTo(W - padR, H - padB); ctx.stroke();
-    ctx.fillStyle = muted; ctx.font = "12px -apple-system, Segoe UI, Roboto, sans-serif";
+    ctx.fillStyle = muted; ctx.font = "12px -apple-system, Segoe UI, sans-serif";
     ctx.textAlign = "right"; ctx.textBaseline = "middle";
     for (var v = 0; v <= yMax; v += Math.max(1, Math.round(yMax / 5))) {
       ctx.strokeStyle = line; ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.moveTo(padL, Y(v)); ctx.lineTo(W - padR, Y(v)); ctx.stroke();
