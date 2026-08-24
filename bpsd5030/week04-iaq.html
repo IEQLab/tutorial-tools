@@ -116,6 +116,9 @@
   .formula { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: var(--t-label);
     background: var(--result-bg); border-radius: var(--r-md); padding: var(--s-3); margin: var(--s-2) 0; overflow-x: auto; }
   .note { color: var(--muted); font-size: var(--t-label); }
+  .working { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: var(--t-meta); color: var(--muted); padding: var(--s-2) 0;
+    border-top: 1px solid var(--line); overflow-x: auto; white-space: nowrap; }
 
   /* ---- "the maths behind it" panel ----
      A top hairline, not a nested tinted card. */
@@ -258,43 +261,47 @@
         <label for="spacetype">Space type (loads R<sub>p</sub>, R<sub>a</sub>)</label>
         <select id="spacetype">
           <option value="3.8,0.3">Lecture hall (fixed seats)</option>
-          <option value="3.8,0.3">Classroom (ages 9+)</option>
+          <option value="5,0.6">Classroom (ages 9+)</option>
+          <option value="5,0.6">Computer lab</option>
+          <option value="5,0.9">Art / design studio</option>
           <option value="2.5,0.3">Office space</option>
           <option value="2.5,0.3">Conference / meeting</option>
           <option value="2.5,0.6">Library</option>
+          <option value="3.8,0.9">Café / dining</option>
+          <option value="0,0.3">Corridor</option>
           <option value="custom">Custom (enter below)</option>
         </select>
       </div>
       <div>
-        <label for="rp">R<sub>p</sub> — per person (L/s·person)<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About R-p">i</button><span class="popover" role="tooltip" hidden>From ASHRAE 62.1 Table 6.2.2.1: outdoor airflow required per occupant. Classroom/lecture ≈ 3.8; office/conference ≈ 2.5.</span></span></label>
-        <input id="rp" type="number" step="0.1" value="3.8">
+        <label for="rp">R<sub>p</sub> — per person (L/s·person)<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About R-p">i</button><span class="popover" role="tooltip" hidden>From ASHRAE 62.1 Table 6.2.2.1: outdoor airflow required per occupant. Lecture hall ≈ 3.8; classroom ≈ 5; office/conference ≈ 2.5; corridor 0 (area term only).</span></span></label>
+        <input id="rp" type="number" step="0.1" min="0" value="3.8">
       </div>
       <div>
         <label for="ra">R<sub>a</sub> — per area (L/s·m&sup2;)<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About R-a">i</button><span class="popover" role="tooltip" hidden>From ASHRAE 62.1 Table 6.2.2.1: outdoor airflow required per unit floor area, covering building and furnishing emissions. Typically 0.3 L/s·m².</span></span></label>
-        <input id="ra" type="number" step="0.1" value="0.3">
+        <input id="ra" type="number" step="0.1" min="0" value="0.3">
       </div>
       <div>
         <label for="pz">P<sub>z</sub> — occupants</label>
-        <input id="pz" type="number" step="1" value="50">
+        <input id="pz" type="number" step="1" min="0" value="50">
       </div>
       <div>
         <label for="len">Floor length (m)</label>
-        <input id="len" type="number" step="0.1" value="11.8">
+        <input id="len" type="number" step="0.1" min="0" value="11.8">
       </div>
       <div>
         <label for="wid">Floor width (m)</label>
-        <input id="wid" type="number" step="0.1" value="12.3">
+        <input id="wid" type="number" step="0.1" min="0" value="12.3">
       </div>
       <div>
         <label for="ez">E<sub>z</sub> — air distribution effectiveness<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About E-z">i</button><span class="popover" role="tooltip" hidden>1.0 = fully mixed (typical ceiling supply/return). Real systems are often 0.5–0.8; lower effectiveness means more airflow is needed for the same air quality.</span></span></label>
-        <input id="ez" type="number" step="0.05" value="1.0">
+        <input id="ez" type="number" step="0.05" min="0.1" max="1.5" value="1.0">
       </div>
     </div>
     <div class="results" id="reqResults" role="status" aria-live="polite" aria-atomic="true"></div>
     <details class="maths">
       <summary>The maths behind the required airflow</summary>
       <div class="formula">Vbz = (Rp &times; Pz) + (Ra &times; Az)   ·   Voz = Vbz / Ez</div>
-      <p class="deriv">From ASHRAE 62.1 Table 6.2.2.1, R<sub>p</sub> is the outdoor airflow per person and R<sub>a</sub> the outdoor airflow per unit floor area. The breathing-zone airflow is V<sub>bz</sub> = (R<sub>p</sub> &times; P<sub>z</sub>) + (R<sub>a</sub> &times; A<sub>z</sub>), and the outdoor airflow the system must supply is V<sub>oz</sub> = V<sub>bz</sub> / E<sub>z</sub>. The "breathing zone" is the region 0.75–1.8 m above the floor and at least 0.6 m from walls, where people actually breathe. E<sub>z</sub> = 1.0 assumes fully mixed air; real systems are often 0.5–0.8, and lower effectiveness means more airflow is needed for the same result.</p>
+      <p class="deriv">From ASHRAE 62.1 Table 6.2.2.1, R<sub>p</sub> is the outdoor airflow per person and R<sub>a</sub> the outdoor airflow per unit floor area. The breathing-zone airflow is V<sub>bz</sub> = (R<sub>p</sub> &times; P<sub>z</sub>) + (R<sub>a</sub> &times; A<sub>z</sub>), and the outdoor airflow the system must supply is V<sub>oz</sub> = V<sub>bz</sub> / E<sub>z</sub>. The "breathing zone" is the region 75 mm to 1.8 m above the floor and at least 0.6 m from walls, where people actually breathe. E<sub>z</sub> = 1.0 assumes fully mixed air; real systems are often 0.5–0.8, and lower effectiveness means more airflow is needed for the same result.</p>
     </details>
     <div class="tabnav">
       <button type="button" class="btn ghost" data-nav="prev" disabled>&larr; Back</button>
@@ -311,23 +318,23 @@
     <div class="grid">
       <div>
         <label for="ci">Indoor steady-state CO<sub>2</sub>, C<sub>i</sub> (ppm)<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About indoor CO2">i</button><span class="popover" role="tooltip" hidden>Read this off your measured curve where it flattens (stops rising). That plateau is the steady-state concentration.</span></span></label>
-        <input id="ci" type="number" step="10" value="950">
+        <input id="ci" type="number" step="10" min="0" value="950">
       </div>
       <div>
         <label for="co">Outdoor CO<sub>2</sub>, C<sub>o</sub> (ppm)<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About outdoor CO2">i</button><span class="popover" role="tooltip" hidden>Current global average is ~425 ppm (2025). Use a local outdoor reading if you have one; see co2.earth for the latest.</span></span></label>
-        <input id="co" type="number" step="10" value="420">
+        <input id="co" type="number" step="10" min="0" value="420">
       </div>
       <div>
-        <label for="g">Generation per person, G (L/s)<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About generation rate">i</button><span class="popover" role="tooltip" hidden>CO₂ exhaled per person. ~0.005 L/s for an adult at rest; rises with activity level and body size, lower for children.</span></span></label>
-        <input id="g" type="number" step="0.001" value="0.005">
+        <label for="g">Generation per person, G (L/s)<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About generation rate">i</button><span class="popover" role="tooltip" hidden>CO₂ exhaled per person. ~0.005 L/s for an adult at rest (ASHRAE's sedentary figure of 0.0052, rounded); rises with activity level and body size, lower for children.</span></span></label>
+        <input id="g" type="number" step="0.001" min="0" value="0.005">
       </div>
       <div>
-        <label for="npeople">People present, N</label>
-        <input id="npeople" type="number" step="1" value="50">
+        <label for="npeople">People present, N<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About people present">i</button><span class="popover" role="tooltip" hidden>The people actually in the room during your measurement. This can differ from P<sub>z</sub> in step 1, which is the occupancy the requirement is computed for.</span></span></label>
+        <input id="npeople" type="number" step="1" min="0" value="50">
       </div>
       <div>
         <label for="height">Ceiling height (m) — for ACH</label>
-        <input id="height" type="number" step="0.1" value="3.3">
+        <input id="height" type="number" step="0.1" min="0" value="3.3">
       </div>
     </div>
     <div class="results" id="actResults" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -335,7 +342,7 @@
     <details class="maths">
       <summary>The maths behind the measured ventilation</summary>
       <div class="formula">Qperson = G / (Ci &minus; Co)   ·   Qtotal = Qperson &times; N   ·   ACH = (Qtotal &times; 3.6) / Volume</div>
-      <p class="deriv">The per-person outdoor airflow is Q<sub>person</sub> = G / (C<sub>i</sub> &minus; C<sub>o</sub>), with G the CO<sub>2</sub> generation rate per person (default 0.005 L/s for an adult at rest), C<sub>i</sub> the indoor steady-state CO<sub>2</sub>, and C<sub>o</sub> the outdoor value. CO<sub>2</sub> in ppm is converted to a fraction (ppm &divide; 1,000,000) internally, so you enter values in ppm. The room total and air-change rate follow: Q<sub>total</sub> = Q<sub>person</sub> &times; N and ACH = (Q<sub>total</sub> &times; 3.6) / Volume, with Volume the floor area &times; ceiling height.</p>
+      <p class="deriv">The per-person outdoor airflow is Q<sub>person</sub> = G / (C<sub>i</sub> &minus; C<sub>o</sub>), with G the CO<sub>2</sub> generation rate per person (default 0.005 L/s for an adult at rest), C<sub>i</sub> the indoor steady-state CO<sub>2</sub>, and C<sub>o</sub> the outdoor value. CO<sub>2</sub> in ppm is converted to a fraction (ppm &divide; 1,000,000) internally, so you enter values in ppm. The room total and air-change rate follow: Q<sub>total</sub> = Q<sub>person</sub> &times; N and ACH = (Q<sub>total</sub> &times; 3.6) / Volume, with Volume the floor area &times; ceiling height. One subtlety worth discussing: a ventilation rate derived from measured CO<sub>2</sub> already reflects how well the air reaches the occupants, so when E<sub>z</sub> is below 1.0 the like-for-like target arguably sits between V<sub>bz</sub> and V<sub>oz</sub>.</p>
     </details>
     <div class="tabnav">
       <button type="button" class="btn ghost" data-nav="prev">&larr; Back</button>
@@ -362,22 +369,23 @@
     <p class="note" style="margin-top:14px;">Occupancy schedule. Each row sets the people count <em>N</em> and ventilation <em>Q</em> that apply <strong>from that time onward</strong>. Add a row to open a window (raise Q) or have the class leave (drop N to 0) partway through.</p>
     <table class="sched" id="schedTable">
       <thead>
-        <tr><th>From (min)</th><th>People, N</th><th>Ventilation Q (L/s)</th><th></th></tr>
+        <tr><th scope="col">From (min)</th><th scope="col">People, N</th><th scope="col">Ventilation Q (L/s)</th><th scope="col"><span class="visually-hidden">Remove</span></th></tr>
       </thead>
       <tbody id="schedBody"></tbody>
     </table>
     <div class="btn-row">
       <button type="button" class="btn ghost" id="schedAdd">+ Add change</button>
-      <button type="button" class="btn ghost" id="schedReset">Reset to step 2</button>
+      <button type="button" class="btn ghost" id="schedReset">Fill from my measurements</button>
     </div>
     <div class="results" id="tResults" role="status" aria-live="polite" aria-atomic="true"></div>
     <canvas id="tChart" width="820" height="360" role="img" aria-label="Predicted CO2 concentration over time"></canvas>
     <div class="csv-upload" id="csvDrop">
       <label class="csv-label" for="csvFile">
         <span>Drop a CSV here or <strong>browse</strong> to overlay your measured CO<sub>2</sub> data</span>
-        <span class="csv-hint note">Two columns: time (minutes, MM:SS, HH:MM:SS or a date-time) and CO<sub>2</sub> (ppm). A header row is detected automatically.</span>
+        <span class="csv-hint note">Two columns: time (minutes, seconds, MM:SS, HH:MM, HH:MM:SS or a date-time) and CO<sub>2</sub> (ppm). A header row is detected automatically.</span>
       </label>
       <input type="file" id="csvFile" accept=".csv,.tsv,.txt" class="visually-hidden">
+      <span class="csv-hint note" id="csvMsg" role="status" aria-live="polite" style="color: var(--bad);"></span>
       <button type="button" class="btn ghost csv-clear hidden" id="csvClear">Clear measured data</button>
     </div>
     <details class="maths">
@@ -471,7 +479,9 @@
   document.querySelectorAll('[data-nav]').forEach(function (b) {
     b.addEventListener("click", function () {
       if (b.disabled) return;
-      activate(current + (b.getAttribute("data-nav") === "next" ? 1 : -1), false);
+      // move focus with the step change; the old button is inside a now-hidden
+      // panel, so leaving focus there drops keyboard users back to <body>
+      activate(current + (b.getAttribute("data-nav") === "next" ? 1 : -1), true);
       window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
     });
   });
@@ -544,7 +554,7 @@
         if (h.indexOf("co2") >= 0 || h.indexOf("ppm") >= 0 || h.indexOf("concentration") >= 0) co2Col = i;
       }
     }
-    var pts = [];
+    var pts = [], twoPart = 0, plainNum = 0;
     for (var r = 0; r < data.length; r++) {
       var row = data[r];
       if (row.length < 2) continue;
@@ -552,7 +562,22 @@
       if (!isFinite(c)) continue;
       var t = parseTime(row[timeCol]);
       if (t === null) continue;
+      if (/^\d{1,2}:\d{2}$/.test(row[timeCol])) twoPart++;
+      else if (/^[\d.]+$/.test(row[timeCol])) plainNum++;
       pts.push({ t: t, c: c });
+    }
+    // A:BB columns were read as MM:SS. If the whole series spans under 3 minutes
+    // that way but a sensible log the other way, they were HH:MM clock times:
+    // (A + B/60) * 60 = A*60 + B, so multiplying by 60 reinterprets exactly.
+    if (twoPart === pts.length && pts.length >= 5) {
+      var sp = pts[pts.length - 1].t - pts[0].t;
+      if (sp >= 0 && sp < 3 && sp * 60 <= 1440) pts.forEach(function (p) { p.t *= 60; });
+    }
+    // Plain numeric columns spanning more than 4 hours "of minutes" are almost
+    // certainly elapsed seconds from a logger; a tutorial measurement is ~30 min.
+    if (plainNum === pts.length && pts.length > 1) {
+      var spn = pts[pts.length - 1].t - pts[0].t;
+      if (spn > 240 && spn < 86400) pts.forEach(function (p) { p.t /= 60; });
     }
     // normalise time to minutes from the first reading
     if (pts.length > 1) {
@@ -574,12 +599,18 @@
       var pts = parseCSV(e.target.result);
       if (pts) {
         measured = pts;
+        $("csvMsg").textContent = "";
         // stretch the chart duration to cover the data if needed
         var tMax = pts[pts.length - 1].t;
         if (isFinite(tMax) && tMax > num("tDur")) $("tDur").value = Math.ceil(tMax / 5) * 5;
         $("csvClear").classList.remove("hidden");
         recomputeTransient();
+      } else {
+        $("csvMsg").textContent = "Could not read “" + file.name + "”. The file needs a time column and a CO₂ column in ppm; check the format hint above and try again.";
       }
+    };
+    reader.onerror = function () {
+      $("csvMsg").textContent = "Could not open “" + file.name + "”. Try saving it again as a plain .csv and re-dropping it.";
     };
     reader.readAsText(file);
   }
@@ -595,7 +626,8 @@
       row("Floor area, Az", fmt(az, 1) + " m&sup2;") +
       row("Breathing-zone airflow, Vbz", fmt(vbz, 1) + " L/s") +
       row("Required outdoor airflow, Voz", "<strong>" + fmt(voz, 1) + " L/s</strong>") +
-      row("Voz per person", (pz > 0 ? fmt(voz / pz, 2) : "—") + " L/s·person");
+      row("Voz per person", (pz > 0 ? fmt(voz / pz, 2) : "—") + " L/s·person") +
+      '<div class="working">Vbz = (' + fmt(rp, 1) + " × " + fmt(pz, 0) + ") + (" + fmt(ra, 1) + " × " + fmt(az, 1) + ") = " + fmt(vbz, 1) + " L/s &nbsp;·&nbsp; Voz = " + fmt(vbz, 1) + " / " + fmt(ez, 2) + " = " + fmt(voz, 1) + " L/s</div>";
 
     // Tab 2
     var ci = num("ci"), co = num("co"), g = num("g"), n = num("npeople");
@@ -610,7 +642,10 @@
       row("Room volume", fmt(volume, 1) + " m&sup3;") +
       row("Outdoor airflow per person, Qperson", (isFinite(qperson) ? fmt(qperson, 2) : "—") + " L/s·person") +
       row("Total ventilation, Qtotal", "<strong>" + (isFinite(qtotal) ? fmt(qtotal, 1) : "—") + " L/s</strong>") +
-      row("Air changes per hour, ACH", isFinite(ach) ? fmt(ach, 2) : "—");
+      row("Air changes per hour, ACH", isFinite(ach) ? fmt(ach, 2) : "—") +
+      (isFinite(qperson)
+        ? '<div class="working">Qperson = ' + fmt(g, 4) + " / ((" + fmt(ci, 0) + " − " + fmt(co, 0) + ") × 10⁻⁶) = " + fmt(qperson, 2) + " L/s·person &nbsp;·&nbsp; Qtotal = " + fmt(qperson, 2) + " × " + fmt(n, 0) + " = " + fmt(qtotal, 1) + " L/s</div>"
+        : "");
 
     // Adequacy verdict: compare actual Qtotal to required Voz
     var vEl = $("verdict");
@@ -625,6 +660,19 @@
       var pct = voz > 0 ? (100 * qtotal / voz) : 0;
       vEl.innerHTML = "Estimated ventilation (" + fmt(qtotal, 0) + " L/s) is about " + fmt(pct, 0) + "% of the ASHRAE 62.1 requirement (" + fmt(voz, 0) + " L/s). The space looks under-ventilated.";
     }
+
+    // Tab 3: keep the occupancy schedule tracking the student's own room until
+    // they edit a row themselves. Without this the transient panel mixes their
+    // volume with the worked example's occupancy and flow, and its readout is
+    // half theirs and half the demo's with no visual cue.
+    if (!schedTouched && isFinite(qtotal) && qtotal > 0) {
+      seedScheduleFromInputs();
+      renderSched();
+    }
+
+    // Occupancy slider range should reach past the design occupancy.
+    var sN = $("scenN");
+    if (pz * 1.2 > parseFloat(sN.max)) sN.max = Math.ceil(pz * 1.5 / 10) * 10;
 
     // Tab 4: keep the scenario ventilation locked to the measured Qtotal from
     // step 2 until the student drags the slider themselves. Without this the
@@ -665,14 +713,21 @@
   // ---- Tab 3: transient (accumulation & decay) ----
   // Each row applies from its start time onward: {t: minutes, n: people, q: L/s}.
   var schedule = [{ t: 0, n: 50, q: 470 }, { t: 30, n: 0, q: 470 }];
+  var schedTouched = false; // has the student edited the schedule themselves?
+
+  function seedScheduleFromInputs() {
+    var q = Math.max(0, Math.round(qtotalActual));
+    var half = Math.round((num("tDur") || 60) / 2);
+    schedule = [{ t: 0, n: num("npeople"), q: q }, { t: half, n: 0, q: q }];
+  }
 
   function renderSched() {
     $("schedBody").innerHTML = schedule.map(function (s, i) {
       return '<tr>' +
-        '<td><input type="number" step="1" min="0" value="' + s.t + '" data-i="' + i + '" data-f="t"></td>' +
-        '<td><input type="number" step="1" min="0" value="' + s.n + '" data-i="' + i + '" data-f="n"></td>' +
-        '<td><input type="number" step="10" min="0" value="' + s.q + '" data-i="' + i + '" data-f="q"></td>' +
-        '<td>' + (schedule.length > 1 ? '<button type="button" class="iconbtn" data-del="' + i + '" aria-label="remove row">&times;</button>' : '') + '</td>' +
+        '<td><input type="number" step="1" min="0" value="' + s.t + '" data-i="' + i + '" data-f="t" aria-label="row ' + (i + 1) + ' start time, minutes"></td>' +
+        '<td><input type="number" step="1" min="0" value="' + s.n + '" data-i="' + i + '" data-f="n" aria-label="row ' + (i + 1) + ' people"></td>' +
+        '<td><input type="number" step="10" min="0" value="' + s.q + '" data-i="' + i + '" data-f="q" aria-label="row ' + (i + 1) + ' ventilation, litres per second"></td>' +
+        '<td>' + (schedule.length > 1 ? '<button type="button" class="iconbtn" data-del="' + i + '" aria-label="remove row ' + (i + 1) + '">&times;</button>' : '') + '</td>' +
         '</tr>';
     }).join("");
   }
@@ -732,7 +787,7 @@
     var r = simulateTransient();
     $("tResults").innerHTML =
       row("Room volume (from step 2)", fmt(r.V, 1) + " m&sup3;") +
-      row("Time constant &tau; (final ventilation rate)", isFinite(r.tau) ? fmt(r.tau, 1) + " min" : "&infin; (no ventilation)") +
+      row("Time constant &tau; (final ventilation rate)", r.V <= 0 ? "— (enter room dimensions in step 1)" : (isFinite(r.tau) ? fmt(r.tau, 1) + " min" : "&infin; (no ventilation)")) +
       row("Peak CO&#8322; reached", fmt(r.peak, 0) + " ppm") +
       row("Time to exceed 800 ppm", r.cross800 !== null ? fmt(r.cross800, 1) + " min" : "not reached") +
       row("Time to exceed 1,000 ppm", r.cross1000 !== null ? fmt(r.cross1000, 1) + " min" : "not reached") +
@@ -740,9 +795,27 @@
     drawTChart(r);
   }
 
+  /* Size the backing store from the rendered width and devicePixelRatio, and
+     draw in CSS-pixel space. With a fixed 820px backing store scaled down by
+     CSS, a phone renders the 12px axis text at ~4.5px; this keeps text at 12px
+     at any width, and gives narrow screens a taller aspect so the y-axis still
+     has room. Hidden canvases report clientWidth 0 and fall back to 820; the
+     tab activation redraw resizes them correctly once visible. */
+  function prepCanvas(c) {
+    var cssW = c.clientWidth || 820;
+    var cssH = cssW < 520 ? Math.round(cssW * 0.62) : Math.round(cssW * 360 / 820);
+    var dpr = window.devicePixelRatio || 1;
+    var bw = Math.round(cssW * dpr), bh = Math.round(cssH * dpr);
+    if (c.width !== bw || c.height !== bh) { c.width = bw; c.height = bh; }
+    c.style.height = cssH + "px";
+    var ctx = c.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { ctx: ctx, W: cssW, H: cssH };
+  }
+
   function drawTChart(r) {
-    var c = $("tChart"), ctx = c.getContext("2d");
-    var W = c.width, H = c.height;
+    var c = $("tChart"), prep = prepCanvas(c), ctx = prep.ctx;
+    var W = prep.W, H = prep.H;
     ctx.clearRect(0, 0, W, H);
     var css = getComputedStyle(document.documentElement);
     var ink = css.getPropertyValue("--ink").trim() || "#1c2430";
@@ -773,10 +846,12 @@
     ctx.strokeStyle = line; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, H - padB); ctx.lineTo(W - padR, H - padB); ctx.stroke();
 
-    // y gridlines + labels
+    // y gridlines + labels (adaptive step, ~8 lines max: a huge range from an
+    // extreme slider position must not paint hundreds of labelled gridlines)
     ctx.fillStyle = muted; ctx.font = "12px -apple-system, Segoe UI, sans-serif";
     ctx.textAlign = "right"; ctx.textBaseline = "middle";
-    for (var v = Math.ceil(yMin / 200) * 200; v <= yMax; v += 200) {
+    var vStep = Math.max(200, Math.ceil((yMax - yMin) / 8 / 200) * 200);
+    for (var v = Math.ceil(yMin / vStep) * vStep; v <= yMax; v += vStep) {
       var y = Y(v);
       ctx.strokeStyle = line; ctx.globalAlpha = 0.5;
       ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
@@ -867,8 +942,8 @@
   }
 
   function drawChart(qtot, g, co, markN) {
-    var c = $("chart"), ctx = c.getContext("2d");
-    var W = c.width, H = c.height;
+    var c = $("chart"), prep = prepCanvas(c), ctx = prep.ctx;
+    var W = prep.W, H = prep.H;
     ctx.clearRect(0, 0, W, H);
     var css = getComputedStyle(document.documentElement);
     var ink = css.getPropertyValue("--ink").trim() || "#1c2430";
@@ -890,10 +965,12 @@
     ctx.strokeStyle = line; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, H - padB); ctx.lineTo(W - padR, H - padB); ctx.stroke();
 
-    // y gridlines + labels
+    // y gridlines + labels (adaptive step, ~8 lines max: a huge range from an
+    // extreme slider position must not paint hundreds of labelled gridlines)
     ctx.fillStyle = muted; ctx.font = "12px -apple-system, Segoe UI, sans-serif";
     ctx.textAlign = "right"; ctx.textBaseline = "middle";
-    for (var v = Math.ceil(yMin / 200) * 200; v <= yMax; v += 200) {
+    var vStep = Math.max(200, Math.ceil((yMax - yMin) / 8 / 200) * 200);
+    for (var v = Math.ceil(yMin / vStep) * vStep; v <= yMax; v += vStep) {
       var y = Y(v);
       ctx.strokeStyle = line; ctx.globalAlpha = 0.5;
       ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
@@ -959,6 +1036,7 @@
     clearBtn.addEventListener("click", function (e) {
       e.stopPropagation();
       measured = null; fileInput.value = "";
+      $("csvMsg").textContent = "";
       clearBtn.classList.add("hidden");
       recomputeTransient();
     });
@@ -970,23 +1048,25 @@
     if (i === null) return;
     var v = parseFloat(el.value);
     schedule[i][f] = isFinite(v) ? v : 0;
+    schedTouched = true;
     recomputeTransient();
   });
   $("schedBody").addEventListener("click", function (e) {
     var d = e.target.getAttribute("data-del");
     if (d === null) return;
     schedule.splice(+d, 1);
+    schedTouched = true;
     renderSched(); recomputeTransient();
   });
   $("schedAdd").addEventListener("click", function () {
     var last = schedule[schedule.length - 1];
     schedule.push({ t: last.t + 10, n: last.n, q: last.q });
+    schedTouched = true;
     renderSched(); recomputeTransient();
   });
   $("schedReset").addEventListener("click", function () {
-    var q = Math.max(0, Math.round(qtotalActual));
-    var half = Math.round((num("tDur") || 60) / 2);
-    schedule = [{ t: 0, n: num("npeople"), q: q }, { t: half, n: 0, q: q }];
+    seedScheduleFromInputs();
+    schedTouched = false; // resume tracking the step 1-2 inputs
     renderSched(); recomputeTransient();
   });
 
@@ -996,6 +1076,13 @@
      theme change has to be redrawn. This also fixes a case that already existed:
      changing the OS theme with a tool open left stale colours in the chart. */
   window.__ttRedraw = function () { updateScenario(); recomputeTransient(); };
+  /* Charts are sized from clientWidth, so a rotation or window resize needs a
+     redraw; debounced so drag-resizing does not redraw on every frame. */
+  var rsz = null;
+  window.addEventListener("resize", function () {
+    clearTimeout(rsz);
+    rsz = setTimeout(function () { window.__ttRedraw(); }, 150);
+  });
 })();
 </script>
 <script>
