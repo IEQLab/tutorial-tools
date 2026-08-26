@@ -181,6 +181,7 @@
   .csv-label strong { color: var(--accent); }
   .csv-hint { display: block; font-size: var(--t-meta); margin-top: var(--s-1); }
   .csv-clear { margin-top: var(--s-3); }
+  .csv-msg.error { color: var(--bad); }
   .hidden { display: none; }
 
   /* ---- theme control ----
@@ -382,10 +383,10 @@
     <div class="csv-upload" id="csvDrop">
       <label class="csv-label" for="csvFile">
         <span>Drop a CSV here or <strong>browse</strong> to overlay your measured CO<sub>2</sub> data</span>
-        <span class="csv-hint note">Two columns: time (minutes, seconds, MM:SS, HH:MM, HH:MM:SS or a date-time) and CO<sub>2</sub> (ppm). A header row is detected automatically.</span>
+        <span class="csv-hint note">Needs a time column (minutes, seconds, MM:SS, HH:MM, HH:MM:SS or a date-time) and a CO<sub>2</sub> column in ppm. A header row, extra columns and InfluxDB annotation lines are detected automatically.</span>
       </label>
       <input type="file" id="csvFile" accept=".csv,.tsv,.txt" class="visually-hidden">
-      <span class="csv-hint note" id="csvMsg" role="status" aria-live="polite" style="color: var(--bad);"></span>
+      <span class="csv-hint note csv-msg" id="csvMsg" role="status" aria-live="polite"></span>
       <button type="button" class="btn ghost csv-clear hidden" id="csvClear">Clear measured data</button>
     </div>
     <details class="maths">
@@ -523,49 +524,97 @@
   var measured = null;  // overlaid CSV points [{t: minutes, c: ppm}], or null
 
   // ---- CSV overlay (measured sensor data on the transient chart) ----
+  // Returns {t: minutes, abs: true} for a real date-time — t is then minutes since
+  // the epoch, so multi-hour and across-midnight logs stay monotonic — or
+  // {t: minutes, abs: false} for an elapsed or clock-only reading. null if unreadable.
   function parseTime(raw) {
     if (!raw) return null;
-    // date-time: "25/9/2025 9:20", "2025-09-25 09:20:00"
-    var dt = raw.match(/^(\d{1,4})[\/\-](\d{1,2})[\/\-](\d{1,4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
-    if (dt) return (+dt[4]) * 60 + (+dt[5]) + (dt[6] !== undefined ? (+dt[6]) / 60 : 0);
+    // ISO 8601 / RFC3339, as exported by InfluxDB and most loggers: "2026-08-26T19:30:00Z"
+    if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/.test(raw)) {
+      var ms = Date.parse(raw.indexOf("T") >= 0 ? raw : raw.replace(" ", "T"));
+      if (isFinite(ms)) return { t: ms / 60000, abs: true };
+    }
+    // day-first or year-first date-time: "25/9/2025 9:20", "2025-09-25 09:20:00"
+    var dt = raw.match(/^(\d{1,4})[\/\-](\d{1,2})[\/\-](\d{1,4})[\sT](\d{1,2}):(\d{2})(?::(\d{2}))?/);
+    if (dt) {
+      var y, da, mo = +dt[2];
+      if (dt[1].length === 4) { y = +dt[1]; da = +dt[3]; }
+      else { da = +dt[1]; y = +dt[3] < 100 ? 2000 + (+dt[3]) : +dt[3]; }
+      var d = new Date(y, mo - 1, da, +dt[4], +dt[5], dt[6] !== undefined ? +dt[6] : 0);
+      if (isFinite(d.getTime())) return { t: d.getTime() / 60000, abs: true };
+    }
     // HH:MM:SS or MM:SS
     var tm = raw.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
     if (tm) {
-      if (tm[3] !== undefined) return (+tm[1]) * 60 + (+tm[2]) + (+tm[3]) / 60; // HH:MM:SS
-      return (+tm[1]) + (+tm[2]) / 60;                                          // MM:SS
+      if (tm[3] !== undefined) return { t: (+tm[1]) * 60 + (+tm[2]) + (+tm[3]) / 60, abs: false }; // HH:MM:SS
+      return { t: (+tm[1]) + (+tm[2]) / 60, abs: false };                                          // MM:SS
     }
     var n = parseFloat(raw);
-    return isFinite(n) ? n : null;
+    return isFinite(n) ? { t: n, abs: false } : null;
+  }
+
+  // Headers are scored rather than first-hit-wins, so a strong match beats an
+  // incidental substring: "illuminance" contains "min", and "pm25" must not
+  // outrank a real CO2 column.
+  function scoreTimeHead(h) {
+    if (/^_?(time|timestamp|datetime|date)$/.test(h)) return 4;
+    if (h.indexOf("time") >= 0 || h.indexOf("date") >= 0) return 3;
+    if (/(^|[^a-z])(min|sec|elapsed)/.test(h)) return 2;
+    return 0;
+  }
+  function scoreCo2Head(h) {
+    if (/^_?co2$/.test(h) || h === "co₂") return 4;
+    if (h.indexOf("co2") >= 0 || h.indexOf("co₂") >= 0 || h.indexOf("ppm") >= 0) return 3;
+    if (h.indexOf("concentration") >= 0) return 2;
+    return 0;
   }
 
   function parseCSV(text) {
-    var lines = text.trim().split(/\r?\n/);
+    // Blank lines and #-prefixed annotation lines go first: an InfluxDB export
+    // leads with #group / #datatype / #default above the real header row.
+    var lines = text.replace(/^\uFEFF/, "").trim().split(/\r?\n/).filter(function (l) {
+      return l.trim() !== "" && l.charAt(0) !== "#";
+    });
     if (lines.length < 2) return null;
-    var delim = lines[0].indexOf("\t") >= 0 ? "\t" : ",";
-    var rows = lines.map(function (l) { return l.split(delim).map(function (s) { return s.trim(); }); });
+    var delim = lines[0].indexOf("\t") >= 0 ? "\t"
+              : (lines[0].indexOf(";") >= 0 && lines[0].indexOf(",") < 0 ? ";" : ",");
+    var rows = lines.map(function (l) {
+      return l.split(delim).map(function (s) { return s.trim().replace(/^"(.*)"$/, "$1"); });
+    });
     var head = rows[0];
     var hasHeader = head.some(function (c) { return !isFinite(parseFloat(c)) && !/^\d{1,2}:\d{2}/.test(c); });
     var data = hasHeader ? rows.slice(1) : rows;
-    var timeCol = 0, co2Col = 1;
+    var timeCol = 0, co2Col = 1, fieldCol = -1;
     if (hasHeader) {
+      var tHit = -1, tBest = 0, cHit = -1, cBest = 0, valCol = -1, sc;
       for (var i = 0; i < head.length; i++) {
         var h = head[i].toLowerCase();
-        if (h.indexOf("time") >= 0 || h.indexOf("min") >= 0 || h.indexOf("sec") >= 0) timeCol = i;
-        if (h.indexOf("co2") >= 0 || h.indexOf("ppm") >= 0 || h.indexOf("concentration") >= 0) co2Col = i;
+        sc = scoreTimeHead(h); if (sc > tBest) { tBest = sc; tHit = i; }
+        sc = scoreCo2Head(h);  if (sc > cBest) { cBest = sc; cHit = i; }
+        if (/^_?value$/.test(h)) valCol = i;
+        if (/^_?field$/.test(h) || h === "measurement") fieldCol = i;
       }
+      // long-format InfluxDB export: every metric in one _value column, named in _field
+      if (cHit < 0 && valCol >= 0) cHit = valCol; else fieldCol = -1;
+      if (tHit >= 0) timeCol = tHit;
+      if (cHit >= 0) co2Col = cHit;
+      if (tHit < 0 && cHit === 0) timeCol = 1;  // only CO2 was named, and it took column 0
     }
+    var widest = Math.max(timeCol, co2Col, fieldCol);
     var pts = [], twoPart = 0, plainNum = 0;
     for (var r = 0; r < data.length; r++) {
       var row = data[r];
-      if (row.length < 2) continue;
+      if (row.length <= widest) continue;
+      if (fieldCol >= 0 && row[fieldCol].toLowerCase().indexOf("co2") < 0) continue;
       var c = parseFloat(row[co2Col]);
-      if (!isFinite(c)) continue;
+      if (!isFinite(c)) continue;             // also skips any repeated header block
       var t = parseTime(row[timeCol]);
       if (t === null) continue;
       if (/^\d{1,2}:\d{2}$/.test(row[timeCol])) twoPart++;
       else if (/^[\d.]+$/.test(row[timeCol])) plainNum++;
-      pts.push({ t: t, c: c });
+      pts.push({ t: t.t, c: c, abs: t.abs });
     }
+    pts.sort(function (a, b) { return a.t - b.t; });
     // A:BB columns were read as MM:SS. If the whole series spans under 3 minutes
     // that way but a sensible log the other way, they were HH:MM clock times:
     // (A + B/60) * 60 = A*60 + B, so multiplying by 60 reinterprets exactly.
@@ -582,7 +631,9 @@
     // normalise time to minutes from the first reading
     if (pts.length > 1) {
       var t0 = pts[0].t;
-      if (t0 > 1000) {                       // absolute minutes/seconds from midnight
+      if (pts[0].abs) {                      // real date-times: already minutes, just re-zero
+        pts.forEach(function (p) { p.t = p.t - t0; });
+      } else if (t0 > 1000) {                // absolute minutes/seconds from midnight
         var span = pts[pts.length - 1].t - t0;
         var isSeconds = span > 60 && span < 86400;
         pts.forEach(function (p) { p.t = isSeconds ? (p.t - t0) / 60 : (p.t - t0); });
@@ -593,24 +644,33 @@
     return pts.length > 0 ? pts : null;
   }
 
+  function csvMsg(text, isError) {
+    var el = $("csvMsg");
+    el.textContent = text || "";
+    el.classList.toggle("error", !!isError);
+  }
+
   function loadCSV(file) {
     var reader = new FileReader();
     reader.onload = function (e) {
       var pts = parseCSV(e.target.result);
       if (pts) {
         measured = pts;
-        $("csvMsg").textContent = "";
         // stretch the chart duration to cover the data if needed
         var tMax = pts[pts.length - 1].t;
         if (isFinite(tMax) && tMax > num("tDur")) $("tDur").value = Math.ceil(tMax / 5) * 5;
         $("csvClear").classList.remove("hidden");
+        var lo = pts[0].c, hi = pts[0].c;
+        pts.forEach(function (p) { if (p.c < lo) lo = p.c; if (p.c > hi) hi = p.c; });
+        csvMsg(pts.length + " readings loaded, spanning " + fmt(tMax, 0) + " min and " +
+               fmt(lo, 0) + "–" + fmt(hi, 0) + " ppm.", false);
         recomputeTransient();
       } else {
-        $("csvMsg").textContent = "Could not read “" + file.name + "”. The file needs a time column and a CO₂ column in ppm; check the format hint above and try again.";
+        csvMsg("Could not read “" + file.name + "”. The file needs a time column and a CO₂ column in ppm; check the format hint above and try again.", true);
       }
     };
     reader.onerror = function () {
-      $("csvMsg").textContent = "Could not open “" + file.name + "”. Try saving it again as a plain .csv and re-dropping it.";
+      csvMsg("Could not open “" + file.name + "”. Try saving it again as a plain .csv and re-dropping it.", true);
     };
     reader.readAsText(file);
   }
@@ -1036,7 +1096,7 @@
     clearBtn.addEventListener("click", function (e) {
       e.stopPropagation();
       measured = null; fileInput.value = "";
-      $("csvMsg").textContent = "";
+      csvMsg("", false);
       clearBtn.classList.add("hidden");
       recomputeTransient();
     });
