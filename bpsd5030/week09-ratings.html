@@ -71,7 +71,7 @@
   .home:hover { text-decoration: underline; }
 
   /* ---- ordered tabs ---- */
-  .tabs { display: flex; gap: var(--s-2); margin: 0 0 var(--s-6); flex-wrap: wrap; }
+  .tabs { display: flex; gap: var(--s-2); margin: 0 0 var(--s-3); flex-wrap: wrap; }
   .tab { border: 1px solid var(--line); background: var(--field); color: var(--muted);
     border-radius: var(--r-pill); padding: var(--s-2) var(--s-4) var(--s-2) var(--s-2); font-size: var(--t-label); cursor: pointer;
     display: inline-flex; align-items: center; gap: var(--s-2); font-family: inherit; }
@@ -82,6 +82,27 @@
     width: 21px; height: 21px; border-radius: 50%; background: var(--line); color: var(--muted);
     font-size: var(--t-meta); font-weight: 700; flex: none; }
   .tab.active .n { background: var(--accent-ink); color: var(--accent); }
+
+  /* ---- orientation strip ----
+     Which tutorial segment a tab serves, and (where one input set feeds several
+     tabs) whose numbers are on screen. Deliberately NOT the teal details.maths
+     treatment, which in this unit means "optional maths aside" and would
+     misfile it. */
+  .orient { display: flex; flex-direction: column; gap: var(--s-2); margin: 0 0 var(--s-6); }
+  details.mapsto { border: 1px solid var(--line); border-radius: var(--r-md); background: var(--field); }
+  details.mapsto > summary { cursor: pointer; color: var(--muted); font-size: var(--t-label);
+    font-weight: 600; padding: var(--s-2) var(--s-3); list-style: none; border-radius: var(--r-md); }
+  details.mapsto > summary::-webkit-details-marker { display: none; }
+  details.mapsto > summary::before { content: "\25b8  "; }
+  details.mapsto[open] > summary::before { content: "\25be  "; }
+  details.mapsto > summary:hover { color: var(--ink); }
+  details.mapsto > summary:active { color: var(--accent); }
+  details.mapsto > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .mapsto ul { margin: 0; padding: 0 var(--s-3) var(--s-2); list-style: none; }
+  .mapsto li { font-size: var(--t-label); color: var(--muted); padding: var(--s-1) 0; }
+  .mapsto li b { color: var(--ink); font-weight: 600; }
+  .mapsto .none { font-size: var(--t-label); color: var(--muted); margin: 0;
+    padding: var(--s-2) var(--s-3) var(--s-3); border-top: 1px solid var(--line); }
 
   section.card {
     background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md);
@@ -287,6 +308,19 @@
     <button class="tab" role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false" tabindex="-1" data-idx="1"><span class="n">2</span><span>Act 2 &middot; WELL</span></button>
   </div>
 
+  <!-- ===== Orientation: tutorial map ===== -->
+  <div class="orient">
+    <details class="mapsto" open>
+      <summary>Where this fits in today&#x27;s tutorial</summary>
+      <ul>
+        <li>Activity 1 <i>NABERS IE Star Challenge</i> &rarr; tab <b>1 Act 1 &middot; NABERS IE</b></li>
+        <li>Activity 2 <i>WELL Credit Round</i> &rarr; tab <b>2 Act 2 &middot; WELL</b></li>
+      </ul>
+      <p class="none">Nothing else in the session uses a tab: getting started, the debrief on what the rating cost, bringing it back to Assignment 1, and the Assignment 1 feedback slot are all discussion. Both acts run on the same building, so pick your profile in Act 1 and carry it through.</p>
+    </details>
+  </div>
+
+
   <!-- ===== Tab 1: Act 1 — NABERS IE ===== -->
   <section class="card" role="tabpanel" id="panel-1" aria-labelledby="tab-1" tabindex="0">
     <div class="primer">
@@ -381,7 +415,7 @@ overall star = mean of the five dimension stars</div>
   <footer class="page">
     NABERS bands and dimensions follow the Week 9 lecture; WELL point values are from the public WELL v2 scorecard (Q3 to Q4 2024). The scoring is deliberately simplified to make the gaming logic visible in a tutorial. It is not the NABERS or WELL algorithm; do not use its numbers in an assignment.
     Built for the BPSD5030 Week 9 tutorial by the IEQ Lab, Sydney School of Architecture, Design and Planning, because the point about gaming a rating lands faster once you have spent the budget yourself.
-    Revised August 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.
+    Revised September 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.
   </footer>
 </div>
 

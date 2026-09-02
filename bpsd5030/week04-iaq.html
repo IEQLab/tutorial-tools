@@ -67,7 +67,7 @@
   .home:hover { text-decoration: underline; }
 
   /* ---- ordered tabs ---- */
-  .tabs { display: flex; gap: var(--s-2); margin: 0 0 var(--s-6); flex-wrap: wrap; }
+  .tabs { display: flex; gap: var(--s-2); margin: 0 0 var(--s-3); flex-wrap: wrap; }
   .tab { border: 1px solid var(--line); background: var(--field); color: var(--muted);
     border-radius: var(--r-pill); padding: var(--s-2) var(--s-4) var(--s-2) var(--s-2); font-size: var(--t-label); cursor: pointer;
     display: inline-flex; align-items: center; gap: var(--s-2); font-family: inherit; }
@@ -78,6 +78,32 @@
     width: 21px; height: 21px; border-radius: 50%; background: var(--line); color: var(--muted);
     font-size: var(--t-meta); font-weight: 700; flex: none; }
   .tab.active .n { background: var(--accent-ink); color: var(--accent); }
+
+  /* ---- orientation strip ----
+     Two lines of "where am I": which tutorial activity a tab serves, and whose
+     numbers are on screen. Deliberately NOT the teal details.maths treatment,
+     which in this unit means "optional maths aside" and would misfile it. */
+  .orient { display: flex; flex-direction: column; gap: var(--s-2); margin: 0 0 var(--s-6); }
+  details.mapsto { border: 1px solid var(--line); border-radius: var(--r-md); background: var(--field); }
+  details.mapsto > summary { cursor: pointer; color: var(--muted); font-size: var(--t-label);
+    font-weight: 600; padding: var(--s-2) var(--s-3); list-style: none; border-radius: var(--r-md); }
+  details.mapsto > summary::-webkit-details-marker { display: none; }
+  details.mapsto > summary::before { content: "\25b8  "; }
+  details.mapsto[open] > summary::before { content: "\25be  "; }
+  details.mapsto > summary:hover { color: var(--ink); }
+  details.mapsto > summary:active { color: var(--accent); }
+  details.mapsto > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .mapsto ul { margin: 0; padding: 0 var(--s-3) var(--s-2); list-style: none; }
+  .mapsto li { font-size: var(--t-label); color: var(--muted); padding: var(--s-1) 0; }
+  .mapsto li b { color: var(--ink); font-weight: 600; }
+  .mapsto .none { font-size: var(--t-label); color: var(--muted); margin: 0;
+    padding: var(--s-2) var(--s-3) var(--s-3); border-top: 1px solid var(--line); }
+  .datasource { margin: 0; font-size: var(--t-label); color: var(--muted);
+    border: 1px solid var(--line); border-radius: var(--r-md); background: var(--field);
+    padding: var(--s-2) var(--s-3); transition: border-color var(--dur) var(--ease-out); }
+  .datasource b { color: var(--ink); font-weight: 600; }
+  .datasource.mine { border-color: var(--accent); }
+  .datasource.mine b { color: var(--accent); }
 
   section.card {
     background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md);
@@ -240,7 +266,7 @@
   <header class="page">
     <h1>IAQ &amp; Ventilation Calculator</h1>
     <p class="lede">Work out the outdoor air a space needs, then check what it actually delivers from measured CO<sub>2</sub>, one step at a time. The tool does the arithmetic. Deciding whether the space is adequately ventilated, and what you would change, is yours.</p>
-    <p class="note">The fields open pre-filled with a worked example (a real teaching room) so you can see each step working. Type over them with your own space to make the numbers yours.</p>
+    <p class="note">The fields open pre-filled with a worked example (a real teaching room) so you can see each step working. Type over them on tabs 1 and 2 with your own space, and every tab follows.</p>
   </header>
 
   <!-- ===== Tabs ===== -->
@@ -249,6 +275,19 @@
     <button class="tab" role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false" tabindex="-1" data-idx="1"><span class="n">2</span><span>Measured ventilation</span></button>
     <button class="tab" role="tab" id="tab-3" aria-controls="panel-3" aria-selected="false" tabindex="-1" data-idx="2"><span class="n">3</span><span>CO<sub>2</sub> over time</span></button>
     <button class="tab" role="tab" id="tab-4" aria-controls="panel-4" aria-selected="false" tabindex="-1" data-idx="3"><span class="n">4</span><span>Scenario explorer</span></button>
+  </div>
+
+  <!-- ===== Orientation: activity map + whose numbers ===== -->
+  <div class="orient">
+    <details class="mapsto" open>
+      <summary>Where this fits in today&#x27;s tutorial</summary>
+      <ul>
+        <li>Activity 2 &rarr; tab <b>1 Required airflow</b></li>
+        <li>Activity 3 &rarr; tab <b>2 Measured ventilation</b>, then <b>3 CO<sub>2</sub> over time</b>, then <b>4 Scenario explorer</b></li>
+      </ul>
+      <p class="none">Activities 1 and 4 use no tab. Activity 1 is the sensor measurement that produces your numbers, and Activity 4 is the share-back where you set the required airflow against the actual.</p>
+    </details>
+    <p class="datasource" id="dataSource" aria-live="polite">Numbers on screen: <b>the worked example</b> (a real teaching room).</p>
   </div>
 
   <!-- ===== Tab 1: Required airflow ===== -->
@@ -433,7 +472,7 @@
     Formulas: ASHRAE 62.1 Ventilation Rate Procedure and a single-zone CO<sub>2</sub> mass balance (steady-state and transient).
     Always sanity-check the output against your own data and the source standard.
     Built for the BPSD5030 Week 4 tutorial by the IEQ Lab, Sydney School of Architecture, Design and Planning, so the session goes on judging whether a room is adequately ventilated once the mass balance is out of the way.
-    Revised August 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.
+    Revised September 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.
   </footer>
 </div>
 
@@ -443,6 +482,39 @@
   function num(id) { var v = parseFloat($(id).value); return isFinite(v) ? v : 0; }
   function fmt(x, d) { if (!isFinite(x)) return "—"; return x.toLocaleString(undefined, {minimumFractionDigits: d, maximumFractionDigits: d}); }
   function row(k, v) { return '<div class="row"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>'; }
+
+  // ---------- "whose numbers" strip ----------
+  /* The tool ships pre-filled with a worked example, and one global recompute()
+     feeds all four tabs from a single set of inputs. Both facts are invisible,
+     so a student can land on tab 3, see a finished curve, and never register
+     that it is not their room. Say plainly, on every tab, whose numbers are on
+     screen.
+
+     There are two independent ways the numbers become the student's, and the
+     line has to track both. The room profile is typed over the example, so it
+     is detected by comparing against a snapshot of the shipped values (unlike
+     the lighting tool, this one has no "load example" button to hang a flag
+     on). The measured CO2 trace arrives separately, as a CSV dropped on tab 3,
+     and touches none of those fields. Reporting only the first is how the line
+     came to say "the worked example" over a chart of the student's own
+     readings, on the one tab the whole problem started with. */
+  var IDENT = ["spacetype", "rp", "ra", "pz", "len", "wid", "ci", "co", "npeople", "height", "ez", "g"];
+  var identDefaults = IDENT.map(function (id) { return $(id).value; });
+
+  function updateDataSource() {
+    var el = $("dataSource");
+    if (!el) return;
+    var myRoom = IDENT.some(function (id, i) { return $(id).value !== identDefaults[i]; });
+    var myTrace = !!measured;   // truthiness, not !== null: var-hoisted, so undefined before init
+    el.classList.toggle("mine", myRoom || myTrace);
+    /* A status, not an instruction. This line sits on every tab, and an
+       instruction repeated on tabs where it cannot be acted on reads as noise.
+       How to replace the example belongs in the header, stated once. */
+    var msg = "Numbers on screen: <b>" + (myRoom ? "your space" : "the worked example") + "</b>" +
+      (myRoom ? "" : " (a real teaching room)") +
+      (myTrace ? ", with <b>your measured CO<sub>2</sub></b> on tab 3" : "") + ".";
+    if (el.innerHTML !== msg) el.innerHTML = msg;   // aria-live: only speak on a real change
+  }
 
   // ---------- Tabs (ordered stepper) ----------
   var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
@@ -665,6 +737,7 @@
         csvMsg(pts.length + " readings loaded, spanning " + fmt(tMax, 0) + " min and " +
                fmt(lo, 0) + "–" + fmt(hi, 0) + " ppm.", false);
         recomputeTransient();
+        updateDataSource();   // the overlay is the student's own data, and nothing else says so
       } else {
         csvMsg("Could not read “" + file.name + "”. The file needs a time column and a CO₂ column in ppm; check the format hint above and try again.", true);
       }
@@ -748,6 +821,7 @@
     }
     updateScenario();
     recomputeTransient();
+    updateDataSource();
   }
 
   function ciFor(nPeople, qtot, g, co) {
@@ -1099,6 +1173,7 @@
       csvMsg("", false);
       clearBtn.classList.add("hidden");
       recomputeTransient();
+      updateDataSource();
     });
   })();
 

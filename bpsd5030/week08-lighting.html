@@ -67,7 +67,7 @@
   .home:hover { text-decoration: underline; }
 
   /* ---- ordered tabs ---- */
-  .tabs { display: flex; gap: var(--s-2); margin: 0 0 var(--s-6); flex-wrap: wrap; }
+  .tabs { display: flex; gap: var(--s-2); margin: 0 0 var(--s-3); flex-wrap: wrap; }
   .tab { border: 1px solid var(--line); background: var(--field); color: var(--muted);
     border-radius: var(--r-pill); padding: var(--s-2) var(--s-4) var(--s-2) var(--s-2); font-size: var(--t-label); cursor: pointer;
     display: inline-flex; align-items: center; gap: var(--s-2); font-family: inherit; }
@@ -78,6 +78,32 @@
     width: 21px; height: 21px; border-radius: 50%; background: var(--line); color: var(--muted);
     font-size: var(--t-meta); font-weight: 700; flex: none; }
   .tab.active .n { background: var(--accent-ink); color: var(--accent); }
+
+  /* ---- orientation strip ----
+     Which tutorial step a tab serves, and whose numbers are on screen.
+     Deliberately NOT the teal details.maths treatment, which in this unit
+     means "optional maths aside" and would misfile it. */
+  .orient { display: flex; flex-direction: column; gap: var(--s-2); margin: 0 0 var(--s-6); }
+  details.mapsto { border: 1px solid var(--line); border-radius: var(--r-md); background: var(--field); }
+  details.mapsto > summary { cursor: pointer; color: var(--muted); font-size: var(--t-label);
+    font-weight: 600; padding: var(--s-2) var(--s-3); list-style: none; border-radius: var(--r-md); }
+  details.mapsto > summary::-webkit-details-marker { display: none; }
+  details.mapsto > summary::before { content: "\25b8  "; }
+  details.mapsto[open] > summary::before { content: "\25be  "; }
+  details.mapsto > summary:hover { color: var(--ink); }
+  details.mapsto > summary:active { color: var(--accent); }
+  details.mapsto > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .mapsto ul { margin: 0; padding: 0 var(--s-3) var(--s-2); list-style: none; }
+  .mapsto li { font-size: var(--t-label); color: var(--muted); padding: var(--s-1) 0; }
+  .mapsto li b { color: var(--ink); font-weight: 600; }
+  .mapsto .none { font-size: var(--t-label); color: var(--muted); margin: 0;
+    padding: var(--s-2) var(--s-3) var(--s-3); border-top: 1px solid var(--line); }
+  .datasource { margin: 0; font-size: var(--t-label); color: var(--muted);
+    border: 1px solid var(--line); border-radius: var(--r-md); background: var(--field);
+    padding: var(--s-2) var(--s-3); transition: border-color var(--dur) var(--ease-out); }
+  .datasource b { color: var(--ink); font-weight: 600; }
+  .datasource.mine { border-color: var(--accent); }
+  .datasource.mine b { color: var(--accent); }
 
   section.card {
     background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md);
@@ -245,6 +271,18 @@
     <button class="tab" role="tab" id="tab-3" aria-controls="panel-3" aria-selected="false" tabindex="-1" data-idx="2"><span class="n">3</span><span>Spread</span></button>
   </div>
 
+  <!-- ===== Orientation: tutorial map + whose numbers ===== -->
+  <div class="orient">
+    <details class="mapsto" open>
+      <summary>Where this fits in today&#x27;s tutorial</summary>
+      <ul>
+        <li>Step 2 <i>Investigate your spaces</i> &rarr; all three tabs: <b>1 Readings</b>, then <b>2 Uniformity map</b>, then <b>3 Spread</b></li>
+      </ul>
+      <p class="none">Steps 1, 3, 4, 5 and 6 use no tab. To use tab 1 you need your readings recorded as a grid, so note the position of each reading as you take it, not just the value.</p>
+    </details>
+    <p class="datasource" id="dataSource" aria-live="polite" style="display: none"></p>
+  </div>
+
   <!-- ===== Tab 1: Readings ===== -->
   <section class="card" role="tabpanel" id="panel-1" aria-labelledby="tab-1" tabindex="0">
     <div class="primer">
@@ -340,7 +378,7 @@
     Uniformity ratio U<sub>0</sub> = minimum &divide; average illuminance; diversity = minimum &divide; maximum. Illuminance targets are the maintained-illuminance figures from AS/NZS 1680.2 (Week 8 brief). Statistics are computed over the cells you filled in.
     A comparable, standards-quotable uniformity figure needs a regular measurement grid over the task area (see the standards note), and the illuminance targets are indicative. Validate against the source standard before reporting.
     Built for the BPSD5030 Week 8 tutorial by the IEQ Lab, Sydney School of Architecture, Design and Planning, so the grid statistics come back fast enough to test more than one layout in class. The figure you submit stays your own build.
-    Revised August 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.
+    Revised September 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.
   </footer>
 </div>
 
@@ -534,7 +572,42 @@
     el.innerHTML = '<div class="callout ' + vClass + '" style="margin-top:var(--s-4)">' + vText + "</div>";
   }
 
+  /* ---------- "whose numbers" strip ----------
+     One grid feeds all three tabs, and the grid starts empty, so there are
+     three honest states rather than two. Tracked as an origin flag rather than
+     by comparing against the example values, because makeExample() regenerates
+     itself whenever the grid is resized. */
+  var dataOrigin = "none";   // "none" | "example" | "mine"
+
+  function updateDataSource() {
+    var el = $("dataSource");
+    if (!el) return;
+    /* Nothing to label when the grid is empty. "Numbers on screen: no readings
+       yet" is a caption for numbers that are not there, and it lands before the
+       student has done anything that would give it meaning. Hide the line until
+       there is a reading to be about; it then appears at the moment it starts
+       saying something. */
+    if (dataOrigin === "none") {
+      el.style.display = "none";
+      el.innerHTML = "";
+      el.classList.remove("mine");
+      return;
+    }
+    el.style.display = "";
+    var mine = dataOrigin === "mine";
+    el.classList.toggle("mine", mine);
+    /* A status, not an instruction: this line shows on all three tabs, and an
+       instruction repeated where it cannot be acted on reads as noise. */
+    var msg = mine
+      ? "Numbers on screen: <b>your readings</b>."
+      : "Numbers on screen: <b>the worked example</b>.";
+    if (el.innerHTML !== msg) el.innerHTML = msg;   // aria-live: only speak on a real change
+  }
+
   function recompute() {
+    // at the top, not the tail: recompute() returns early on an empty grid, and
+    // the strip has to be right in that state too
+    updateDataSource();
     var g = readGrid();
     if (g.vals.length < 2) {
       lastG = null;
@@ -715,16 +788,20 @@
   }
 
   // ---- events ----
+  // registered before recompute so the origin is current when the strip redraws
+  $("grid").addEventListener("input", function () { dataOrigin = "mine"; });
   $("grid").addEventListener("input", recompute);
   $("spacetype").addEventListener("change", recompute);
   $("cols").addEventListener("change", buildGrid);
   $("rows").addEventListener("change", buildGrid);
   $("clear").addEventListener("click", function () {
+    dataOrigin = "none";
     var d = dims(); data = [];
     for (var r = 0; r < d.rows; r++) { data[r] = []; for (var c = 0; c < d.cols; c++) data[r][c] = ""; }
     buildGrid();
   });
   $("example").addEventListener("click", function () {
+    dataOrigin = "example";
     var d = dims();
     data = makeExample(d.rows, d.cols);
     buildGrid();

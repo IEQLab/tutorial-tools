@@ -66,7 +66,7 @@
   .home:hover { text-decoration: underline; }
 
   /* ---- ordered tabs ---- */
-  .tabs { display: flex; gap: var(--s-2); margin: 0 0 var(--s-6); flex-wrap: wrap; }
+  .tabs { display: flex; gap: var(--s-2); margin: 0 0 var(--s-3); flex-wrap: wrap; }
   .tab { border: 1px solid var(--line); background: var(--field); color: var(--muted);
     border-radius: var(--r-pill); padding: var(--s-2) var(--s-4) var(--s-2) var(--s-2); font-size: var(--t-label); cursor: pointer;
     display: inline-flex; align-items: center; gap: var(--s-2); font-family: inherit; }
@@ -77,6 +77,33 @@
     width: 21px; height: 21px; border-radius: 50%; background: var(--line); color: var(--muted);
     font-size: var(--t-meta); font-weight: 700; flex: none; }
   .tab.active .n { background: var(--accent-ink); color: var(--accent); }
+
+  /* ---- orientation strip ----
+     Which tutorial segment a tab serves, and (where one input set feeds several
+     tabs) whose numbers are on screen. Deliberately NOT the teal details.maths
+     treatment, which in this unit means "optional maths aside" and would
+     misfile it. */
+  .orient { display: flex; flex-direction: column; gap: var(--s-2); margin: 0 0 var(--s-6); }
+  details.mapsto { border: 1px solid var(--line); border-radius: var(--r-md); background: var(--field); }
+  details.mapsto > summary { cursor: pointer; color: var(--muted); font-size: var(--t-label);
+    font-weight: 600; padding: var(--s-2) var(--s-3); list-style: none; border-radius: var(--r-md); }
+  details.mapsto > summary::-webkit-details-marker { display: none; }
+  details.mapsto > summary::before { content: "\25b8  "; }
+  details.mapsto[open] > summary::before { content: "\25be  "; }
+  details.mapsto > summary:hover { color: var(--ink); }
+  details.mapsto > summary:active { color: var(--accent); }
+  details.mapsto > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .mapsto ul { margin: 0; padding: 0 var(--s-3) var(--s-2); list-style: none; }
+  .mapsto li { font-size: var(--t-label); color: var(--muted); padding: var(--s-1) 0; }
+  .mapsto li b { color: var(--ink); font-weight: 600; }
+  .mapsto .none { font-size: var(--t-label); color: var(--muted); margin: 0;
+    padding: var(--s-2) var(--s-3) var(--s-3); border-top: 1px solid var(--line); }
+  .datasource { margin: 0; font-size: var(--t-label); color: var(--muted);
+    border: 1px solid var(--line); border-radius: var(--r-md); background: var(--field);
+    padding: var(--s-2) var(--s-3); transition: border-color var(--dur) var(--ease-out); }
+  .datasource b { color: var(--ink); font-weight: 600; }
+  .datasource.mine { border-color: var(--accent); }
+  .datasource.mine b { color: var(--accent); }
 
   section.card {
     background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md);
@@ -256,6 +283,22 @@
     <button class="tab" role="tab" id="tab-6" aria-controls="panel-6" aria-selected="false" tabindex="-1" data-idx="5"><span class="n">6</span><span>Checklist</span></button>
   </div>
 
+  <!-- ===== Orientation: tutorial map + whose numbers ===== -->
+  <div class="orient">
+    <details class="mapsto" open>
+      <summary>Where this fits in today&#x27;s tutorial</summary>
+      <ul>
+        <li>Step 1 <i>Name the design</i> &rarr; tab <b>1 Design</b></li>
+        <li>Step 2 <i>Describe before you test</i> &rarr; tab <b>3 Descriptives</b></li>
+        <li>Step 3 <i>Test one difference</i> &rarr; tab <b>4 Test</b></li>
+        <li>Step 4 <i>Write it up, IMRaD-style</i> &rarr; tab <b>5 Write-up</b></li>
+      </ul>
+      <p class="none">Those four steps are the analysis workshop at the end of the session. Everything before it uses no tab: the chamber sessions themselves, which are where the data comes from, and the warm-up reflection that opens the workshop. Two tabs also sit outside the run of four: <b>2 Data</b> is where your two conditions go in, once, before steps 2 to 4 can say anything, and <b>6 Checklist</b> is for Assignment 2, after today. This tool is one way to run step 3, not the required one: a spreadsheet, R or Python will get you the same numbers, and you are responsible for checking them either way.</p>
+    </details>
+    <p class="datasource" id="dataSource" aria-live="polite" style="display: none"></p>
+  </div>
+
+
   <!-- ===== Tab 1: Design ===== -->
   <section class="card" role="tabpanel" id="panel-1" aria-labelledby="tab-1" tabindex="0">
     <div class="primer">
@@ -433,7 +476,7 @@
     normal approximation with continuity and tie corrections (for small samples, confirm against exact tables or software).
     Effect size is Cohen's d<sub>z</sub> = mean difference / SD of differences. Validate against software before relying on it.
     Built for the BPSD5030 Week 10 tutorial and Assignment 2 by the IEQ Lab, Sydney School of Architecture, Design and Planning. It shows the working at each step, because Assignment 2 is marked on how you read the test.
-    Revised August 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.
+    Revised September 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.
   </footer>
 </div>
 
@@ -617,7 +660,44 @@
     return "= " + fmt(p, 3);
   }
 
+  /* ---------- "whose numbers" strip ----------
+     One paste on tab 2 feeds tabs 3, 4 and 5, and the tool ships a worked
+     example a click away, so a student can land on the Test tab, read a p
+     value off a finished analysis and not register whose experiment it came
+     from. Tracked as an origin flag rather than by comparing the textarea
+     against EXAMPLE, because a student who loads the example and then edits a
+     row has made it theirs. */
+  var dataOrigin = "none";   // "none" | "example" | "mine"
+
+  function updateDataSource() {
+    var el = $("dataSource");
+    if (!el) return;
+    /* Nothing to label when no data has been pasted. "Numbers on screen: no
+       data yet" is a caption for numbers that are not there, and it lands
+       before the student has done anything that would give it meaning. Hide
+       the line until there is data to be about; it then appears at the moment
+       it starts saying something. */
+    if (dataOrigin === "none") {
+      el.style.display = "none";
+      el.innerHTML = "";
+      el.classList.remove("mine");
+      return;
+    }
+    el.style.display = "";
+    var mine = dataOrigin === "mine";
+    el.classList.toggle("mine", mine);
+    /* A status, not an instruction: this line shows on all six tabs, and an
+       instruction repeated where it cannot be acted on reads as noise. */
+    var msg = mine
+      ? "Numbers on screen: <b>your data</b>."
+      : "Numbers on screen: <b>the worked example</b>.";
+    if (el.innerHTML !== msg) el.innerHTML = msg;   // aria-live: only speak on a real change
+  }
+
   function analyse() {
+    // at the top, not the tail: analyse() returns early on unparseable input,
+    // and the strip has to be right in that state too
+    updateDataSource();
     var pr = parse();
     if (!pr.ok) { $("parseMsg").innerHTML = '<span class="err">' + pr.msg + '</span>'; setAnalysed(false); return; }
     var A = pr.A, B = pr.B, n = A.length;
@@ -734,9 +814,14 @@
   }
 
   $("run").addEventListener("click", analyse);
-  $("example").addEventListener("click", function () { $("data").value = EXAMPLE; analyse(); });
+  // registered before the analyse listener so the origin is current when the strip redraws
+  $("data").addEventListener("input", function () { dataOrigin = "mine"; updateDataSource(); });
+  $("example").addEventListener("click", function () {
+    $("data").value = EXAMPLE; dataOrigin = "example"; analyse();
+  });
   $("clear").addEventListener("click", function () {
     $("data").value = ""; $("parseMsg").textContent = "";
+    dataOrigin = "none"; updateDataSource();
     lastChart = null; setAnalysed(false);
     activate(1, false);
   });

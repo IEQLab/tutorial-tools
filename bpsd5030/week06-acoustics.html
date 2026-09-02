@@ -68,6 +68,20 @@
   .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--s-3); align-items: end; }
   .grid > div { display: flex; flex-direction: column; }
   .grid > div > input, .grid > div > select { margin-top: auto; }
+
+  /* ---- two-space benchmark ----
+     Every group measures two spaces this week and the take-home asks them to
+     compare the pair, so the AS/NZS check takes both side by side rather than
+     one at a time. Each column is a fieldset, so a screen reader announces the
+     space number with every field inside it instead of six unlabelled numbers. */
+  .spacepair { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: var(--s-4); }
+  .spacecol { border: 1px solid var(--line); border-radius: var(--r-md);
+    padding: var(--s-2) var(--s-4) var(--s-4); margin: 0; min-width: 0; }
+  .spacecol > legend { padding: 0 var(--s-2); color: var(--ink); font-size: var(--t-label); font-weight: 600; }
+  .spacecol label { margin-top: var(--s-3); }
+  .spacecol > label:first-of-type { margin-top: 0; }
+  .results .grouphead { padding: var(--s-3) 0 var(--s-1); color: var(--ink);
+    font-size: var(--t-label); font-weight: 600; }
   .results { margin-top: var(--s-4); background: var(--result-bg); border-radius: var(--r-md); padding: var(--s-1) var(--s-4); }
   .row { display: flex; justify-content: space-between; gap: var(--s-3); padding: var(--s-2) 0; border-bottom: 1px solid var(--line); }
   .row:last-child { border-bottom: 0; }
@@ -95,7 +109,7 @@
   .bandgrid input { padding: var(--s-2) var(--s-1); text-align: center; font-size: var(--t-label); }
   .scrollx { overflow-x: auto; }
   /* ---- ordered tabs (top-level) ---- */
-  .tabs { display: flex; gap: var(--s-2); margin: var(--s-1) 0 var(--s-5); flex-wrap: wrap; }
+  .tabs { display: flex; gap: var(--s-2); margin: var(--s-1) 0 var(--s-3); flex-wrap: wrap; }
   .tab { border: 1px solid var(--line); background: var(--field); color: var(--muted);
     border-radius: var(--r-pill); padding: var(--s-2) var(--s-4) var(--s-2) var(--s-2); font-size: var(--t-label); cursor: pointer;
     display: inline-flex; align-items: center; gap: var(--s-2); font-family: inherit; }
@@ -106,6 +120,26 @@
     width: 21px; height: 21px; border-radius: 50%; background: var(--line); color: var(--muted);
     font-size: var(--t-meta); font-weight: 700; flex: none; }
   .tab.active .n { background: var(--accent-ink); color: var(--accent); }
+
+  /* ---- orientation strip ----
+     Which tutorial step a tab serves, and whose numbers are on screen.
+     Deliberately NOT the teal details.maths treatment, which in this unit
+     means "optional maths aside" and would misfile it. */
+  .orient { display: flex; flex-direction: column; gap: var(--s-2); margin: 0 0 var(--s-6); }
+  details.mapsto { border: 1px solid var(--line); border-radius: var(--r-md); background: var(--field); }
+  details.mapsto > summary { cursor: pointer; color: var(--muted); font-size: var(--t-label);
+    font-weight: 600; padding: var(--s-2) var(--s-3); list-style: none; border-radius: var(--r-md); }
+  details.mapsto > summary::-webkit-details-marker { display: none; }
+  details.mapsto > summary::before { content: "\25b8  "; }
+  details.mapsto[open] > summary::before { content: "\25be  "; }
+  details.mapsto > summary:hover { color: var(--ink); }
+  details.mapsto > summary:active { color: var(--accent); }
+  details.mapsto > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .mapsto ul { margin: 0; padding: 0 var(--s-3) var(--s-2); list-style: none; }
+  .mapsto li { font-size: var(--t-label); color: var(--muted); padding: var(--s-1) 0; }
+  .mapsto li b { color: var(--ink); font-weight: 600; }
+  .mapsto .none { font-size: var(--t-label); color: var(--muted); margin: 0;
+    padding: var(--s-2) var(--s-3) var(--s-3); border-top: 1px solid var(--line); }
 
   /* ---- inner material-table pills (nested inside the Material data tab) ---- */
   .subtabs { display: flex; gap: var(--s-2); margin-bottom: var(--s-3); flex-wrap: wrap; }
@@ -229,6 +263,20 @@
     <button class="tab" role="tab" id="tab-5" aria-controls="s-data" aria-selected="false" tabindex="-1" data-idx="4"><span class="n">5</span><span>Material data</span></button>
   </div>
 
+  <!-- ===== Orientation: tutorial map ===== -->
+  <div class="orient">
+    <details class="mapsto" open>
+      <summary>Where this fits in today&#x27;s tutorial</summary>
+      <ul>
+        <li>Part&nbsp;2, step 1 <i>Measure background noise</i> &rarr; tab <b>1 Combine levels</b></li>
+        <li>Part&nbsp;2, step 4 <i>Estimate sound absorption</i> &rarr; tab <b>2 Reverberation</b> and tab <b>3 Room absorption</b>, with the coefficients in <b>5 Material data</b></li>
+        <li>Part&nbsp;2, step 5 <i>Estimate speech intelligibility</i> &rarr; tab <b>4 Speech (STI)</b></li>
+        <li>Part&nbsp;2, step 6 <i>Compare to standards</i> &rarr; tab <b>2 Reverberation</b>, the AS/NZS&nbsp;2107 section at the bottom</li>
+      </ul>
+      <p class="none">Nothing else in the session uses a tab. Part&nbsp;1 is the listening you do before any meter comes out; steps 2 and 3 of Part&nbsp;2 are the reverberation measurement and the room geometry you record in the space; Part&nbsp;3 is the design reflection. These five tabs are independent calculators rather than an ordered sequence, so you can use them in any order.</p>
+    </details>
+  </div>
+
   <!-- ===== Tab 1: Combine levels ===== -->
   <section class="card" role="tabpanel" id="s-db" aria-labelledby="tab-1" tabindex="0">
     <div class="primer">
@@ -275,25 +323,68 @@
       <button id="calcT" class="btn-ghost">V and A &rarr; T</button>
     </div>
     <div class="results" id="sabResults" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <h2>Compare to AS/NZS&nbsp;2107</h2>
+    <p class="sub">A measurement becomes design evidence once you judge it against a benchmark. You measured two spaces today, so enter both and the comparison comes out with them. For each space pick the closest interior type, the energy-averaged L<sub>Aeq</sub> you worked out on tab&nbsp;1, and the mid-frequency RT60 you measured (the average of your 500&nbsp;Hz and 1&nbsp;kHz bands). One space on its own is fine if that is all you have.</p>
+    <div class="spacepair">
+      <fieldset class="spacecol">
+        <legend>Space 1</legend>
+        <label for="benchType1">Interior type (AS/NZS&nbsp;2107:2016)</label>
+        <select id="benchType1">
+          <option value="" selected>Select an interior type&hellip;</option>
+          <option value="35,40,0.6,1.0">Lecture theatre</option>
+          <option value="35,45,0.4,0.6">Teaching space / classroom</option>
+          <option value="35,40,0.4,0.6">Private office</option>
+          <option value="40,45,0.4,0.6">Open-plan office</option>
+          <option value="30,40,0.6,0.8">Meeting / conference room</option>
+          <option value="40,45,0.4,0.6">Library (quiet study)</option>
+          <option value="45,50,,">Corridor / lobby / foyer</option>
+        </select>
+        <label for="benchLeq1">Energy-averaged L<sub>Aeq</sub> (dBA)</label>
+        <input id="benchLeq1" type="number" step="0.1" placeholder="e.g. 44.5">
+        <label for="benchRt1">Mid-frequency RT60 (s)</label>
+        <input id="benchRt1" type="number" step="0.01" placeholder="e.g. 0.82">
+      </fieldset>
+      <fieldset class="spacecol">
+        <legend>Space 2</legend>
+        <label for="benchType2">Interior type (AS/NZS&nbsp;2107:2016)</label>
+        <select id="benchType2">
+          <option value="" selected>Select an interior type&hellip;</option>
+          <option value="35,40,0.6,1.0">Lecture theatre</option>
+          <option value="35,45,0.4,0.6">Teaching space / classroom</option>
+          <option value="35,40,0.4,0.6">Private office</option>
+          <option value="40,45,0.4,0.6">Open-plan office</option>
+          <option value="30,40,0.6,0.8">Meeting / conference room</option>
+          <option value="40,45,0.4,0.6">Library (quiet study)</option>
+          <option value="45,50,,">Corridor / lobby / foyer</option>
+        </select>
+        <label for="benchLeq2">Energy-averaged L<sub>Aeq</sub> (dBA)</label>
+        <input id="benchLeq2" type="number" step="0.1" placeholder="e.g. 52.1">
+        <label for="benchRt2">Mid-frequency RT60 (s)</label>
+        <input id="benchRt2" type="number" step="0.01" placeholder="e.g. 1.35">
+      </fieldset>
+    </div>
+    <div class="results" id="benchResults" role="status" aria-live="polite" aria-atomic="true"></div>
+    <p class="note">Enter RT60 here rather than reading it off the Sabine calculator above: that <b>T</b> field belongs to one room at a time, and these are your two measured rooms. The two measures are judged differently: the sound levels are design maxima, so a room quieter than its range is generally better rather than worse, while reverberation is a genuine two-sided range because a room can be too dry for its function as well as too live. These are indicative figures for orientation: the standard gives satisfactory-to-maximum ranges that vary with room size, so consult AS/NZS&nbsp;2107:2016 for design work.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th class="name">Space type</th><th>L<sub>Aeq</sub> (dBA)</th><th>Mid-freq RT60 (s)</th></tr></thead>
+        <tbody>
+          <tr><td class="name">Lecture theatre</td><td>35&ndash;40</td><td>0.6&ndash;1.0</td></tr>
+          <tr><td class="name">Teaching space / classroom</td><td>35&ndash;45</td><td>0.4&ndash;0.6</td></tr>
+          <tr><td class="name">Private office</td><td>35&ndash;40</td><td>0.4&ndash;0.6</td></tr>
+          <tr><td class="name">Open-plan office</td><td>40&ndash;45</td><td>0.4&ndash;0.6</td></tr>
+          <tr><td class="name">Meeting / conference room</td><td>30&ndash;40</td><td>0.6&ndash;0.8</td></tr>
+          <tr><td class="name">Library (quiet study)</td><td>40&ndash;45</td><td>0.4&ndash;0.6</td></tr>
+          <tr><td class="name">Corridor / lobby / foyer</td><td>45&ndash;50</td><td>n/a</td></tr>
+        </tbody>
+      </table>
+    </div>
+
     <details class="maths">
-      <summary>The maths behind Sabine, and benchmarking against AS/NZS&nbsp;2107</summary>
+      <summary>The maths behind the Sabine relationship</summary>
       <div class="formula">A = 0.16 &middot; V / T   ·   T = 0.16 &middot; V / A</div>
       <p class="deriv">With V the room volume in m&sup3; and T the average RT60 at 500&nbsp;Hz and 1000&nbsp;Hz. The 0.16 constant (&asymp; 24&middot;ln(10)/c) carries the speed of sound c, which is why it is specific to metric units. Sabine assumes a diffuse, well-mixed sound field, so it is only approximate in very live or very dead rooms, or where the absorption is bunched on one surface rather than spread evenly around.</p>
-      <p class="deriv">Measurements become design evidence once judged against a benchmark. AS/NZS&nbsp;2107:2016 gives recommended design sound levels and reverberation times per interior type: find the closest category, then check that your energy-averaged LAeq and your mid-frequency RT60 (the 500&nbsp;Hz and 1&nbsp;kHz average) sit within range. These are indicative figures for orientation; the standard gives satisfactory-to-maximum ranges that vary with room size, so consult AS/NZS&nbsp;2107:2016 for design work.</p>
-      <div class="tablewrap">
-        <table>
-          <thead><tr><th class="name">Space type</th><th>LAeq (dBA)</th><th>Mid-freq RT60 (s)</th></tr></thead>
-          <tbody>
-            <tr><td class="name">Lecture theatre</td><td>35&ndash;40</td><td>0.6&ndash;1.0</td></tr>
-            <tr><td class="name">Teaching space / classroom</td><td>35&ndash;45</td><td>0.4&ndash;0.6</td></tr>
-            <tr><td class="name">Private office</td><td>35&ndash;40</td><td>0.4&ndash;0.6</td></tr>
-            <tr><td class="name">Open-plan office</td><td>40&ndash;45</td><td>0.4&ndash;0.6</td></tr>
-            <tr><td class="name">Meeting / conference room</td><td>30&ndash;40</td><td>0.6&ndash;0.8</td></tr>
-            <tr><td class="name">Library (quiet study)</td><td>40&ndash;45</td><td>0.4&ndash;0.6</td></tr>
-            <tr><td class="name">Corridor / lobby / foyer</td><td>45&ndash;50</td><td>n/a</td></tr>
-          </tbody>
-        </table>
-      </div>
     </details>
     <div class="tabnav">
       <button type="button" class="btn ghost" data-nav="prev">&larr; Back</button>
@@ -411,7 +502,7 @@
   <footer class="page">
     Sabine and logarithmic level arithmetic are exact; the octave-band STI reproduces the BPSD5030 STI workbook developed by Densil Cabrera (rev. 2019) using the IEC&nbsp;60268-16 statistical method with masking. Material data are indicative generic values (BB93 / Adrian James data). Benchmark results against AS/NZS&nbsp;2107:2016 and confirm against measurement software.
     Built for the BPSD5030 Week 6 tutorial by the IEQ Lab, Sydney School of Architecture, Design and Planning, because the Sabine and decibel arithmetic used to take most of the session.
-    Revised August 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.
+    Revised September 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.
   </footer>
 </div>
 
@@ -514,6 +605,88 @@ var MAT = {"ab":[["MASONRY WALLS","Rough concrete","",null,0.02,0.03,0.03,0.03,0
     $("t60").value = fmt(t, 2);
     $("sabResults").innerHTML = row("Reverberation time, T", "<strong>" + fmt(t, 2) + " s</strong>") +
       row("From", "V = " + fmt(v, 0) + " m&sup3;, A = " + fmt(a, 1) + " m&sup2; sabine");
+  }
+
+  /* ---------- AS/NZS 2107 benchmark ----------
+     Part 2, step 6 of the tutorial asks students to judge two measured numbers
+     against the standard, for each of the two spaces they measured. The table
+     was already in this tool but buried in the collapsed maths panel, where
+     the unit's visual language reads it as an optional aside; this makes it an
+     actual check, on the pair rather than on one room at a time.
+
+     Both numbers are typed rather than carried over from elsewhere in the
+     tool. LAeq comes off tab 1 and RT60 off the XL2, and a student runs tab 1
+     several times over the session, so there is no single value here to carry.
+     Typing also keeps the two columns independent, which is the whole point of
+     the pair. */
+  /* The two metrics are not symmetric, so they are not coloured the same way.
+     AS/NZS 2107's sound levels are design maxima for ambient noise: below the
+     range is generally better, not worse, so it is not marked as a fault.
+     Reverberation is a real two-sided range, because a room can be too dry for
+     its function as well as too live, so below the range is flagged, in amber
+     rather than red since it is the milder fault. */
+  function benchVerdict(label, val, lo, hi, unit, dp, rangeDp, highWord, lowWord, belowIsOk) {
+    if (!isFinite(val)) return row(label, '<span style="color:var(--muted)">not entered yet</span>');
+    // rangeDp, not dp: the range has to read exactly as the table below prints it
+    var range = fmt(lo, rangeDp) + "\u2013" + fmt(hi, rangeDp) + " " + unit;
+    var colour, verdict;
+    if (val >= lo && val <= hi) {
+      colour = "var(--good)";
+      verdict = "within " + range;
+    } else if (val > hi) {
+      colour = "var(--bad)";
+      verdict = fmt(val - hi, dp) + " " + unit + " " + highWord + " than the recommended " + range;
+    } else {
+      colour = belowIsOk ? "var(--good)" : "var(--warn)";
+      verdict = fmt(lo - val, dp) + " " + unit + " " + lowWord + " than the recommended " + range;
+    }
+    return row(label, "<strong>" + fmt(val, dp) + " " + unit + "</strong> <span style=\"color:" + colour + "\">(" + verdict + ")</span>");
+  }
+
+  function grouphead(t) { return '<div class="grouphead">' + t + "</div>"; }
+
+  /* One space's pair of verdicts, or null if no interior type is chosen yet.
+     Returning null rather than an empty string lets the caller tell "not filled
+     in" from "filled in and conforming", which is what decides whether the
+     difference block can be shown. */
+  function benchSpace(n) {
+    var sel = $("benchType" + n);
+    if (!sel.value) return null;
+    var p = sel.value.split(",");
+    var loL = parseFloat(p[0]), hiL = parseFloat(p[1]);
+    var hasT = p[2] !== "";
+    var out = grouphead("Space " + n + ": " + sel.options[sel.selectedIndex].text);
+    out += benchVerdict("Sound level, LAeq", num("benchLeq" + n), loL, hiL, "dBA", 1, 0, "louder", "quieter", true);
+    out += hasT
+      ? benchVerdict("Mid-frequency RT60", num("benchRt" + n), parseFloat(p[2]), parseFloat(p[3]), "s", 2, 1, "longer", "shorter", false)
+      : row("Mid-frequency RT60", '<span style="color:var(--muted)">no reverberation figure is given for this interior type</span>');
+    return out;
+  }
+
+  /* Signed difference, Space 2 minus Space 1. Deliberately not coloured: a gap
+     between two rooms is not a pass or a fail, and the take-home asks whether
+     it is big enough to matter, which is a judgement rather than a threshold. */
+  function benchDiff(label, id, unit, dp) {
+    var a = num(id + "1"), b = num(id + "2");
+    if (!isFinite(a) || !isFinite(b)) return "";
+    var d = b - a;
+    return row(label, (d > 0 ? "+" : d < 0 ? "\u2212" : "") + fmt(Math.abs(d), dp) + " " + unit);
+  }
+
+  function benchCalc() {
+    var el = $("benchResults");
+    var s1 = benchSpace(1), s2 = benchSpace(2);
+    if (!s1 && !s2) {
+      el.innerHTML = row("Interior type", '<span style="color:var(--muted)">pick one for a space to compare against</span>');
+      return;
+    }
+    var out = (s1 || "") + (s2 || "");
+    if (s1 && s2) {
+      var diff = benchDiff("Sound level, LAeq", "benchLeq", "dBA", 1) +
+                 benchDiff("Mid-frequency RT60", "benchRt", "s", 2);
+      if (diff) out += grouphead("Difference, Space 2 \u2212 Space 1") + diff;
+    }
+    el.innerHTML = out;
   }
 
   // ---------- 3. Room absorption builder ----------
@@ -759,6 +932,15 @@ var MAT = {"ab":[["MASONRY WALLS","Rough concrete","",null,0.02,0.03,0.03,0.03,0
   $("mode").addEventListener("change", dbCalc);
   $("calcA").addEventListener("click", calcA);
   $("calcT").addEventListener("click", calcT);
+  ["benchType1", "benchType2"].forEach(function (id) { $(id).addEventListener("change", benchCalc); });
+  ["benchLeq1", "benchLeq2", "benchRt1", "benchRt2"].forEach(function (id) { $(id).addEventListener("input", benchCalc); });
+  /* Recompute Sabine as T is typed, not only when the button is pressed:
+     otherwise the results box keeps showing the absorption for the T it was
+     last computed with while a different T sits in the field above it, which
+     reads as the tool contradicting itself. calcT() writes t60
+     programmatically and that fires no input event, so the V-and-A-to-T
+     direction is unaffected. */
+  $("t60").addEventListener("input", calcA);
 
   $("addSurf").addEventListener("click", function () { addSurface(null, undefined); });
   $("clearSurf").addEventListener("click", function () { surfaces = []; renderSurfaces(); roomCalc(); });
@@ -792,7 +974,7 @@ var MAT = {"ab":[["MASONRY WALLS","Rough concrete","",null,0.02,0.03,0.03,0.03,0
   });
 
   // init
-  dbCalc(); calcA(); stiQuick();
+  dbCalc(); calcA(); stiQuick(); benchCalc();
   addSurface(null, undefined);
   buildStiBands(); calcFullSTI();
   matCats(); renderMat();
