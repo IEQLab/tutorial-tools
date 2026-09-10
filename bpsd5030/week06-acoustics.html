@@ -107,6 +107,9 @@
   .bandgrid label { margin: 0 0 var(--s-1); font-size: var(--t-meta); text-align: center; }
   .bandgrid .rowlabel { font-size: var(--t-meta); color: var(--muted); align-self: center; padding-right: var(--s-2); }
   .bandgrid input { padding: var(--s-2) var(--s-1); text-align: center; font-size: var(--t-label); }
+  /* The 63 Hz-to-8 kHz spectrum plus an LAeq column, i.e. the row students are
+     filling in on their measurement sheet. */
+  .bandgrid.nine { grid-template-columns: 104px repeat(9, 1fr); min-width: 760px; }
   .scrollx { overflow-x: auto; }
   /* ---- ordered tabs (top-level) ---- */
   .tabs { display: flex; gap: var(--s-2); margin: var(--s-1) 0 var(--s-3); flex-wrap: wrap; }
@@ -281,20 +284,35 @@
   <section class="card" role="tabpanel" id="s-db" aria-labelledby="tab-1" tabindex="0">
     <div class="primer">
       <p class="what">Decibels measure sound energy on a logarithmic scale, so you cannot average or add them with plain arithmetic.</p>
-      <p>LAeq is the equivalent continuous level (the single steady level carrying the same energy as a fluctuating signal), and the "A" weighting discounts very low and very high frequencies to track how the ear hears, so a dBA figure is close to perceived loudness. Because the scale is logarithmic, two equal levels combine to just 3 dB above one of them, while a source 10 dB quieter adds almost nothing. Enter your levels separated by commas or spaces, then energy-average repeated readings of one source or combine independent sources into a total.</p>
+      <p>LAeq is the equivalent continuous level (the single steady level carrying the same energy as a fluctuating signal), and the "A" weighting discounts very low and very high frequencies to track how the ear hears, so a dBA figure is close to perceived loudness. Because the scale is logarithmic, two equal levels combine to just 3 dB above one of them, while a source 10 dB quieter adds almost nothing. Two routes are offered here, matching the tutorial: a plain list of levels, all of them the same kind of level, and the octave-band table off your measurement sheet, which averages your positions column by column and hands you the whole Average row at once.</p>
     </div>
-    <label for="levels">Levels (dB)</label>
-    <input id="levels" type="text" value="60, 63, 66">
-    <div class="grid" style="margin-top:12px">
-      <div>
-        <label for="mode">Operation<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About the operation choice">i</button><span class="popover" role="tooltip" hidden>Energy average summarises repeated LAeq or octave-band readings of the same source. Combine adds independent sources together into a total level.</span></span></label>
-        <select id="mode">
-          <option value="avg">Energy average (Leq of several readings)</option>
-          <option value="sum">Combine sources (total level)</option>
-        </select>
+    <label for="entry">What you are entering</label>
+    <select id="entry">
+      <option value="list">A list of levels, all of one kind</option>
+      <option value="bands">The octave-band table, one row per position</option>
+    </select>
+
+    <div id="entryList">
+      <label for="levels" style="margin-top:12px">Levels (dB)<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About what belongs in this box">i</button><span class="popover" role="tooltip" hidden>Every value in the box has to be the same kind of level: your two positions&#x27; L<sub>Aeq</sub> in dBA, or one band&#x27;s unweighted dB from several positions. A whole spectrum pasted in at once averages across frequency, which is not a quantity; use the octave-band table above for that.</span></span></label>
+      <input id="levels" type="text" value="60, 63, 66">
+      <div class="grid" style="margin-top:12px">
+        <div>
+          <label for="mode">Operation<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About the operation choice">i</button><span class="popover" role="tooltip" hidden>Energy average summarises repeated LAeq or octave-band readings of the same source. Combine adds independent sources together into a total level.</span></span></label>
+          <select id="mode">
+            <option value="avg">Energy average (Leq of several readings)</option>
+            <option value="sum">Combine sources (total level)</option>
+          </select>
+        </div>
       </div>
+      <div class="results" id="dbResults" role="status" aria-live="polite" aria-atomic="true"></div>
     </div>
-    <div class="results" id="dbResults" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <div id="entryBands" hidden>
+      <p class="sub" style="margin-top:12px">One row per measurement position, read straight off your sheet: the eight unweighted octave-band levels, then the L<sub>Aeq</sub> in dBA for that position. Each column is energy-averaged down its own column, so what comes back is the Average row of the table you are filling in. Leave a cell blank where the meter gave you nothing for that band.</p>
+      <div class="scrollx"><div class="bandgrid nine" id="posBands"></div></div>
+      <div class="btns"><button id="addPos" class="btn-ghost btn-sm" type="button">Add a position</button></div>
+      <div id="bandResults" role="status" aria-live="polite" aria-atomic="true"></div>
+    </div>
     <details class="maths">
       <summary>The maths behind combining decibels</summary>
       <div class="formula">Average: L = 10 &middot; log&#8321;&#8320;( (1/n) &middot; &Sigma; 10^(Li/10) )   ·   Combine: L = 10 &middot; log&#8321;&#8320;( &Sigma; 10^(Li/10) )</div>
@@ -587,6 +605,113 @@ var MAT = {"ab":[["MASONRY WALLS","Rough concrete","",null,0.02,0.03,0.03,0.03,0
       row("Values entered", vals.length + " (" + vals.join(", ") + " dB)") +
       row(mode === "avg" ? "Energy-averaged level" : "Combined level", "<strong>" + fmt(res, 1) + " dB</strong>") +
       (mode === "avg" ? row("(Wrong) plain arithmetic mean", fmt(plain, 1) + " dB") : "");
+  }
+
+  // ---------- 1b. Octave-band table: energy-average each column ----------
+  /* Tab 1's text box is agnostic about what its numbers are, which is fine for
+     one column but leaves students guessing when the sheet in front of them has
+     eight bands and an LAeq for each of two positions. This mode takes that
+     sheet as it stands and returns its Average row, so the ambiguity never
+     arises and nine separate runs of the box collapse into one. */
+  var posCount = 0, lastBandAvg = null;
+  var BAND_KEYS = BANDS8.map(function (f, i) { return String(i); }).concat(["leq"]);
+
+  function bandLabel(key) { var f = BANDS8[+key]; return f >= 1000 ? (f / 1000) + " kHz" : f + " Hz"; }
+  function energyAvg(vals) {
+    var s = 0; for (var i = 0; i < vals.length; i++) s += Math.pow(10, vals[i] / 10);
+    return 10 * Math.log10(s / vals.length);
+  }
+  function posRow(n) {
+    var html = '<div class="rowlabel">Position ' + n + '</div>';
+    BANDS8.forEach(function (f, i) {
+      html += '<input data-pos="' + n + '" data-band="' + i + '" type="number" step="0.1" aria-label="Position ' + n + ', ' + bandLabel(i) + ', unweighted dB">';
+    });
+    html += '<input data-pos="' + n + '" data-band="leq" type="number" step="0.1" aria-label="Position ' + n + ', LAeq in dBA">';
+    return html;
+  }
+  function buildPosBands() {
+    var html = '<div class="rowlabel">Frequency (Hz)</div>';
+    BANDS8.forEach(function (f) { html += '<label>' + (f >= 1000 ? (f / 1000) + 'k' : f) + '</label>'; });
+    html += '<label>L<sub>Aeq</sub></label>';
+    posCount = 2;
+    html += posRow(1) + posRow(2);
+    $("posBands").innerHTML = html;
+  }
+  function bandCalc() {
+    var avg = {}, filled = [], thin = [];
+    /* An empty row is a position not yet typed in, not a position with no
+       readings, so it must not count against the per-column tally. Otherwise
+       pressing "Add a position" instantly flags every column as short. */
+    var active = 0;
+    for (var n = 1; n <= posCount; n++) {
+      var got = false;
+      Array.prototype.forEach.call($("posBands").querySelectorAll('[data-pos="' + n + '"]'), function (inp) {
+        if (isFinite(parseFloat(inp.value))) got = true;
+      });
+      if (got) active += 1;
+    }
+    BAND_KEYS.forEach(function (key) {
+      var vals = [];
+      Array.prototype.forEach.call($("posBands").querySelectorAll('[data-band="' + key + '"]'), function (inp) {
+        var v = parseFloat(inp.value); if (isFinite(v)) vals.push(v);
+      });
+      if (vals.length) {
+        avg[key] = energyAvg(vals); filled.push(key);
+        if (vals.length < active) thin.push(key === "leq" ? "L<sub>Aeq</sub>" : bandLabel(key));
+      }
+    });
+    lastBandAvg = filled.length ? avg : null;
+    if (!lastBandAvg) {
+      $("bandResults").innerHTML = '<p class="note" style="margin-top:12px">Type your positions in above and the energy-averaged row appears here.</p>';
+      return;
+    }
+    var head = '<tr><th class="name">Energy average</th>';
+    var body = '<tr><td class="name">' + active + ' position' + (active === 1 ? '' : 's') + '</td>';
+    BAND_KEYS.forEach(function (key) {
+      head += '<th>' + (key === "leq" ? 'L<sub>Aeq</sub>' : (BANDS8[+key] >= 1000 ? (BANDS8[+key] / 1000) + 'k' : BANDS8[+key])) + '</th>';
+      body += '<td>' + (isFinite(avg[key]) ? fmt(avg[key], 1) : '&mdash;') + '</td>';
+    });
+    var html = '<div class="tablewrap"><table><thead>' + head + '</tr></thead><tbody>' + body + '</tr></tbody></table></div>';
+    html += '<p class="note" style="margin-top:12px">Bands are unweighted dB, L<sub>Aeq</sub> is dBA. The L<sub>Aeq</sub> figure is the one step 6 benchmarks against AS/NZS&nbsp;2107; the bands are the background-noise spectrum the full STI calculation asks for, and are not needed for anything else.</p>';
+    if (thin.length) html += '<div class="flag">Averaged over fewer than ' + active + ' readings: ' + thin.join(", ") + '. Blank cells are skipped rather than counted as zero.</div>';
+    var btns = [];
+    if (stiBandsReady()) btns.push('<button class="btn-primary btn-sm" type="button" data-send="sti">Send bands to STI noise (tab 4)</button>');
+    if (isFinite(avg.leq)) {
+      btns.push('<button class="btn-primary btn-sm" type="button" data-send="leq1">Send L<sub>Aeq</sub> to Space 1 benchmark</button>');
+      btns.push('<button class="btn-primary btn-sm" type="button" data-send="leq2">Send L<sub>Aeq</sub> to Space 2 benchmark</button>');
+    }
+    if (btns.length) html += '<div class="btns">' + btns.join("") + '</div>';
+    $("bandResults").innerHTML = html;
+  }
+  /* The full STI wants 125 Hz to 8 kHz, so 63 Hz is dropped and every one of the
+     remaining seven has to be there: a hand-off that silently left a gap would
+     leave the workbook's own default sitting in the row. */
+  function stiBandsReady() {
+    if (!lastBandAvg) return false;
+    for (var i = 1; i <= 7; i++) if (!isFinite(lastBandAvg[String(i)])) return false;
+    return true;
+  }
+  function sendBandsToSti() {
+    if (!stiBandsReady()) return;
+    for (var i = 1; i <= 7; i++) {
+      var el = $("stiBands").querySelector('[data-ns="' + (i - 1) + '"]');
+      if (el) el.value = lastBandAvg[String(i)].toFixed(1);
+    }
+    calcFullSTI();
+    activate(3, false);
+    window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  }
+  function sendLeqToBench(which) {
+    if (!lastBandAvg || !isFinite(lastBandAvg.leq)) return;
+    $("benchLeq" + which).value = lastBandAvg.leq.toFixed(1);
+    benchCalc();
+    activate(1, false);
+    $("benchLeq" + which).focus();
+  }
+  function setEntryMode() {
+    var bands = $("entry").value === "bands";
+    $("entryList").hidden = bands;
+    $("entryBands").hidden = !bands;
   }
 
   // ---------- 2. Sabine ----------
@@ -930,6 +1055,20 @@ var MAT = {"ab":[["MASONRY WALLS","Rough concrete","",null,0.02,0.03,0.03,0.03,0
   // ---------- wiring ----------
   ["levels"].forEach(function (id) { $(id).addEventListener("input", dbCalc); });
   $("mode").addEventListener("change", dbCalc);
+  $("entry").addEventListener("change", setEntryMode);
+  $("posBands").addEventListener("input", bandCalc);
+  $("addPos").addEventListener("click", function () {
+    posCount += 1;
+    $("posBands").insertAdjacentHTML("beforeend", posRow(posCount));
+    bandCalc();
+  });
+  $("bandResults").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-send]");
+    if (!b) return;
+    var what = b.getAttribute("data-send");
+    if (what === "sti") sendBandsToSti();
+    else sendLeqToBench(what === "leq1" ? "1" : "2");
+  });
   $("calcA").addEventListener("click", calcA);
   $("calcT").addEventListener("click", calcT);
   ["benchType1", "benchType2"].forEach(function (id) { $(id).addEventListener("change", benchCalc); });
@@ -975,6 +1114,7 @@ var MAT = {"ab":[["MASONRY WALLS","Rough concrete","",null,0.02,0.03,0.03,0.03,0
 
   // init
   dbCalc(); calcA(); stiQuick(); benchCalc();
+  setEntryMode(); buildPosBands(); bandCalc();
   addSurface(null, undefined);
   buildStiBands(); calcFullSTI();
   matCats(); renderMat();

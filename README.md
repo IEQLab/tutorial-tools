@@ -123,6 +123,14 @@ all five BPSD5030 tools; what follows is what is left.
    runs tab 1 twice and copies the results across by hand. A `.datasource` line for the
    acoustics tool (previously deferred for having no single answer to "whose numbers") only
    becomes meaningful if this happens.
+
+   Partly addressed on 2026-09-10: tab 1 now has a second entry mode that takes the Part 2
+   step 1 measurement sheet as it stands (one row per position, eight unweighted bands plus
+   that position's LAeq) and returns its Average row, and hands the result on with buttons that
+   write the band spectrum into the STI noise row on tab 4 and the LAeq into either space of
+   the benchmark. That removes the nine-runs-of-one-text-box problem and two rounds of
+   transcription, but it is still one space at a time: a group works Space 1, sends what it
+   needs, then retypes for Space 2.
 4. **Fix the Week 9 profile control's placement.** `#profile` drives both acts but sits inside
    `panel-1`, so switching to Act 2 hides the control that set the scenario. Activity 2 is its
    own 15-minute segment.
