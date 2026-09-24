@@ -143,6 +143,9 @@
   .err { color: var(--bad); font-weight: 600; }
   .note { color: var(--muted); font-size: var(--t-label); }
   #parseMsg { margin-top: var(--s-3); }
+  .power { margin-top: var(--s-6); padding-top: var(--s-5); border-top: 1px solid var(--line); }
+  .power h3 { font-size: var(--t-body); margin: 0 0 var(--s-1); }
+  .power > .note { margin: 0 0 var(--s-4); max-width: 64ch; }
 
   /* ---- measurement grid ---- */
   .dims { display: flex; gap: var(--s-5); align-items: flex-end; flex-wrap: wrap; }
@@ -295,18 +298,18 @@
         <label for="spacetype">Space type — target from AS/NZS 1680.2<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About the illuminance target">i</button><span class="popover" role="tooltip" hidden>Maintained-illuminance targets from the Week 8 brief (AS/NZS 1680.2). The tool checks your average against this range: below it, on it, or over it. Consult the standard for design work.</span></span></label>
         <select id="spacetype">
           <option value="" selected>Select your space type…</option>
-          <option value="40,80" data-name="a circulation space">Circulation (hallway, stairway) — 40–80 lux</option>
-          <option value="80,160" data-name="a bathroom">Bathroom — 80–160 lux</option>
-          <option value="160,160" data-name="a social space">Socialising (lounge, foyer) — 160 lux</option>
-          <option value="150,200" data-name="an ATM / self-service point">ATM / self-service — 150–200 lux</option>
-          <option value="100,200" data-name="library stacks">Library stacks — 100–200 lux</option>
-          <option value="50,200" data-name="an art gallery">Art gallery — 50–200 lux</option>
-          <option value="200,300" data-name="a fast-food counter">Fast-food counter — 200–300 lux</option>
-          <option value="200,400" data-name="a retail display">Retail display — 200–400 lux</option>
-          <option value="240,320" data-name="a classroom / lecture hall">Classroom / lecture hall — 240–320 lux</option>
-          <option value="320,320" data-name="a computer workstation">Computer workstation — 320 lux</option>
-          <option value="300,400" data-name="a study space">Study space (reading, writing) — 300–400 lux</option>
-          <option value="400,600" data-name="a studio / workshop">Studio / workshop — 400–600 lux</option>
+          <option value="40,80" data-ipd="5" data-ncc="Corridors" data-name="a circulation space">Circulation (hallway, stairway) — 40–80 lux</option>
+          <option value="80,160" data-ipd="3" data-ncc="Toilet, locker room and the like" data-name="a bathroom">Bathroom — 80–160 lux</option>
+          <option value="160,160" data-ipd="2.5" data-ncc="an illuminance of more than 80 to 160 lx" data-name="a social space">Socialising (lounge, foyer) — 160 lux</option>
+          <option value="150,200" data-ipd="3" data-ncc="an illuminance of more than 160 to 240 lx" data-name="an ATM / self-service point">ATM / self-service — 150–200 lux</option>
+          <option value="100,200" data-ipd="2.5" data-ncc="Library – stack and shelving area" data-name="library stacks">Library stacks — 100–200 lux</option>
+          <option value="50,200" data-ipd="2.5" data-ncc="Museum and gallery – circulation" data-name="an art gallery">Art gallery — 50–200 lux</option>
+          <option value="200,300" data-ipd="14" data-ncc="Restaurant, café, bar and food service" data-name="a fast-food counter">Fast-food counter — 200–300 lux</option>
+          <option value="200,400" data-ipd="14" data-ncc="Retail space" data-name="a retail display">Retail display — 200–400 lux</option>
+          <option value="240,320" data-ipd="4.5" data-ncc="School – general purpose learning areas" data-name="a classroom / lecture hall">Classroom / lecture hall — 240–320 lux</option>
+          <option value="320,320" data-ipd="4.5" data-ncc="Office lit to 200 lx or more" data-name="a computer workstation">Computer workstation — 320 lux</option>
+          <option value="300,400" data-ipd="4.5" data-ncc="Library – reading room and general areas" data-name="a study space">Study space (reading, writing) — 300–400 lux</option>
+          <option value="400,600" data-ipd="10" data-ncc="an illuminance of more than 400 to 600 lx" data-name="a studio / workshop">Studio / workshop — 400–600 lux</option>
         </select>
       </div>
       <div class="fld" style="flex:1 1 260px">
@@ -332,6 +335,16 @@
     <div class="results" id="metrics" role="status" aria-live="polite" aria-atomic="true"></div>
     <div id="levelVerdict" role="status" aria-live="polite" aria-atomic="true"></div>
     <div id="verdict" role="status" aria-live="polite" aria-atomic="true"></div>
+    <div class="power">
+      <h3>Optional: lighting power density</h3>
+      <p class="note">The standard says how much light a space needs; the NCC caps the electric lighting power used to deliver it, as a maximum illumination power density in W/m² (NCC 2022 J7D3). Enter the floor area your lights serve and their total rated power to see the density, how it compares with the NCC figure for your space type, and how many lux your average buys per W/m².</p>
+      <div class="dims">
+        <div class="fld"><label for="floorArea">Floor area (m²)</label><input id="floorArea" class="dim" type="number" min="0" step="any" inputmode="decimal"></div>
+        <div class="fld"><label for="lampW">Installed lighting power (W)<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About installed lighting power">i</button><span class="popover" role="tooltip" hidden>Add up the rated power of every luminaire lighting that floor area: count &times; wattage, from the label, the product code or a spec sheet. Use the whole-luminaire rating where one is given, since it includes the driver.</span></span></label><input id="lampW" class="dim" type="number" min="0" step="any" inputmode="decimal"></div>
+      </div>
+      <div class="results" id="powerMetrics" role="status" aria-live="polite" aria-atomic="true"></div>
+      <div id="powerVerdict" role="status" aria-live="polite" aria-atomic="true"></div>
+    </div>
     <details class="maths">
       <summary>How these relate to the lighting standard (AS/NZS 1680)</summary>
       <p class="deriv"><strong>Amount.</strong> AS/NZS 1680.2 sets a maintained illuminance per space type (the targets in the space-type list, from the Week 8 brief); the tool reports whether your average sits below, on, or above that range. It allows a 20% margin above the top of the range before flagging "above target", since a little headroom is normal, and reads any average below the bottom of the range as falling short. Overshoot is not a failure, but note it: over-lighting wastes energy and can add glare.</p>
@@ -384,7 +397,7 @@
   </section>
 
   <footer class="page">
-    Uniformity ratio U<sub>0</sub> = minimum &divide; average illuminance; diversity = minimum &divide; maximum. Uniformity recommendations and measurement method from AS/NZS 1680.1:2006 (Table 3.2, Appendix B3.4); illuminance targets are the maintained-illuminance figures from the AS/NZS 1680.2 series (Week 8 brief). Statistics are computed over the cells you filled in.
+    Uniformity ratio U<sub>0</sub> = minimum &divide; average illuminance; diversity = minimum &divide; maximum. Uniformity recommendations and measurement method from AS/NZS 1680.1:2006 (Table 3.2, Appendix B3.4); illuminance targets are the maintained-illuminance figures from the AS/NZS 1680.2 series (Week 8 brief). Illumination power density maxima from NCC 2022 Volume One Table J7D3a, via the <a href="https://ncc.abcb.gov.au/resource/calculator/ncc-2022-volume-one-lighting-calculator">ABCB lighting calculator</a>. Statistics are computed over the cells you filled in.
     A comparable, standards-quotable uniformity figure needs a regular measurement grid (see the standards note), and the illuminance targets are indicative. Validate against the source standard before reporting.
     Built for the BPSD5030 Week 8 tutorial by the IEQ Lab, Sydney School of Architecture, Design and Planning, so the grid statistics come back fast enough to test more than one layout in class. The figure you submit stays your own build.
     Revised September 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.
@@ -581,6 +594,37 @@
     el.innerHTML = '<div class="callout ' + vClass + '" style="margin-top:var(--s-4)">' + vText + "</div>";
   }
 
+  // Power check: installed W per m² against the NCC 2022 J7D3 maximum for the
+  // space type. Worded as a comparison, not a compliance verdict: J7D3 is a
+  // design-stage check on new work, and this leaves out the room-aspect and
+  // control-device concessions that raise the allowance.
+  function renderPower(avg) {
+    var met = $("powerMetrics"), ver = $("powerVerdict");
+    var area = parseFloat($("floorArea").value), watts = parseFloat($("lampW").value);
+    if (!(area > 0) || !(watts > 0)) { met.innerHTML = ""; ver.innerHTML = ""; return; }
+    var ipd = watts / area;
+    var opt = $("spacetype").options[$("spacetype").selectedIndex];
+    var max = parseFloat(opt.getAttribute("data-ipd")), ncc = opt.getAttribute("data-ncc");
+    var html = '<div class="row"><span class="k">Power density = W &divide; m&sup2;</span><span class="v big">' + fmt(ipd, 1) + " W/m&sup2;</span></div>";
+    if (isFinite(max)) html += '<div class="row"><span class="k">NCC maximum (' + ncc + ')</span><span class="v">' + fmt(max, 1) + " W/m&sup2;</span></div>";
+    if (isFinite(avg)) html += '<div class="row"><span class="k">Average illuminance per W/m&sup2;</span><span class="v">' + fmt(avg / ipd, 0) + " lux per W/m&sup2;</span></div>";
+    met.innerHTML = html;
+    if (!isFinite(max)) {
+      ver.innerHTML = '<p class="note" style="margin-top:var(--s-4)">Pick your space type above to compare the density against its NCC J7D3 maximum.</p>';
+      return;
+    }
+    var caveat = " J7D3 applies to new and altered work at design stage, so this is a benchmark for an existing space, not a compliance check. The NCC also raises the allowance for small or tall rooms and for lighting controls such as motion or daylight sensors, which this comparison leaves out.";
+    var vClass, vText;
+    if (ipd <= max) {
+      vClass = "verdict-good";
+      vText = "<strong>Within the NCC benchmark (" + fmt(ipd, 1) + " vs " + fmt(max, 1) + " W/m&sup2;).</strong> The lighting uses no more power per square metre than the NCC allows new work in this kind of space." + caveat;
+    } else {
+      vClass = "verdict-warn";
+      vText = "<strong>Above the NCC benchmark (" + fmt(ipd, 1) + " vs " + fmt(max, 1) + " W/m&sup2;).</strong> New lighting this power-hungry would need a concession or a more efficient design. Read it against the lux: more power buying more light than the target needs points to over-lighting; more power for too little light points to inefficient luminaires." + caveat;
+    }
+    ver.innerHTML = '<div class="callout ' + vClass + '">' + vText + "</div>";
+  }
+
   /* ---------- "whose numbers" strip ----------
      One grid feeds all three tabs, and the grid starts empty, so there are
      three honest states rather than two. Tracked as an origin flag rather than
@@ -626,6 +670,7 @@
       $("heatcap").innerHTML = "";
       $("boxcap").innerHTML = "";
       clearCanvas($("heat")); clearCanvas($("box"));
+      renderPower(NaN);
       $("parseMsg").innerHTML = g.vals.length === 0
         ? 'Enter your readings above, or load the worked example.'
         : '<span class="err">Enter at least two readings to map the space.</span>';
@@ -660,6 +705,7 @@
     $("verdict").innerHTML = '<div class="callout ' + vClass + '">' + vText + "</div>";
 
     renderLevelCheck(m);
+    renderPower(m);
 
     lastG = g; lastMn = mn; lastMx = mx;
 
@@ -808,6 +854,8 @@
     recompute();
   });
   $("area").addEventListener("change", recompute);
+  $("floorArea").addEventListener("input", recompute);
+  $("lampW").addEventListener("input", recompute);
   $("cols").addEventListener("change", buildGrid);
   $("rows").addEventListener("change", buildGrid);
   $("clear").addEventListener("click", function () {
