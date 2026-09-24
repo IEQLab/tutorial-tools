@@ -350,13 +350,18 @@
         <label for="benchType1">Interior type (AS/NZS&nbsp;2107:2016)</label>
         <select id="benchType1">
           <option value="" selected>Select an interior type&hellip;</option>
-          <option value="35,40,0.6,1.0">Lecture theatre</option>
-          <option value="35,45,0.4,0.6">Teaching space / classroom</option>
-          <option value="35,40,0.4,0.6">Private office</option>
-          <option value="40,45,0.4,0.6">Open-plan office</option>
-          <option value="30,40,0.6,0.8">Meeting / conference room</option>
-          <option value="40,45,0.4,0.6">Library (quiet study)</option>
-          <option value="45,50,,">Corridor / lobby / foyer</option>
+          <option value="30,35,,,Curve 3*">Lecture rooms up to 50 seats</option>
+          <option value="30,35,,,Curve 3*">Lecture theatres: without speech reinforcement</option>
+          <option value="30,40,,,Curve 3*">Lecture theatres: with speech reinforcement</option>
+          <option value="35,45,,,Curve 3* (see Note 1)">Teaching spaces/single classroom: open plan teaching spaces</option>
+          <option value="40,45,,0.8,">Art/craft studios</option>
+          <option value="40,45,0.4,0.6,">Computer rooms: teaching</option>
+          <option value="35,40,0.6,0.7,">Conference rooms</option>
+          <option value="40,50,,0.6,">Libraries: general areas</option>
+          <option value="40,45,,0.6,">Libraries: reading areas</option>
+          <option value="40,45,0.4,0.7,">Office areas</option>
+          <option value="35,40,0.6,0.8,">Professional and administrative offices</option>
+          <option value=",50,,0.8,">Corridors and lobbies</option>
         </select>
         <label for="benchLeq1">Energy-averaged L<sub>Aeq</sub> (dBA)</label>
         <input id="benchLeq1" type="number" step="0.1" placeholder="e.g. 44.5">
@@ -368,13 +373,18 @@
         <label for="benchType2">Interior type (AS/NZS&nbsp;2107:2016)</label>
         <select id="benchType2">
           <option value="" selected>Select an interior type&hellip;</option>
-          <option value="35,40,0.6,1.0">Lecture theatre</option>
-          <option value="35,45,0.4,0.6">Teaching space / classroom</option>
-          <option value="35,40,0.4,0.6">Private office</option>
-          <option value="40,45,0.4,0.6">Open-plan office</option>
-          <option value="30,40,0.6,0.8">Meeting / conference room</option>
-          <option value="40,45,0.4,0.6">Library (quiet study)</option>
-          <option value="45,50,,">Corridor / lobby / foyer</option>
+          <option value="30,35,,,Curve 3*">Lecture rooms up to 50 seats</option>
+          <option value="30,35,,,Curve 3*">Lecture theatres: without speech reinforcement</option>
+          <option value="30,40,,,Curve 3*">Lecture theatres: with speech reinforcement</option>
+          <option value="35,45,,,Curve 3* (see Note 1)">Teaching spaces/single classroom: open plan teaching spaces</option>
+          <option value="40,45,,0.8,">Art/craft studios</option>
+          <option value="40,45,0.4,0.6,">Computer rooms: teaching</option>
+          <option value="35,40,0.6,0.7,">Conference rooms</option>
+          <option value="40,50,,0.6,">Libraries: general areas</option>
+          <option value="40,45,,0.6,">Libraries: reading areas</option>
+          <option value="40,45,0.4,0.7,">Office areas</option>
+          <option value="35,40,0.6,0.8,">Professional and administrative offices</option>
+          <option value=",50,,0.8,">Corridors and lobbies</option>
         </select>
         <label for="benchLeq2">Energy-averaged L<sub>Aeq</sub> (dBA)</label>
         <input id="benchLeq2" type="number" step="0.1" placeholder="e.g. 52.1">
@@ -383,18 +393,23 @@
       </fieldset>
     </div>
     <div class="results" id="benchResults" role="status" aria-live="polite" aria-atomic="true"></div>
-    <p class="note">Enter RT60 here rather than reading it off the Sabine calculator above: that <b>T</b> field belongs to one room at a time, and these are your two measured rooms. The two measures are judged differently: the sound levels are design maxima, so a room quieter than its range is generally better rather than worse, while reverberation is a genuine two-sided range because a room can be too dry for its function as well as too live. These are indicative figures for orientation: the standard gives satisfactory-to-maximum ranges that vary with room size, so consult AS/NZS&nbsp;2107:2016 for design work.</p>
+    <p class="note">Enter RT60 here rather than reading it off the Sabine calculator above: that <b>T</b> field belongs to one room at a time, and these are your two measured rooms. The rows are transcribed from AS/NZS&nbsp;2107:2016 Table&nbsp;1, Item&nbsp;1 (educational buildings), the extract listed for this week, which is the right item for campus spaces. The table gives a design range for each room type. This tool does not flag a sound level below its range as a fault, while a reverberation time below its range is flagged, in amber, because a room can be too dry for its function as well as too live. Where the reverberation column reads &ldquo;Curve 3*&rdquo; (lecture rooms, lecture theatres, classrooms), the target is a curve that depends on room volume and is defined in the full standard, not the extract, so no reverberation verdict is given. The lecture&rsquo;s table is headed as an offices table and gives different figures for some of the same room types, so say which table you used. These are indicative figures for orientation: consult AS/NZS&nbsp;2107:2016 for design work and for Assignment&nbsp;1.</p>
     <div class="tablewrap">
       <table>
-        <thead><tr><th class="name">Space type</th><th>L<sub>Aeq</sub> (dBA)</th><th>Mid-freq RT60 (s)</th></tr></thead>
+        <thead><tr><th class="name">Type of occupancy/activity (AS/NZS&nbsp;2107:2016 Table&nbsp;1, Item&nbsp;1)</th><th>Design sound level, L<sub>Aeq</sub> (dB)</th><th>Design reverberation time, T (s)</th></tr></thead>
         <tbody>
-          <tr><td class="name">Lecture theatre</td><td>35&ndash;40</td><td>0.6&ndash;1.0</td></tr>
-          <tr><td class="name">Teaching space / classroom</td><td>35&ndash;45</td><td>0.4&ndash;0.6</td></tr>
-          <tr><td class="name">Private office</td><td>35&ndash;40</td><td>0.4&ndash;0.6</td></tr>
-          <tr><td class="name">Open-plan office</td><td>40&ndash;45</td><td>0.4&ndash;0.6</td></tr>
-          <tr><td class="name">Meeting / conference room</td><td>30&ndash;40</td><td>0.6&ndash;0.8</td></tr>
-          <tr><td class="name">Library (quiet study)</td><td>40&ndash;45</td><td>0.4&ndash;0.6</td></tr>
-          <tr><td class="name">Corridor / lobby / foyer</td><td>45&ndash;50</td><td>n/a</td></tr>
+          <tr><td class="name">Lecture rooms up to 50 seats</td><td>30 to 35</td><td>Curve 3*</td></tr>
+          <tr><td class="name">Lecture theatres: without speech reinforcement</td><td>30 to 35</td><td>Curve 3*</td></tr>
+          <tr><td class="name">Lecture theatres: with speech reinforcement</td><td>30 to 40</td><td>Curve 3*</td></tr>
+          <tr><td class="name">Teaching spaces/single classroom: open plan teaching spaces</td><td>35 to 45</td><td>Curve 3* (see Note 1)</td></tr>
+          <tr><td class="name">Art/craft studios</td><td>40 to 45</td><td>&lt; 0.8</td></tr>
+          <tr><td class="name">Computer rooms: teaching</td><td>40 to 45</td><td>0.4 to 0.6</td></tr>
+          <tr><td class="name">Conference rooms</td><td>35 to 40</td><td>0.6 to 0.7</td></tr>
+          <tr><td class="name">Libraries: general areas</td><td>40 to 50</td><td>&lt; 0.6</td></tr>
+          <tr><td class="name">Libraries: reading areas</td><td>40 to 45</td><td>&lt; 0.6</td></tr>
+          <tr><td class="name">Office areas</td><td>40 to 45</td><td>0.4 to 0.7</td></tr>
+          <tr><td class="name">Professional and administrative offices</td><td>35 to 40</td><td>0.6 to 0.8</td></tr>
+          <tr><td class="name">Corridors and lobbies</td><td>&lt; 50</td><td>&lt; 0.8</td></tr>
         </tbody>
       </table>
     </div>
@@ -483,6 +498,7 @@
       <div class="formula">Quick: SNR = Lspeech &minus; Lnoise   ·   STI &asymp; (SNR + 15) / 30   (clamped 0&ndash;1)</div>
       <p class="deriv">The quick estimate maps the A-weighted speech-to-noise ratio straight onto the STI scale: fast, but it sees neither reverberation nor the per-band structure of noise. The full method reproduces the class STI workbook: a statistical room-acoustics model (IEC&nbsp;60268-16, with auditory masking) that computes the modulation transfer index in each octave band from the room volume, talker distance, reverberation time and background-noise spectrum, then weights the bands into one index.</p>
       <p class="deriv">Qualitative bands used here (as in the spreadsheet): &lt;0.20 none &middot; 0.20&ndash;0.40 poor &middot; 0.40&ndash;0.60 fair &middot; 0.60&ndash;0.80 good &middot; &gt;0.80 excellent.</p>
+      <p class="deriv">The lecture and page&nbsp;2 of the AS/NZS&nbsp;2107 extract use a finer category scale from IEC&nbsp;60268-16 (Table&nbsp;G.1), with a typical use for each category. For example, category D (nominal STI 0.62) is good speech intelligibility for lecture theatres and classrooms, and category G (0.50) is the target value for voice alarm systems. The two scales are not the same, so say which one you used.</p>
     </details>
     <div class="tabnav">
       <button type="button" class="btn ghost" data-nav="prev">&larr; Back</button>
@@ -745,17 +761,25 @@ var MAT = {"ab":[["MASONRY WALLS","Rough concrete","",null,0.02,0.03,0.03,0.03,0
      Typing also keeps the two columns independent, which is the whole point of
      the pair. */
   /* The two metrics are not symmetric, so they are not coloured the same way.
-     AS/NZS 2107's sound levels are design maxima for ambient noise: below the
-     range is generally better, not worse, so it is not marked as a fault.
-     Reverberation is a real two-sided range, because a room can be too dry for
-     its function as well as too live, so below the range is flagged, in amber
-     rather than red since it is the milder fault. */
+     The rows are AS/NZS 2107:2016 Table 1, Item 1 (educational buildings), as
+     transcribed from the unit's extract. The table gives design ranges, not
+     maxima, but this tool does not mark a sound level below its range as a
+     fault (a quieter room is not the problem the tutorial is looking for).
+     Reverberation below its range is flagged, in amber rather than red,
+     because a room can be too dry for its function as well as too live.
+     Some rows are one-sided ("< 50", "< 0.8"): those arrive with lo = NaN and
+     have no lower bound to check. */
   function benchVerdict(label, val, lo, hi, unit, dp, rangeDp, highWord, lowWord, belowIsOk) {
     if (!isFinite(val)) return row(label, '<span style="color:var(--muted)">not entered yet</span>');
     // rangeDp, not dp: the range has to read exactly as the table below prints it
-    var range = fmt(lo, rangeDp) + "\u2013" + fmt(hi, rangeDp) + " " + unit;
+    var oneSided = !isFinite(lo);
+    var range = oneSided ? "&lt; " + fmt(hi, rangeDp) + " " + unit
+                         : fmt(lo, rangeDp) + " to " + fmt(hi, rangeDp) + " " + unit;
     var colour, verdict;
-    if (val >= lo && val <= hi) {
+    if (oneSided && val <= hi) {
+      colour = "var(--good)";
+      verdict = "meets the recommended " + range;
+    } else if (!oneSided && val >= lo && val <= hi) {
       colour = "var(--good)";
       verdict = "within " + range;
     } else if (val > hi) {
@@ -777,14 +801,20 @@ var MAT = {"ab":[["MASONRY WALLS","Rough concrete","",null,0.02,0.03,0.03,0.03,0
   function benchSpace(n) {
     var sel = $("benchType" + n);
     if (!sel.value) return null;
+    // value = "LAeq lo,LAeq hi,T lo,T hi,T note"; an empty lo means a one-sided
+    // "< hi" entry, and a T note ("Curve 3*") replaces a numeric T range.
     var p = sel.value.split(",");
     var loL = parseFloat(p[0]), hiL = parseFloat(p[1]);
-    var hasT = p[2] !== "";
+    var tNote = p[4] || "";
     var out = grouphead("Space " + n + ": " + sel.options[sel.selectedIndex].text);
     out += benchVerdict("Sound level, LAeq", num("benchLeq" + n), loL, hiL, "dBA", 1, 0, "louder", "quieter", true);
-    out += hasT
-      ? benchVerdict("Mid-frequency RT60", num("benchRt" + n), parseFloat(p[2]), parseFloat(p[3]), "s", 2, 1, "longer", "shorter", false)
-      : row("Mid-frequency RT60", '<span style="color:var(--muted)">no reverberation figure is given for this interior type</span>');
+    if (tNote) {
+      var rt = num("benchRt" + n);
+      out += row("Mid-frequency RT60", (isFinite(rt) ? "<strong>" + fmt(rt, 2) + " s</strong> " : "") +
+        '<span style="color:var(--muted)">(the standard gives ' + tNote + ' for this room type: a target curve that depends on room volume and is not in the extract, so there is no single figure to check against)</span>');
+    } else {
+      out += benchVerdict("Mid-frequency RT60", num("benchRt" + n), parseFloat(p[2]), parseFloat(p[3]), "s", 2, 1, "longer", "shorter", false);
+    }
     return out;
   }
 
