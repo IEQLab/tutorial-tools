@@ -393,7 +393,7 @@
       </fieldset>
     </div>
     <div class="results" id="benchResults" role="status" aria-live="polite" aria-atomic="true"></div>
-    <p class="note">Enter RT60 here rather than reading it off the Sabine calculator above: that <b>T</b> field belongs to one room at a time, and these are your two measured rooms. The rows are transcribed from AS/NZS&nbsp;2107:2016 Table&nbsp;1, Item&nbsp;1 (educational buildings), the extract listed for this week, which is the right item for campus spaces. The table gives a design range for each room type. This tool does not flag a sound level below its range as a fault, while a reverberation time below its range is flagged, in amber, because a room can be too dry for its function as well as too live. Where the reverberation column reads &ldquo;Curve 3*&rdquo; (lecture rooms, lecture theatres, classrooms), the target is a curve that depends on room volume and is defined in the full standard, not the extract, so no reverberation verdict is given. The lecture&rsquo;s table is headed as an offices table and gives different figures for some of the same room types, so say which table you used. These are indicative figures for orientation: consult AS/NZS&nbsp;2107:2016 for design work and for Assignment&nbsp;1.</p>
+    <p class="note">Enter RT60 here rather than reading it off the Sabine calculator above: that <b>T</b> field belongs to one room at a time, and these are your two measured rooms. The rows are transcribed from AS/NZS&nbsp;2107:2016 Table&nbsp;1, Item&nbsp;1 (educational buildings), the extract listed for this week, which is the right item for campus spaces. The table gives a design range for each room type, not just a maximum, so a value below the design range is flagged in amber and a value above it in red: a sound level or reverberation time can sit outside the design range in either direction. Where the reverberation column reads &ldquo;Curve 3*&rdquo; (lecture rooms, lecture theatres, classrooms), the target is a curve that depends on room volume and is defined in the full standard, not the extract, so no reverberation verdict is given. The lecture&rsquo;s table is headed as an offices table and gives different figures for some of the same room types, so say which table you used. These are indicative figures for orientation: consult AS/NZS&nbsp;2107:2016 for design work and for Assignment&nbsp;1.</p>
     <div class="tablewrap">
       <table>
         <thead><tr><th class="name">Type of occupancy/activity (AS/NZS&nbsp;2107:2016 Table&nbsp;1, Item&nbsp;1)</th><th>Design sound level, L<sub>Aeq</sub> (dB)</th><th>Design reverberation time, T (s)</th></tr></thead>
@@ -760,13 +760,12 @@ var MAT = {"ab":[["MASONRY WALLS","Rough concrete","",null,0.02,0.03,0.03,0.03,0
      several times over the session, so there is no single value here to carry.
      Typing also keeps the two columns independent, which is the whole point of
      the pair. */
-  /* The two metrics are not symmetric, so they are not coloured the same way.
-     The rows are AS/NZS 2107:2016 Table 1, Item 1 (educational buildings), as
+  /* The rows are AS/NZS 2107:2016 Table 1, Item 1 (educational buildings), as
      transcribed from the unit's extract. The table gives design ranges, not
-     maxima, but this tool does not mark a sound level below its range as a
-     fault (a quieter room is not the problem the tutorial is looking for).
-     Reverberation below its range is flagged, in amber rather than red,
-     because a room can be too dry for its function as well as too live.
+     maxima, so both metrics are coloured the same way: above the range is red,
+     below it amber (a room can be too dry as well as too live, and sit below
+     its design sound level as well as above it). belowIsOk lets a future
+     metric treat below-range as fine.
      Some rows are one-sided ("< 50", "< 0.8"): those arrive with lo = NaN and
      have no lower bound to check. */
   function benchVerdict(label, val, lo, hi, unit, dp, rangeDp, highWord, lowWord, belowIsOk) {
@@ -807,7 +806,7 @@ var MAT = {"ab":[["MASONRY WALLS","Rough concrete","",null,0.02,0.03,0.03,0.03,0
     var loL = parseFloat(p[0]), hiL = parseFloat(p[1]);
     var tNote = p[4] || "";
     var out = grouphead("Space " + n + ": " + sel.options[sel.selectedIndex].text);
-    out += benchVerdict("Sound level, LAeq", num("benchLeq" + n), loL, hiL, "dBA", 1, 0, "louder", "quieter", true);
+    out += benchVerdict("Sound level, LAeq", num("benchLeq" + n), loL, hiL, "dBA", 1, 0, "louder", "quieter", false);
     if (tNote) {
       var rt = num("benchRt" + n);
       out += row("Mid-frequency RT60", (isFinite(rt) ? "<strong>" + fmt(rt, 2) + " s</strong> " : "") +
