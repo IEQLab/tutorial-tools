@@ -324,8 +324,8 @@
   <!-- ===== Tab 1: Act 1 — NABERS IE ===== -->
   <section class="card" role="tabpanel" id="panel-1" aria-labelledby="tab-1" tabindex="0">
     <div class="primer">
-      <p class="what">A NABERS IE star rates measured performance: five dimensions scored equally, then averaged into one star.</p>
-      <p>NABERS weights all five dimensions equally, so the overall star is just their average. You can raise a dimension two ways: a real upgrade that lifts what occupants actually experience, or a measurement tactic that changes when, where, or how you sample so only the reading moves. Because NABERS re-rates every three years with clean, full-period sampling, a rating built on tactics collapses at recertification while one built on real work survives.</p>
+      <p class="what">A NABERS IE star rates measured performance: five dimensions, weighted and combined into one star.</p>
+      <p>A Whole Building rating weights thermal comfort and indoor air quality at 30% each, lighting and acoustics at 15% each, and office layout at 10%, so the thermal and air-quality scores move the star most. You can raise a dimension two ways: a real upgrade that lifts what occupants actually experience, or a measurement tactic that changes when, where, or how you sample so only the reading moves. A rating expires 12 months after its rating period, and the assessor keeps records so that an auditor can repeat it. A rating built on tactics collapses when it is re-rated with clean, compliant sampling, while one built on real work survives.</p>
     </div>
 
     <!-- Shared: building profile (drives the NABERS baseline) -->
@@ -335,7 +335,7 @@
     <div class="strip" id="profileStrip"></div>
 
     <h2>NABERS IE Star Challenge</h2>
-    <p class="sub">Five dimensions, each rated 1 to 6 stars from its measured performance; the overall star is their average (NABERS weights all five equally). Spend your budget on <strong>real upgrades</strong> (they lift what occupants experience and what the sensors read) or on cheaper <strong>measurement tactics</strong> (they lift only what the sensors read). Reach the target star without going over budget.</p>
+    <p class="sub">Five dimensions, each rated 1 to 6 stars from its measured performance; the overall star is their weighted average (Whole Building weights: thermal 30%, IAQ 30%, lighting 15%, acoustics 15%, layout 10%). Spend your budget on <strong>real upgrades</strong> (they lift what occupants experience and what the sensors read) or on cheaper <strong>measurement tactics</strong> (they lift only what the sensors read). Reach the target star without going over budget.</p>
 
     <div class="strip">
       <div class="item">Target rating: <b id="targetStar"></b></div>
@@ -357,7 +357,7 @@
     <div class="results" id="nabersResults" role="status" aria-live="polite" aria-atomic="true"></div>
 
     <div class="btn-row">
-      <button type="button" class="btn" id="recertBtn">Trigger a 3-year recertification</button>
+      <button type="button" class="btn" id="recertBtn">Re-rate with clean sampling</button>
       <button type="button" class="btn ghost" id="resetNabers">Reset Act 1</button>
     </div>
     <div class="recert hidden" id="recertOut" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -367,8 +367,8 @@
       <p class="deriv">Each dimension carries a <em>true</em> score (0 to 100, what occupants experience) and a <em>measured</em> score (what the rating sees). A real upgrade adds to both. A measurement tactic adds only to the measured score, because it changes when, where, or how you sample, not the building.</p>
       <div class="formula">measured = clamp(true + tactic_inflation, 0, 100)
 dimension star = clamp(1 + measured / 20, 1, 6)
-overall star = mean of the five dimension stars</div>
-      <p class="deriv">Real thresholds sit behind this (thermal = % time operative temperature inside the ASHRAE 55 band, roughly 75% for 4 stars and 85%+ for 5; IAQ = % time CO<sub>2</sub> at or below 1000 ppm; acoustics at or below 55 dB(A) open-plan; lighting 300 to 500 lux with glare control; layout by m<sup>2</sup>/person and satisfaction). The 0 to 100 scale is a teaching simplification of those bands, not the NABERS algorithm.</p>
+overall star = 0.30 thermal + 0.30 IAQ + 0.15 lighting + 0.15 acoustics + 0.10 layout</div>
+      <p class="deriv">The weights are the Whole Building column of the NABERS IE Rules (Table 3.1); Base Building and Tenancy ratings weight the dimensions differently. Behind each dimension the real tool combines on-site measurements (thermal comfort scored against ASHRAE 55, CO<sub>2</sub> relative to outdoors, A-weighted sound level, horizontal illuminance) with the occupant satisfaction survey, which is half of every dimension and all of office layout. Each result is scored as a market position against other rated buildings. The 0 to 100 scale and the star formula here are a teaching simplification, not the NABERS algorithm.</p>
     </details>
 
     <div class="tabnav">
@@ -492,15 +492,15 @@ overall star = mean of the five dimension stars</div>
   // ---------- shared data ----------
   var UPGRADE_RATE = 0.5;   // budget points per +1 true score
   var DIMS = [
-    { key: "thermal", label: "Thermal comfort", hint: "% time in ASHRAE 55 band",
+    { key: "thermal", label: "Thermal comfort", w: 0.30, hint: "measured against ASHRAE 55, plus survey",
       tactic: { label: "Measure in a mild shoulder-season week", inflate: 12, cost: 5 } },
-    { key: "iaq", label: "Indoor air quality", hint: "% time CO₂ ≤ 1000 ppm",
+    { key: "iaq", label: "Indoor air quality", w: 0.30, hint: "CO₂ and pollutants, plus survey",
       tactic: { label: "Put the CO₂ sensor by the fresh-air intake", inflate: 12, cost: 4 } },
-    { key: "acoustic", label: "Acoustics", hint: "background dB(A)",
+    { key: "acoustic", label: "Acoustics", w: 0.15, hint: "sound level dB(A), plus survey",
       tactic: { label: "Take sound readings after hours", inflate: 12, cost: 4 } },
-    { key: "light", label: "Lighting", hint: "lux and glare",
-      tactic: { label: "Measure only at desks near the windows", inflate: 10, cost: 4 } },
-    { key: "layout", label: "Office layout", hint: "m²/person and satisfaction",
+    { key: "light", label: "Lighting", w: 0.15, hint: "illuminance (lux), plus survey",
+      tactic: { label: "Open every blind before the lighting readings", inflate: 10, cost: 4 } },
+    { key: "layout", label: "Office layout", w: 0.10, hint: "occupant survey only",
       tactic: { label: "Survey occupants just after the new fit-out", inflate: 10, cost: 5 } }
   ];
   var DROP_INFLATE = 6, DROP_COST = 6;
@@ -518,10 +518,10 @@ overall star = mean of the five dimension stars</div>
     D: { name: "D. Budget Retrofit, Big Expectations", target: 4.0, budget: 40,
       blurb: "1992 public-service building, open-plan. Poor thermal comfort and CO₂; the owner wants a 4-star IE rating to support a lease extension. Informal surveys show poor satisfaction.",
       base: { thermal: 40, iaq: 38, acoustic: 55, light: 55, layout: 50 } },
-    E: { name: "E. Research Facility", target: 4.5, budget: 40,
+    E: { name: "E. Research Facility", target: 5.0, budget: 40,
       blurb: "2007 university labs, well maintained but over-ventilated in places. Poor acoustics in dry-lab write-up areas, limited privacy. Liked by researchers, disliked by admin staff.",
       base: { thermal: 70, iaq: 85, acoustic: 40, light: 70, layout: 45 } },
-    F: { name: "F. Award-Winning Green Building", target: 6.0, budget: 45,
+    F: { name: "F. Award-Winning Green Building", target: 6.0, budget: 40,
       blurb: "2019 flagship with a hybrid facade and BMS. Excellent physical metrics, but occasional complaints about drafts and glare; owner wants a 6-star rating.",
       base: { thermal: 78, iaq: 88, acoustic: 80, light: 74, layout: 85 } }
   };
@@ -538,7 +538,7 @@ overall star = mean of the five dimension stars</div>
   function buildDimRows() {
     $("dimBody").innerHTML = DIMS.map(function (d) {
       return '<tr>' +
-        '<td class="dimname">' + d.label + '<small>' + d.hint + '</small></td>' +
+        '<td class="dimname">' + d.label + ' (' + Math.round(d.w * 100) + '%)<small>' + d.hint + '</small></td>' +
         '<td><div class="rangewrap">' +
           '<input type="range" min="0" max="40" step="1" id="up_' + d.key + '" value="0">' +
           '<span class="rangeval" id="upv_' + d.key + '">+0</span>' +
@@ -569,14 +569,13 @@ overall star = mean of the five dimension stars</div>
       var t = clamp(base[d.key] + realUp[d.key], 0, 100);
       var m = clamp(t + (tactic[d.key] ? d.tactic.inflate : 0) + (dropDays ? DROP_INFLATE : 0), 0, 100);
       trueS[d.key] = t; meas[d.key] = m;
-      baseStar += (1 + base[d.key] / 20);
-      trueStar += (1 + t / 20);
-      measStar += (1 + m / 20);
+      baseStar += d.w * (1 + base[d.key] / 20);
+      trueStar += d.w * (1 + t / 20);
+      measStar += d.w * (1 + m / 20);
     });
-    var n = DIMS.length;
     return {
       trueS: trueS, meas: meas,
-      base: baseStar / n, trueStar: trueStar / n, measStar: measStar / n
+      base: baseStar, trueStar: trueStar, measStar: measStar
     };
   }
 
@@ -625,10 +624,10 @@ overall star = mean of the five dimension stars</div>
       v += '<small>Keep spending, or reach for the cheaper measurement tactics if the budget is tight.</small>';
     } else if (ratingGain > 0.2 && realGain < 0.34 * ratingGain) {
       cls = "bad"; v = "Target hit, but you gamed it.";
-      v += '<small>The rating climbed ' + round1(ratingGain) + ' stars while occupants gained only ' + round1(realGain) + '. Almost all of that badge is measurement, not comfort. See what a recertification does to it.</small>';
+      v += '<small>The rating climbed ' + round1(ratingGain) + ' stars while occupants gained only ' + round1(realGain) + '. Almost all of that badge is measurement, not comfort. See what clean re-rating does to it.</small>';
     } else if (realGain > 0.85 * ratingGain) {
       cls = "good"; v = "Target hit, and honestly.";
-      v += '<small>Nearly all of the rating is real improvement (' + round1(realGain) + ' of ' + round1(ratingGain) + ' stars). This rating should survive a recertification.</small>';
+      v += '<small>Nearly all of the rating is real improvement (' + round1(realGain) + ' of ' + round1(ratingGain) + ' stars). This rating should survive a clean re-rating.</small>';
     } else {
       cls = "warn"; v = "Target hit, part real and part gamed.";
       v += '<small>Real improvement is ' + round1(realGain) + ' stars of the ' + round1(ratingGain) + ' you gained. The measurement tactics are doing some of the work.</small>';
@@ -648,7 +647,7 @@ overall star = mean of the five dimension stars</div>
     var drop = s.measStar - honest;
     var stillPass = honest >= P.target - 0.049;
     var el = $("recertOut");
-    var msg = "<b>Three years on, an independent assessor recertifies with clean, full-period sampling.</b><br>" +
+    var msg = "<b>The rating expires 12 months after its rating period. Re-rated (or audited) with clean, compliant sampling:</b><br>" +
       "Your rated " + round1(s.measStar) + " stars settles to <b>" + round1(honest) + " stars</b> once the sampling tricks are gone";
     if (drop >= 0.05) {
       msg += ", a drop of " + round1(drop) + ". " +
@@ -791,7 +790,7 @@ overall star = mean of the five dimension stars</div>
     $("profileStrip").innerHTML = DIMS.map(function (d) {
       return '<div class="item">' + d.label + ': <b>' + P.base[d.key] + '</b>/100</div>';
     }).join("") + '<div class="item">baseline rating: <b>' + round1(
-      DIMS.reduce(function (a, d) { return a + (1 + P.base[d.key] / 20); }, 0) / DIMS.length) + '</b> stars</div>';
+      DIMS.reduce(function (a, d) { return a + d.w * (1 + P.base[d.key] / 20); }, 0)) + '</b> stars</div>';
     $("targetStar").textContent = round1(P.target) + " stars";
     $("budgetTotal").textContent = P.budget;
   }
