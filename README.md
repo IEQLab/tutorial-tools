@@ -17,6 +17,10 @@ bpsd5030/
   week08-lighting.html
   week09-ratings.html
   week10-stats.html
+bpsd6030/
+  index.html
+  week05-hvac-selector.html
+  week09-plant-life.html
 ```
 
 To add a unit, create a `{unit}/` directory, drop its `weekNN-*.html` tools in, add a `{unit}/index.html` (copy an existing unit page and relist), and add a card to the top-level `index.html`.
@@ -40,6 +44,7 @@ Note on week order: from Semester 2, 2026 the BPSD5030 IAQ tutorial runs in Week
 | File | Tutorial | What it does |
 |------|----------|--------------|
 | `bpsd6030/week05-hvac-selector.html` | Week 5 / Assignment 2 | Stepped HVAC system selector for the Australian commercial sector. The student walks their building (program, NCC climate zone, size, floors) through fresh-air, heating/cooling, system, and plant choices across the all-air (VAV, CAV), air-plus-water (DOAS + chilled beam / fan-coil / radiant), refrigerant (VRF, split/packaged DX), and evaporative families. Draws the selection as a parametric colour-coded schematic, explains each part in plain language, and generates a ranked decarbonisation pathway (electrification, refrigerant GWP, heat recovery, clean supply) with a justification box to carry into Assignment 2. Deliberately does not size plant or estimate loads — DesignBuilder stays the load authority. Adapts the openly published MIT SDL HVAC System Selector (Irani, Reinhard & Reinhart, 2023, CC BY) to Australian systems, metric units, and a carbon focus. |
+| `bpsd6030/week09-plant-life.html` | Week 9 / Assignment 2 | Whole-of-life view of the proposed cooling plant (air-cooled chillers, water-cooled chillers + tower, or VRF). Refrigerant leakage and end-of-life loss by refrigerant (DCCEEW AR4 GWPs, AS/NZS ISO 817 safety classes, Cold Hard Facts 2022 charges, leak and recovery rates) set against cooling electricity on the NGA 2025 state grid factors; a GEMS chiller-register scatter of full-load COP against part-load IPLV with the student's size range highlighted; service lives (Cold Hard Facts lifespans with ASHRAE service-life field data) and replacements over the building life; and the standards and laws that govern upkeep (AS/NZS 3666, AS/NZS 5149, ARC licensing, HFC phase-down, AS 1851, AIRAH DA19). Embeds a snapshot of the GEMS register (199 chillers, exported 2026-09-30). Does not size plant. |
 
 ## Design constraints
 
@@ -87,6 +92,7 @@ tutorial `.md` first, then mirror it in the tool.
 | `bpsd5030/week09-ratings.html` | `bpsd5030/tutorials/week09.md` |
 | `bpsd5030/week10-stats.html` | `bpsd5030/tutorials/week10.md` |
 | `bpsd6030/week05-hvac-selector.html` | none — see below |
+| `bpsd6030/week09-plant-life.html` | none — see below |
 
 To check a pair, extract the tab pill labels from the tool and the tab names from the
 tutorial's table and diff the two lists, then read the strip's "uses no tab" line against the
@@ -99,7 +105,7 @@ repo's no-dependencies, no-build-step constraint stands.
 has no `tutorials/` directory, and the tool is set as pre-class priming and then reused for
 Assignment 2. It is also a JS-rendered stepper rather than an ARIA tablist, so the strip's
 markup does not port unchanged. If it gets an orientation strip it needs different content
-("before class, and again for A2") and its own markup.
+("before class, and again for A2") and its own markup. `week09-plant-life.html` has no tutorial to map to either (the Week 9 tutorial is the plant room visit); it is an ARIA tablist like the BPSD5030 tools but carries only the `.datasource` line, no orientation strip.
 
 ### Open work: aligning the tools to their tutorials
 

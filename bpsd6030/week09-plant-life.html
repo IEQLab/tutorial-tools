@@ -1,0 +1,1036 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plant Over Its Life — BPSD6030</title>
+<style>
+  /* BPSD6030 Building Systems · indigo accent · IEQ Lab · rev. 2026-09 */
+  :root {
+    color-scheme: light;
+    --bg: #f4f6f7; --card: #fcfdfd; --ink: #1c2430; --muted: #5a6675;
+    --line: #dfe4ea; --accent: #4a52b5; --accent-ink: #fbfcfe;
+    --good: #1a7f4b; --warn: #9c5a0b; --bad: #b02a37;
+    --field: #fdfefe; --result-bg: #eef0f8; --chip: #eef2f5;
+    /* one radius scale, one shadow — do not add values outside these */
+    --r-sm: 3px; --r-md: 8px; --r-pill: 999px;
+    --shadow: 0 3px 8px rgba(26, 28, 62, .12);
+    --ease-out: cubic-bezier(.2, 0, 0, 1); --dur: 150ms;
+
+    --t-glyph: .68rem;
+    --t-meta:  .78rem;
+    --t-label: .875rem;
+    --t-body:  1rem;
+    --t-lead:  1.125rem;
+    --t-h2:    1.3rem;
+    --t-h1:    1.625rem;
+    --t-display: 2.4rem;
+
+    --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px;
+    --s-5: 20px; --s-6: 24px; --s-8: 32px; --s-12: 48px;
+
+    /* chart series: air-cooled and water-cooled chillers. Validated with the
+       dataviz palette checker (CVD ΔE 25 light, 22 dark) and carried with a
+       second encoding (circle vs square), so identity is never colour alone. */
+    --s-air: #0b5fa5; --s-water: #b87a0c;
+    --bar: #c5cbe6; --grid: #e6e9ee;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #10151b; --card: #171e27; --ink: #e7ecf2; --muted: #9aa7b6;
+    --line: #2a3441; --accent: #99a4ef; --accent-ink: #131635;
+    --good: #57c98a; --warn: #e0a955; --bad: #e2707a;
+    --field: #0f151c; --result-bg: #191f33; --chip: #1c2733;
+    --shadow: 0 3px 8px rgba(0, 0, 0, .34);
+    --s-air: #4f8cd0; --s-water: #b88a36;
+    --bar: #3a4270; --grid: #242d39;
+  }
+  :root[data-theme="dark"] :is(body) { line-height: 1.6; letter-spacing: .004em; }
+  :root[data-theme="dark"] :is(.primer p, .sub, .hint, .note, label, .deriv) { font-weight: 450; }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: .01ms !important; animation-duration: .01ms !important; scroll-behavior: auto !important; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: var(--s-6) var(--s-4) var(--s-12); }
+  a.home { display: inline-block; color: var(--accent); text-decoration: none; font-size: var(--t-label); margin-bottom: var(--s-4); }
+  a.home:hover { text-decoration: underline; }
+  header.page { margin-bottom: var(--s-2); }
+  h1 { font-size: var(--t-h1); margin: 0 0 var(--s-1); letter-spacing: -.018em; }
+  .lede { color: var(--muted); margin: 0 0 var(--s-6); max-width: 70ch; }
+
+  /* ---- ordered tabs ---- */
+  .tabs { display: flex; gap: var(--s-2); margin: 0 0 var(--s-3); flex-wrap: wrap; }
+  .tab { border: 1px solid var(--line); background: var(--field); color: var(--muted);
+    border-radius: var(--r-pill); padding: var(--s-2) var(--s-4) var(--s-2) var(--s-2); font-size: var(--t-label); cursor: pointer;
+    display: inline-flex; align-items: center; gap: var(--s-2); font-family: inherit; }
+  .tab:hover { border-color: var(--accent); color: var(--ink); }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .tab .n { display: inline-flex; align-items: center; justify-content: center;
+    width: 21px; height: 21px; border-radius: 50%; background: var(--line); color: var(--muted);
+    font-size: var(--t-meta); font-weight: 700; flex: none; }
+  .tab.active .n { background: var(--accent-ink); color: var(--accent); }
+
+  .orient { margin: 0 0 var(--s-6); }
+  .datasource { margin: 0; font-size: var(--t-label); color: var(--muted);
+    border: 1px solid var(--line); border-radius: var(--r-md); background: var(--field);
+    padding: var(--s-2) var(--s-3); transition: border-color var(--dur) var(--ease-out); }
+  .datasource b { color: var(--ink); font-weight: 600; }
+  .datasource.mine { border-color: var(--accent); }
+  .datasource.mine b { color: var(--accent); }
+
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md);
+    padding: var(--s-6); margin: 0;
+  }
+  h2 { font-size: var(--t-h2); margin: 0 0 var(--s-1); letter-spacing: -.012em; }
+  h3 { font-size: var(--t-body); margin: var(--s-6) 0 var(--s-2); }
+  .sub { color: var(--muted); font-size: var(--t-label); margin: 0 0 var(--s-4); max-width: 72ch; }
+
+  label { display: block; font-size: var(--t-label); color: var(--muted); margin-bottom: var(--s-1); }
+  .fieldrow { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-4) var(--s-5); margin-bottom: var(--s-2); }
+  .fieldrow.three { grid-template-columns: 1fr 1fr 1fr; }
+  @media (max-width: 620px) { .fieldrow, .fieldrow.three { grid-template-columns: 1fr; } }
+  select, input[type="number"] {
+    width: 100%; padding: var(--s-2) var(--s-3); font-size: var(--t-body); color: var(--ink);
+    background: var(--field); border: 1px solid var(--line); border-radius: var(--r-md); font-family: inherit;
+  }
+  select:focus, input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  input[type="number"] { font-variant-numeric: tabular-nums; }
+  .hint { color: var(--muted); font-size: var(--t-meta); margin: var(--s-1) 0 0; }
+
+  .choices { display: flex; flex-wrap: wrap; gap: var(--s-2); margin: var(--s-1) 0 var(--s-4); }
+  .choice { flex: 1 1 180px; }
+  .choice input { position: absolute; opacity: 0; pointer-events: none; }
+  .choice label { display: block; margin: 0; padding: var(--s-2) var(--s-3); border: 1px solid var(--line); height: 100%;
+    border-radius: var(--r-md); cursor: pointer; color: var(--ink); font-size: var(--t-label); background: var(--field); }
+  .choice label:hover { border-color: var(--accent); }
+  .choice label small { display: block; color: var(--muted); font-size: var(--t-meta); font-weight: 400; margin-top: var(--s-1); }
+  .choice input:checked + label { border-color: var(--accent); background: var(--result-bg); box-shadow: inset 0 0 0 1px var(--accent); }
+  .choice input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .nav { display: flex; justify-content: space-between; gap: var(--s-2); margin-top: var(--s-6); flex-wrap: wrap; }
+  .btn { background: var(--accent); color: var(--accent-ink); border: none; border-radius: var(--r-md);
+    padding: var(--s-2) var(--s-4); font-size: var(--t-label); cursor: pointer; font-family: inherit; white-space: nowrap; }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:focus-visible, .btn.ghost:focus-visible, .linkbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled, .btn[disabled] { opacity: .45; cursor: not-allowed; transform: none; filter: none; }
+  .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+  .btn.ghost:hover { border-color: var(--accent); filter: none; }
+  .linkbtn { background: none; border: none; padding: 0; color: var(--accent); font: inherit; font-size: var(--t-meta);
+    cursor: pointer; text-decoration: underline; }
+  .linkbtn:hover { color: var(--ink); }
+  .linkbtn:active { color: var(--accent); }
+  .linkbtn[hidden] { display: none; }
+
+  /* results */
+  .results { margin-top: var(--s-5); background: var(--result-bg); border-radius: var(--r-md); padding: var(--s-4); }
+  .headline { display: flex; flex-wrap: wrap; gap: var(--s-4) var(--s-8); align-items: flex-end; }
+  .big { font-size: var(--t-display); font-weight: 650; letter-spacing: -.022em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .big small { font-size: var(--t-label); font-weight: 500; color: var(--muted); letter-spacing: 0; margin-left: var(--s-1); }
+  .bigcap { font-size: var(--t-meta); color: var(--muted); margin-top: var(--s-1); }
+  .verdict { margin: var(--s-3) 0 0; font-size: var(--t-label); max-width: 70ch; }
+  .rows { font-size: var(--t-label); margin-top: var(--s-3); }
+  .rows .row { display: flex; gap: var(--s-3); padding: var(--s-1) 0; border-bottom: 1px solid var(--line); }
+  .rows .row:last-child { border-bottom: none; }
+  .rows .k { color: var(--muted); flex: 1 1 60%; }
+  .rows .v { font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; flex: 0 0 auto; }
+
+  .badge { display: inline-block; font-size: var(--t-meta); border-radius: var(--r-pill); padding: var(--s-1) var(--s-3); border: 1px solid var(--line); background: var(--chip); margin: 0 var(--s-1) var(--s-1) 0; }
+  .badge.good { color: var(--good); } .badge.warn { color: var(--warn); } .badge.bad { color: var(--bad); }
+  .refcard { margin-top: var(--s-3); font-size: var(--t-label); }
+  .refcard p { margin: var(--s-2) 0 0; max-width: 72ch; }
+
+  /* ranked bars (plain HTML so the theme restyles them through CSS) */
+  .bars { margin-top: var(--s-2); font-size: var(--t-label); }
+  .bar-row { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr) 5.5rem; gap: var(--s-2); align-items: center; padding: var(--s-1) 0; }
+  .bar-row .nm { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar-row .track { height: 14px; }
+  .bar-row .fill { height: 14px; background: var(--bar); border-radius: var(--r-sm); min-width: 2px; }
+  .bar-row .val { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink); }
+  .bar-row.sel .nm { color: var(--ink); font-weight: 600; }
+  .bar-row.sel .fill { background: var(--accent); }
+  @media (max-width: 480px) { .bar-row { grid-template-columns: 6.5rem minmax(0, 1fr) 4.5rem; } }
+
+  /* scatter */
+  .chartbox { position: relative; margin-top: var(--s-3); }
+  .scrollx { overflow-x: auto; background: var(--result-bg); border-radius: var(--r-md); padding: var(--s-2); }
+  .scrollx svg { display: block; width: 100%; height: auto; min-width: 520px; }
+  .scatter .dot { stroke: var(--card); stroke-width: 1.5; }
+  .scatter .dot.air { fill: var(--s-air); } .scatter .dot.water { fill: var(--s-water); }
+  .scatter .dot.dim { opacity: .28; }
+  .scatter .dot:hover { stroke: var(--ink); }
+  .scatter .ax { stroke: var(--line); } .scatter .gl { stroke: var(--grid); }
+  .scatter text { fill: var(--muted); font-size: var(--t-meta); font-family: inherit; }
+  .scatter .band { fill: var(--accent); opacity: .10; }
+  .tip { position: absolute; z-index: 20; pointer-events: none; background: var(--card); color: var(--ink);
+    border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-2) var(--s-3); font-size: var(--t-meta);
+    box-shadow: var(--shadow); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tip[hidden] { display: none; }
+  .legend { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-4); margin: var(--s-2) 0 0; font-size: var(--t-meta); color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: var(--s-1); }
+  .legend svg { display: block; flex: none; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--r-pill); overflow: hidden; }
+  .seg button { border: none; background: var(--field); color: var(--muted); font: inherit; font-size: var(--t-meta);
+    padding: var(--s-1) var(--s-3); cursor: pointer; }
+  .seg button:hover { color: var(--ink); }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+  table.data { border-collapse: collapse; width: 100%; font-size: var(--t-label); margin-top: var(--s-2); }
+  table.data th, table.data td { text-align: left; padding: var(--s-1) var(--s-2); border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.data th { color: var(--muted); font-weight: 600; font-size: var(--t-meta); }
+  table.data td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  table.data th.num { text-align: right; }
+  .tablewrap { overflow-x: auto; }
+
+  .rules { list-style: none; margin: var(--s-2) 0 0; padding: 0; }
+  .rules li { padding: var(--s-3) 0; border-bottom: 1px solid var(--line); font-size: var(--t-label); }
+  .rules li:last-child { border-bottom: none; }
+  .rules .std { font-weight: 600; color: var(--ink); }
+  .rules .kind { font-size: var(--t-meta); color: var(--muted); margin-left: var(--s-2); }
+  .rules p { margin: var(--s-1) 0 0; color: var(--muted); max-width: 72ch; }
+
+  .carry { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: var(--t-meta);
+    white-space: pre-wrap; background: var(--result-bg); border-radius: var(--r-md); padding: var(--s-3); margin-top: var(--s-2); }
+  .carry[hidden] { display: none; }
+  .btn-row { display: flex; gap: var(--s-2); flex-wrap: wrap; margin-top: var(--s-3); }
+
+  .note { color: var(--muted); font-size: var(--t-label); max-width: 72ch; }
+  footer.page { color: var(--muted); font-size: var(--t-meta); margin-top: var(--s-8); border-top: 1px solid var(--line); padding-top: var(--s-4); }
+  footer.page p { margin: 0 0 var(--s-2); }
+  footer.page a { color: var(--accent); }
+
+  .primer { margin: 0 0 var(--s-6); padding: 0 0 var(--s-5); border-bottom: 1px solid var(--line); }
+  .primer .what { font-weight: 600; font-size: var(--t-lead); letter-spacing: -.011em; margin: 0 0 var(--s-2); max-width: 58ch; }
+  .primer p { margin: 0; color: var(--muted); font-size: var(--t-label); line-height: 1.62; max-width: 64ch; }
+
+  details.maths { margin-top: var(--s-6); border-top: 1px solid var(--line); padding: 0; }
+  details.maths[open] { padding-bottom: var(--s-4); }
+  details.maths > summary { cursor: pointer; color: var(--accent); font-size: var(--t-label);
+    font-weight: 600; padding: var(--s-3) 0; list-style: none; }
+  details.maths > summary::-webkit-details-marker { display: none; }
+  details.maths > summary::before { content: "▸ "; }
+  details.maths[open] > summary::before { content: "▾ "; }
+  details.maths > summary:hover { color: var(--ink); }
+  details.maths > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  details.maths .deriv { color: var(--muted); font-size: var(--t-label); margin: var(--s-2) 0 0; max-width: 72ch; }
+  details.maths code { font-size: var(--t-meta); }
+
+  .info-wrap { position: relative; display: inline-block; vertical-align: middle; }
+  .info-tip { display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px; margin-left: var(--s-1); border-radius: 50%; border: none; padding: 0;
+    background: var(--line); color: var(--muted); font-size: var(--t-glyph); font-weight: 700;
+    font-family: inherit; font-style: normal; line-height: 1; cursor: pointer; user-select: none; }
+  .info-tip:hover, .info-tip[aria-expanded="true"] { background: var(--accent); color: var(--accent-ink); }
+  .info-tip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .popover { position: absolute; z-index: 30; left: 0; bottom: calc(100% + 8px);
+    width: max-content; max-width: 250px; background: var(--card); color: var(--ink);
+    border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-2) var(--s-3);
+    font-size: var(--t-meta); font-weight: 400; line-height: 1.45; text-align: left;
+    box-shadow: var(--shadow); }
+  .popover[hidden] { display: none; }
+
+  .toprow { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; margin-bottom: var(--s-4); }
+  .toprow .home { margin-bottom: 0; }
+  .themepick { margin-left: auto; border: 0; padding: 0; min-width: 0; display: inline-flex; gap: var(--s-1); }
+  .themepick label { margin: 0; }
+  .themepick input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .themepick span { display: inline-block; cursor: pointer; border: 1px solid var(--line); border-radius: var(--r-pill);
+    padding: var(--s-1) var(--s-3); background: var(--field); color: var(--muted); font-size: var(--t-meta); }
+  .themepick span:hover { border-color: var(--accent); color: var(--ink); }
+  .themepick input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .themepick input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px;
+    padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  @media print {
+    .tabs, .toprow, .nav, .btn-row, .orient { display: none !important; }
+    section.card[hidden] { display: block !important; }
+    section.card { break-inside: avoid; margin-bottom: var(--s-4); }
+  }
+</style>
+<script>
+  /* Resolve the colour theme before first paint. Storage is wrapped in
+     try/catch: a Canvas iframe with storage blocked throws, and the tool keeps
+     working without remembering the choice. */
+  (function () {
+    var pref = "system";
+    try {
+      var v = localStorage.getItem("tt-theme");
+      if (v === "light" || v === "dark") pref = v;
+    } catch (e) {}
+    window.__ttPref = pref;
+    var dark = pref === "dark" ||
+      (pref === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+  })();
+</script>
+</head>
+<body>
+<div class="wrap">
+  <div class="toprow">
+    <a class="home" href="index.html">&larr; BPSD6030 tutorial tools</a>
+    <fieldset class="themepick" id="themePick">
+    <legend class="visually-hidden">Colour theme</legend>
+    <label><input type="radio" name="theme" value="system"><span>System</span></label>
+    <label><input type="radio" name="theme" value="light"><span>Light</span></label>
+    <label><input type="radio" name="theme" value="dark"><span>Dark</span></label>
+    </fieldset>
+  </div>
+  <header class="page">
+    <h1>Plant Over Its Life</h1>
+    <p class="lede">Your cooling plant keeps emitting after the day it is commissioned. Refrigerant leaks from it every year, its efficiency depends on how it runs at part load, and it will be replaced two or three times before the building is. This tool works through those three things for the plant you are proposing in Assignment 2, using Australian registers and data. It starts on a worked example: replace it with your own plant on tab 1.</p>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Plant over its life steps">
+    <button class="tab active" role="tab" id="tab-1" aria-controls="panel-1" aria-selected="true" tabindex="0" data-idx="0"><span class="n">1</span><span>Your plant</span></button>
+    <button class="tab" role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false" tabindex="-1" data-idx="1"><span class="n">2</span><span>Refrigerant</span></button>
+    <button class="tab" role="tab" id="tab-3" aria-controls="panel-3" aria-selected="false" tabindex="-1" data-idx="2"><span class="n">3</span><span>Part load</span></button>
+    <button class="tab" role="tab" id="tab-4" aria-controls="panel-4" aria-selected="false" tabindex="-1" data-idx="3"><span class="n">4</span><span>Life and upkeep</span></button>
+  </div>
+
+  <div class="orient">
+    <p class="datasource" id="dataSource" aria-live="polite">Numbers on screen: <b>the worked example</b> (two 450 kWr air-cooled chillers in Sydney).</p>
+  </div>
+
+  <!-- ===== Tab 1: Your plant ===== -->
+  <section class="card" role="tabpanel" id="panel-1" aria-labelledby="tab-1" tabindex="0">
+    <div class="primer">
+      <h2 class="what">Describe the cooling plant you are proposing.</h2>
+      <p>Everything on the later tabs is worked out from these few numbers. The plant size comes from your scaled Assignment 1 loads and the way you have split that capacity across machines. The annual cooling electricity comes from your DesignBuilder annual run. Where you are building sets the grid emission factor that turns that electricity into carbon.</p>
+    </div>
+
+    <h3 style="margin-top:0">What makes the cooling?</h3>
+    <div class="choices" role="radiogroup" aria-label="Cooling plant type">
+      <div class="choice"><input type="radio" name="plant" id="pl_air" value="air" checked><label for="pl_air">Air-cooled chillers or heat pumps<small>Packaged on the roof or a plant deck; fans reject heat straight to outdoor air</small></label></div>
+      <div class="choice"><input type="radio" name="plant" id="pl_water" value="water"><label for="pl_water">Water-cooled chillers + cooling tower<small>Chillers in a plant room; a cooling tower rejects the heat by evaporating water</small></label></div>
+      <div class="choice"><input type="radio" name="plant" id="pl_vrf" value="vrf"><label for="pl_vrf">VRF systems<small>Outdoor units pipe refrigerant to indoor units on each floor</small></label></div>
+    </div>
+
+    <div class="fieldrow">
+      <div>
+        <label for="nUnits" id="nUnitsLabel">Number of chillers</label>
+        <input type="number" id="nUnits" min="1" max="200" step="1" value="2">
+        <p class="hint" id="nUnitsHint">Duty machines only; a standby machine holds refrigerant too, so count it if you have one.</p>
+      </div>
+      <div>
+        <label for="capUnit" id="capLabel">Capacity of each chiller (kWr)</label>
+        <input type="number" id="capUnit" min="10" max="10000" step="10" value="450">
+        <p class="hint" id="capHint"></p>
+      </div>
+    </div>
+    <div class="fieldrow">
+      <div>
+        <label for="elec">Annual cooling electricity (kWh/yr)<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="Where this number comes from">i</button><span class="popover" role="tooltip" hidden>In DesignBuilder, the annual simulation reports Cooling (Electricity) under fuel breakdown. Scale it to your extended building the same way you scaled the loads. If you only have a heating-and-cooling total, use it and say so.</span></span></label>
+        <input type="number" id="elec" min="0" step="1000" value="150000">
+        <p class="hint">From your DesignBuilder annual run, scaled to the Assignment 2 building.</p>
+      </div>
+      <div>
+        <label for="grid">Where is the building?</label>
+        <select id="grid"></select>
+        <p class="hint" id="gridHint"></p>
+      </div>
+    </div>
+
+    <div class="results">
+      <div class="rows" id="plantSummary" role="status" aria-live="polite" aria-atomic="true"></div>
+    </div>
+
+    <div class="nav">
+      <span></span>
+      <button type="button" class="btn" data-nav="next">Next: refrigerant</button>
+    </div>
+  </section>
+
+  <!-- ===== Tab 2: Refrigerant ===== -->
+  <section class="card" role="tabpanel" id="panel-2" aria-labelledby="tab-2" tabindex="0" hidden>
+    <div class="primer">
+      <h2 class="what">How much your refrigerant choice adds to the plant's emissions.</h2>
+      <p>Every refrigerating system leaks a little each year, through joints, valves and servicing, and loses more when it is decommissioned. A refrigerant's global warming potential (GWP) says how many kilograms of CO<sub>2</sub> one kilogram of it is equivalent to. So the same leak can be trivial or larger than a year of a small building's electricity, depending only on which refrigerant is in the machine. Low-GWP refrigerants bring their own constraints, which is why the safety class matters as much as the GWP.</p>
+    </div>
+
+    <div class="fieldrow">
+      <div>
+        <label for="ref">Refrigerant</label>
+        <select id="ref"></select>
+        <p class="hint">The first group lists refrigerants actually used in the plant type you chose on tab 1.</p>
+      </div>
+      <div>
+        <label for="charge">Refrigerant charge per <span id="chargeUnitWord">chiller</span> (kg)</label>
+        <input type="number" id="charge" min="0" step="1">
+        <p class="hint"><span id="chargeHint"></span> <button type="button" class="linkbtn" id="chargeReset" hidden>Use the typical value</button></p>
+      </div>
+    </div>
+    <div class="fieldrow">
+      <div>
+        <label for="leak">Annual leak rate (% of charge per year)</label>
+        <input type="number" id="leak" min="0" max="30" step="0.1">
+        <p class="hint"><span id="leakHint"></span> <button type="button" class="linkbtn" id="leakReset" hidden>Use the typical value</button></p>
+      </div>
+      <div>
+        <label for="rec">Recovered at end of life (% of what is left)</label>
+        <input type="number" id="rec" min="0" max="100" step="1">
+        <p class="hint"><span id="recHint"></span> <button type="button" class="linkbtn" id="recReset" hidden>Use the typical value</button></p>
+      </div>
+    </div>
+
+    <div class="refcard" id="refCard"></div>
+
+    <div class="results">
+      <div class="headline" id="leakHead" role="status" aria-live="polite" aria-atomic="true"></div>
+      <div class="rows" id="leakRows"></div>
+    </div>
+
+    <h3>The same plant with each refrigerant, over one plant life</h3>
+    <p class="note" id="barsNote"></p>
+    <div class="bars" id="bars"></div>
+
+    <details class="maths">
+      <summary>The maths behind it</summary>
+      <p class="deriv">Annual leakage (t CO<sub>2</sub>-e) = number of units &times; charge (kg) &times; leak rate &times; GWP &divide; 1000.</p>
+      <p class="deriv">End-of-life loss = total charge &times; share of charge still in the machine at end of life &times; (1 &minus; recovery rate) &times; GWP &divide; 1000. The share left at end of life is 85% for chillers and 80% for VRF, from Cold Hard Facts 2022.</p>
+      <p class="deriv">Over one plant life = annual leakage &times; plant life + end-of-life loss. The electricity comparison uses today's scope 2 factor for every year. Australia's grid is getting cleaner, so over 20 to 25 years the electricity figure is an overestimate and refrigerant's share will grow. That is an argument for low GWP, not against it.</p>
+      <p class="deriv">GWP values are the 100-year AR4 values that Australian law uses (the Ozone Protection and Synthetic Greenhouse Gas Management Act 1989). Refrigerants that DCCEEW lists only as &ldquo;less than 5&rdquo; are calculated at 5, an upper bound; CO<sub>2</sub> is 1 by definition. Two refrigerants are not on the DCCEEW list: R-1233zd(E) (GWP about 1, IPCC AR5) and the legacy HCFC R-22 and R-123 (IPCC AR4).</p>
+      <p class="deriv">What this leaves out: a refrigerant change usually changes the efficiency and the charge too. A low-GWP choice that costs a few per cent of efficiency adds electricity emissions every year, so check the manufacturer's data before claiming the whole saving.</p>
+    </details>
+
+    <div class="nav">
+      <button type="button" class="btn ghost" data-nav="back">Back</button>
+      <button type="button" class="btn" data-nav="next">Next: part load</button>
+    </div>
+  </section>
+
+  <!-- ===== Tab 3: Part load ===== -->
+  <section class="card" role="tabpanel" id="panel-3" aria-labelledby="tab-3" tabindex="0" hidden>
+    <div class="primer">
+      <h2 class="what">How efficient real chillers are, at full load and across the year.</h2>
+      <p>A chiller's COP is measured at its full rated load, which it almost never runs at. The IPLV weights four part-load points by how many hours a typical plant spends at each (1% of hours at 100% load, 42% at 75%, 45% at 50%, 12% at 25%), so it is the better guide to annual energy. Every chiller sold in Australia is registered with both numbers under the GEMS Act. Each dot below is one of them.</p>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:var(--s-3);align-items:center;justify-content:space-between">
+      <div class="seg" role="group" aria-label="Efficiency measure">
+        <button type="button" data-metric="cop" aria-pressed="false">Full load (COP)</button>
+        <button type="button" data-metric="iplv" aria-pressed="true">Part load (IPLV)</button>
+      </div>
+      <p class="hint" id="bandHint" style="margin:0"></p>
+    </div>
+    <div class="chartbox" id="chartbox">
+      <div class="scrollx"><svg class="scatter" id="scatter" viewBox="0 0 640 340" role="img" aria-labelledby="scatterTitle"><title id="scatterTitle">Registered chillers: efficiency against capacity</title></svg></div>
+      <div class="tip" id="tip" hidden></div>
+    </div>
+    <div class="legend">
+      <span><svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="5" style="fill:var(--s-air)"/></svg>Air-cooled</span>
+      <span><svg width="12" height="12" aria-hidden="true"><rect x="1" y="1" width="10" height="10" style="fill:var(--s-water)"/></svg>Water-cooled</span>
+      <span><svg width="16" height="12" aria-hidden="true"><rect x="0" y="0" width="16" height="12" class="band" style="fill:var(--accent);opacity:.18"/></svg>Your chiller size, &minus;30% to +40%</span>
+    </div>
+
+    <div class="results">
+      <div class="rows" id="plRows" role="status" aria-live="polite" aria-atomic="true"></div>
+      <p class="verdict" id="plVerdict"></p>
+    </div>
+
+    <details class="maths">
+      <summary>Table view and the maths behind it</summary>
+      <div class="tablewrap"><table class="data" id="plTable"></table></div>
+      <p class="deriv">IPLV = 1 &divide; (0.01&divide;A + 0.42&divide;B + 0.45&divide;C + 0.12&divide;D), where A to D are the efficiencies at 100, 75, 50 and 25% load (the AHRI 550/590 weights).</p>
+      <p class="deriv">For the same cooling delivered, compressor electricity scales with 1 &divide; efficiency, so the ratio of two medians gives the rough size of the gap. The ratings are not like for like on heat rejection. An air-cooled rating includes its condenser fans. A water-cooled rating stops at the chiller, so the cooling tower fans and condenser water pumps come on top, and so does the water the tower evaporates.</p>
+      <p class="deriv">Source: GEMS registration database, chiller product type, exported 30 September 2026. Chillers registered as sold in Australia only (199 of 204). The export includes some registrations for products no longer available. Nothing on the register is below about 350 kWr.</p>
+    </details>
+
+    <div class="nav">
+      <button type="button" class="btn ghost" data-nav="back">Back</button>
+      <button type="button" class="btn" data-nav="next">Next: life and upkeep</button>
+    </div>
+  </section>
+
+  <!-- ===== Tab 4: Life and upkeep ===== -->
+  <section class="card" role="tabpanel" id="panel-4" aria-labelledby="tab-4" tabindex="0" hidden>
+    <div class="primer">
+      <h2 class="what">How long the plant lasts, and what keeping it running legally involves.</h2>
+      <p>Cooling plant usually lasts 20 to 25 years and a building lasts 50 or more, so the plant you propose will be replaced at least once. Each replacement brings a new refrigerant charge, new embodied carbon and a crane lift, which is why a replacement route belongs in the plant-room layout. Different plant also brings different maintenance duties, and some of them are set by law.</p>
+    </div>
+
+    <div class="fieldrow">
+      <div>
+        <label for="bldLife">Building life to plan for (years)</label>
+        <input type="number" id="bldLife" min="10" max="150" step="5" value="60">
+      </div>
+      <div></div>
+    </div>
+
+    <div class="results">
+      <div class="rows" id="lifeRows" role="status" aria-live="polite" aria-atomic="true"></div>
+    </div>
+
+    <h3>How long the main components last</h3>
+    <p class="note">Two sources, read together. The Australian lifespan is what the national refrigerant inventory assumes for this plant class. The ASHRAE figures are field records from about 345 US buildings: the age at which units were actually replaced, and the current age of units still running. Where few units have been replaced, the second number is the more useful one, and it is a lower bound.</p>
+    <div class="tablewrap"><table class="data" id="lifeTable"></table></div>
+
+    <h3>Rules that govern its upkeep</h3>
+    <p class="note" id="rulesNote"></p>
+    <ul class="rules" id="rules"></ul>
+
+    <h3>Carry this into Assignment 2</h3>
+    <p class="note">A summary of your numbers to paste into your notes. The figures are indicative. In the report, state which values are your own (from DesignBuilder or manufacturer data) and which are typical values from this tool.</p>
+    <div class="btn-row">
+      <button type="button" class="btn" id="buildCarry">Build a summary to copy</button>
+      <button type="button" class="btn ghost" id="printBtn">Print / save as PDF</button>
+      <button type="button" class="btn ghost" id="resetBtn">Back to the worked example</button>
+    </div>
+    <div class="carry" id="carry" hidden></div>
+
+    <div class="nav">
+      <button type="button" class="btn ghost" data-nav="back">Back</button>
+      <span></span>
+    </div>
+  </section>
+
+  <footer class="page">
+    <p>Refrigerant GWPs are the AR4 values in the DCCEEW list of HFC refrigerants (updated 13 December 2024). Safety classes are from AS/NZS ISO 817:2016 Tables 5 to 7, as reproduced by the Australian Refrigeration Council (August 2023). Charges, leak rates, end-of-life factors and lifespans are from Cold Hard Facts 2022, Appendix A, Table 1 (Expert Group for DCCEEW, February 2023). Grid factors are the location-based scope 2 factors in the National Greenhouse Accounts Factors 2025, Table 1. Chiller efficiencies are from the GEMS registration database (energyrating.gov.au), exported 30 September 2026. Service lives are from the ASHRAE Service Life and Maintenance Cost Database (contents as of 29 September 2026). Its maintenance costs are in US dollars per square foot, so they are not used here. Standards are summarised in a line each and do not replace the documents.</p>
+    <p>Built by the IEQ Lab, Sydney School of Architecture, Design and Planning, for the BPSD6030 Week 9 material on electrification and refrigerants and the Assignment 2 plant argument. It exists because the leakage arithmetic in the lecture is easy to follow on a slide and hard to redo for your own plant. Nothing here sizes plant. Self-contained, open-source, no tracking.</p>
+    <p>Revised September 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.</p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  function $(id) { return document.getElementById(id); }
+  function fmt(x, d) {
+    if (!isFinite(x)) return "—";
+    return x.toLocaleString("en-AU", { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
+  }
+  function fmtT(x) { return x >= 100 ? fmt(x, 0) : x >= 10 ? fmt(x, 1) : fmt(x, 2); }
+
+  // ---------- data ----------
+  // NGA Factors 2025, Table 1: location-based scope 2 (kg CO2-e/kWh).
+  var GRIDS = [
+    { id: "nsw", name: "NSW or ACT", ef: 0.64 },
+    { id: "vic", name: "Victoria", ef: 0.78 },
+    { id: "qld", name: "Queensland", ef: 0.67 },
+    { id: "sa", name: "South Australia", ef: 0.22 },
+    { id: "wa", name: "WA, south-west grid (SWIS)", ef: 0.50 },
+    { id: "wan", name: "WA, north-west grid (NWIS)", ef: 0.56 },
+    { id: "tas", name: "Tasmania", ef: 0.20 },
+    { id: "nt", name: "NT, Darwin-Katherine grid", ef: 0.56 }
+  ];
+
+  // GWP: AR4, DCCEEW list unless noted. gwpShow is what the page prints; gwp is what
+  // the arithmetic uses ("< 5" is calculated at 5, an upper bound).
+  // use: plant types the refrigerant is actually found in.
+  var REFS = [
+    { id: "R-134a", gwp: 1430, cls: "A1", fam: "HFC", use: ["air", "water"], note: "The standard screw and centrifugal chiller refrigerant for thirty years. Plant installed now will need servicing gas well into the HFC phase-down." },
+    { id: "R-410A", gwp: 2088, cls: "A1", fam: "HFC blend", use: ["air", "vrf"], note: "The legacy refrigerant in scroll chillers and VRF. Its high GWP is why manufacturers are moving to R-32 and R-454B." },
+    { id: "R-407C", gwp: 1774, cls: "A1", fam: "HFC blend", use: ["air"], note: "Found in older scroll chillers in existing buildings." },
+    { id: "R-32", gwp: 675, cls: "A2L", fam: "HFC", use: ["air", "vrf"], note: "Now the common refrigerant in splits and new VRF. About a third of R-410A's GWP, but mildly flammable." },
+    { id: "R-454B", gwp: 465, cls: "A2L", fam: "HFC/HFO blend", use: ["air", "vrf"], note: "A lower-GWP replacement for R-410A in scroll chillers, heat pumps and some VRF." },
+    { id: "R-452B", gwp: 697, cls: "A2L", fam: "HFC/HFO blend", use: ["air"], note: "An R-410A replacement used in some scroll chillers and heat pumps." },
+    { id: "R-513A", gwp: 629, cls: "A1", fam: "HFC/HFO blend", use: ["air", "water"], note: "A non-flammable R-134a replacement for screw and centrifugal chillers. Less than half the GWP with no change of safety class." },
+    { id: "R-515B", gwp: 292, cls: "A1", fam: "HFC/HFO blend", use: ["water"], note: "A non-flammable, low-GWP option for centrifugal and screw chillers." },
+    { id: "R-1234ze(E)", gwp: 5, gwpShow: "< 5", cls: "A2L", fam: "HFO", use: ["air", "water"], note: "Near-zero GWP for screw and centrifugal chillers, but mildly flammable, so AS/NZS 5149 limits where the machine may sit." },
+    { id: "R-1233zd(E)", gwp: 1, gwpShow: "about 1", cls: "A1", fam: "HCFO", use: ["water"], src: "Not on the DCCEEW list and not controlled under the Act. GWP from IPCC AR5; class from ASHRAE 34.", note: "A low-pressure refrigerant for water-cooled centrifugal chillers. Near-zero GWP and non-flammable." },
+    { id: "R-290 (propane)", gwp: 5, gwpShow: "< 5", cls: "A3", fam: "Natural (hydrocarbon)", use: ["air"], note: "Used in packaged air-cooled chillers and heat pumps that sit outdoors. Highly flammable, so charges indoors are tightly limited." },
+    { id: "R-717 (ammonia)", gwp: 5, gwpShow: "< 5", cls: "B2L", fam: "Natural", use: ["water"], note: "Very efficient and zero GWP, but toxic. Needs a dedicated machinery room with detection and ventilation, away from occupied space." },
+    { id: "R-744 (CO₂)", gwp: 1, gwpShow: "1", cls: "A1", fam: "Natural", use: ["air"], note: "Used in heat pumps for hot water, including the large domestic hot water loads of hotels and apartments. Runs at very high pressure." },
+    { id: "R-22", gwp: 1810, cls: "A1", fam: "HCFC (legacy)", use: ["air", "water", "vrf"], legacy: true, src: "Not on the DCCEEW HFC list. GWP from IPCC AR4.", note: "Ozone-depleting and no longer used in new equipment. You will only meet it in old plant in an existing building." },
+    { id: "R-123", gwp: 77, cls: "B1", fam: "HCFC (legacy)", use: ["water"], legacy: true, src: "Not on the DCCEEW HFC list. GWP from IPCC AR4.", note: "Ozone-depleting and no longer used in new equipment. Found in older low-pressure centrifugal chillers." }
+  ];
+
+  var CLASS = {
+    A1: { tone: "good", say: "Lower toxicity, non-flammable.", imp: "The fewest siting constraints. AS/NZS 5149 still limits the charge that may leak into an occupied room, which matters most for VRF." },
+    A2L: { tone: "warn", say: "Lower toxicity, lower flammability (often called mildly flammable).", imp: "AS/NZS 5149 limits the charge by room volume, and plant rooms or ceiling spaces may need leak detection and mechanical ventilation. Check where the machine and its pipework can go." },
+    A3: { tone: "bad", say: "Lower toxicity, higher flammability.", imp: "Keep the charge small and the machine outdoors. Indoor plant rooms become hazardous areas, which is why propane chillers are packaged units on roofs." },
+    B1: { tone: "warn", say: "Higher toxicity, non-flammable.", imp: "Needs a machinery room with refrigerant detection and ventilation to AS/NZS 5149." },
+    B2L: { tone: "bad", say: "Higher toxicity, lower flammability.", imp: "A dedicated machinery room with detection, emergency ventilation and separation from occupied space. It shapes the plant-room layout." }
+  };
+
+  // Cold Hard Facts 2022, Appendix A, Table 1 (2021 values).
+  function typical(plant, cap) {
+    if (plant === "vrf") return { charge: 9, leak: 2.7, life: 20, eol: 0.80, rec: 90, band: "VRF/VRV split systems" };
+    var c, band;
+    if (cap < 350) { c = 40; band = "chillers under 350 kWr"; }
+    else if (cap < 500) { c = 60; band = "chillers of 350 to 500 kWr"; }
+    else if (cap < 1000) { c = 210; band = "chillers of 500 to 1,000 kWr"; }
+    else { c = Math.round(210 * cap / 750); band = "chillers over 1,000 kWr (scaled from the 500 to 1,000 kWr band)"; }
+    return { charge: c, leak: 4.5, life: cap < 350 ? 20 : 25, eol: 0.85, rec: 95, band: band };
+  }
+
+  // GEMS registration database, chillers sold in Australia, exported 2026-09-30.
+  // [0 air | 1 water, capacity kWr, declared COP, declared IPLV]
+  var CHILLERS = [[0,360,3.08,4.88],[0,379,3.23,5.5],[0,380,3.17,5.5],[0,384,3.04,4.54],[0,400,2.8,3.8],[0,400,3.05,5.33],[0,406,2.97,4.87],[0,411,3.1,5.47],[0,414,3.07,5.05],[0,427,2.99,4.72],[0,430,3.45,7.16],[0,433,3.17,5.16],[0,437,3.1,4.47],[0,451,3.17,5.63],[0,452,2.99,4.8],[0,455,3.13,5.68],[0,466,2.82,4.78],[0,472,2.88,7.17],[0,474,2.7,6.97],[0,474,2.77,5.18],[0,483,3.19,5.12],[0,494,3.11,4.81],[0,500,2.88,5.24],[0,500,3.78,6.73],[0,500,3.86,7.37],[0,500,3.86,7.37],[0,500,3.86,7.37],[0,511,2.84,4.42],[0,534,3.2,5.11],[0,541,3.22,5.23],[0,546,3.2,5.73],[0,549,3.37,6.54],[0,550,2.91,5.28],[0,553,3.11,5.59],[0,553,3.27,5.79],[0,568,2.9,4.84],[0,570,4.58,5.37],[0,576,2.92,6.83],[0,609,3.01,5.5],[0,616,3.35,5.4],[0,617,3.18,5.69],[0,618,3.14,4.68],[0,626,3.04,5.5],[0,632,3.34,5.66],[0,633,3.05,4.51],[0,650,3.39,7.34],[0,650,3.39,7.34],[0,650,3.39,7.34],[0,650,3.49,7.33],[0,660,3.11,4.93],[0,665,3.08,5.64],[0,672,3.64,7.29],[0,672,3.64,7.29],[0,672,3.64,7.29],[0,678,3.17,5.64],[0,682,2.72,6.27],[0,700,3.81,6.86],[0,718,2.89,4.79],[0,726,3.09,5.55],[0,749,3.18,5.56],[0,749,3.18,5.56],[0,750,2.91,5.0],[0,759,2.9,4.69],[0,763,2.81,5.31],[0,783,3.1,5.7],[0,800,2.99,5.23],[0,808,3.07,5.67],[0,829,3.11,4.9],[0,860,3.01,4.72],[0,878,3.03,5.62],[0,880,3.03,5.75],[0,890,3.07,5.73],[0,930,3.21,6.57],[0,944,2.96,5.51],[0,978,3.1,5.9],[0,990,5.09,5.28],[0,1006,2.83,4.44],[0,1030,2.81,5.95],[0,1030,3.02,5.93],[0,1032,3.14,5.86],[0,1045,3.12,5.02],[0,1059,3.01,5.86],[0,1146,2.93,4.86],[0,1150,2.98,5.48],[0,1216,3.01,5.5],[0,1227,3.06,4.49],[0,1277,3.67,7.48],[0,1277,3.67,7.48],[0,1277,3.67,7.48],[0,1344,3.6,7.49],[0,1344,3.6,7.49],[0,1408,3.6,6.35],[0,1470,2.92,6.23],[1,425,5.49,8.93],[1,444,5.59,9.22],[1,451,5.23,6.8],[1,451,5.69,7.36],[1,457,6.44,11.15],[1,472,5.43,6.96],[1,518,5.23,7.16],[1,538,4.81,6.76],[1,569,5.63,9.51],[1,573,5.71,10.4],[1,590,5.68,9.68],[1,600,5.22,10.19],[1,600,5.22,10.19],[1,600,5.22,10.19],[1,600,5.22,10.19],[1,600,5.22,10.19],[1,600,5.72,10.16],[1,627,5.54,11.13],[1,640,6.74,11.63],[1,641,6.15,8.76],[1,644,5.6,9.77],[1,650,6.42,10.92],[1,700,5.98,10.87],[1,703,6.36,11.29],[1,718,5.79,9.71],[1,800,5.63,10.28],[1,800,5.63,10.28],[1,800,5.63,10.28],[1,800,5.63,10.28],[1,800,5.63,10.28],[1,800,5.63,10.28],[1,800,5.63,10.28],[1,800,5.63,10.28],[1,800,5.63,10.28],[1,800,5.97,9.96],[1,900,6.21,10.99],[1,910,5.5,9.52],[1,910,5.61,9.65],[1,910,6.02,11.61],[1,999,5.59,10.85],[1,999,5.59,10.85],[1,999,5.59,10.85],[1,999,5.59,10.85],[1,999,5.59,10.85],[1,999,5.59,10.85],[1,999,5.59,10.85],[1,999,5.59,10.85],[1,999,5.59,10.85],[1,1000,5.85,8.88],[1,1050,6.15,9.53],[1,1050,6.38,11.3],[1,1080,5.8,9.99],[1,1080,6.25,10.34],[1,1081,5.95,9.99],[1,1139,5.98,10.39],[1,1156,6.32,10.41],[1,1196,5.91,9.96],[1,1197,6.33,10.58],[1,1250,5.81,10.34],[1,1250,5.81,10.34],[1,1250,5.81,10.34],[1,1250,5.81,10.34],[1,1250,5.81,10.34],[1,1250,5.81,10.34],[1,1250,5.81,10.34],[1,1250,5.81,10.34],[1,1250,5.81,10.34],[1,1250,6.15,10.75],[1,1252,6.06,9.26],[1,1350,5.87,9.63],[1,1398,5.86,8.98],[1,1400,6.04,11.33],[1,1400,6.04,11.33],[1,1400,6.04,11.33],[1,1400,6.04,11.33],[1,1400,6.16,10.31],[1,1400,6.95,11.51],[1,1432,5.84,6.52],[1,1490,6.41,10.9],[1,1499,6.01,11.39],[1,1499,6.01,11.39],[1,1499,6.01,11.39],[1,1499,6.01,11.39],[1,1583,6.57,10.43],[1,1603,6.48,10.83],[1,1735,6.33,11.11],[1,1753,6.0,10.47],[1,1753,6.0,10.47],[1,1753,6.0,10.47],[1,1782,6.13,9.71],[1,1800,7.14,12.0],[1,1910,6.64,11.09],[1,2100,7.08,11.8],[1,2110,6.56,11.42],[1,2110,6.61,11.64],[1,2140,6.48,11.51],[1,2345,6.57,11.09],[1,2400,6.79,11.48],[1,2500,6.42,10.95],[1,2800,6.72,11.9],[1,2950,6.54,10.92],[1,3110,6.23,10.41],[1,3110,6.23,10.41],[1,3110,6.23,10.41],[1,4170,6.54,11.6],[1,5400,6.34,11.14]];
+
+  // ASHRAE service life database, contents as of 2026-09-29.
+  // [label, replaced median yrs, replaced n, in-service median age, in-service n, CHF life or null]
+  var LIFE = {
+    air: [
+      ["Air-cooled screw chiller", 23, 1, 8.5, 8, "chiller"],
+      ["Air-cooled reciprocating chiller", 11, 1, 28.5, 15, "chiller"],
+      ["Chilled water pump (split case)", null, 0, 21, 133, null],
+      ["Air handling unit, VAV", 26, 69, 20, 893, null],
+      ["Fan coil unit", 36.5, 1279, 27, 1605, null],
+      ["BMS, direct digital control", 25, 31, 10, 115, null]
+    ],
+    water: [
+      ["Centrifugal chiller", 25, 30, 18, 209, "chiller"],
+      ["Water-cooled screw chiller", null, 0, 11, 5, "chiller"],
+      ["Cooling tower, metal", 17.5, 26, 17.5, 162, null],
+      ["Chilled or condenser water pump (split case)", null, 0, 21, 133, null],
+      ["Air handling unit, VAV", 26, 69, 20, 893, null],
+      ["Fan coil unit", 36.5, 1279, 27, 1605, null],
+      ["BMS, direct digital control", 25, 31, 10, 115, null]
+    ],
+    vrf: [
+      ["Split DX system (closest match to VRF)", 17, 1, 19, 173, "vrf"],
+      ["Heat pump, air-to-air", 17, 1, 14, 1295, null],
+      ["Air handling unit, VAV (DOAS)", 26, 69, 20, 893, null],
+      ["BMS, direct digital control", 25, 31, 10, 115, null]
+    ]
+  };
+
+  var RULES_COMMON = [
+    { std: "AS/NZS 3666.1 and 3666.2", kind: "Standard", txt: "Microbial control of air-handling and water systems: part 1 covers design, installation and commissioning, part 2 operation and maintenance. It applies to the air-handling units in every option here, not only to cooling towers: drain pans, coils and filters need a documented cleaning and inspection regime." },
+    { std: "AS/NZS 5149 (parts 1 to 4)", kind: "Standard", txt: "Safety and environmental requirements for refrigerating systems and heat pumps. It uses the AS/NZS ISO 817 safety class to set how much refrigerant may sit in or near a room, when a machinery room, leak detection or ventilation is needed, and (part 4) how the plant is operated, maintained, repaired and its refrigerant recovered." },
+    { std: "AS/NZS ISO 817:2016", kind: "Standard", txt: "Gives every refrigerant its R-number and its safety class (A or B for toxicity; 1, 2L, 2 or 3 for flammability). It does not set maintenance duties itself, but the class it assigns drives the AS/NZS 5149 requirements." },
+    { std: "Refrigerant handling licence", kind: "Commonwealth law", txt: "Under the Ozone Protection and Synthetic Greenhouse Gas Management Regulations 1995, anyone who installs, services or decommissions this plant must hold a licence from the Australian Refrigeration Council, and the business must hold a refrigerant trading authorisation. Recovered refrigerant may not be vented." },
+    { std: "HFC phase-down", kind: "Commonwealth law", txt: "Australia's imports of HFCs are stepping down to 15% of the baseline by 2036. A high-GWP plant installed today will need servicing gas in a market where that gas is scarcer and dearer for most of its life." },
+    { std: "AS 1851", kind: "Standard", txt: "Routine service of fire protection systems, including fire and smoke dampers and smoke-control fans in the air-handling system." },
+    { std: "AIRAH DA19", kind: "Industry guide", txt: "HVAC&R maintenance: the Australian industry guide to maintenance tasks and frequencies for each type of equipment. Not mandatory, but it is what a maintenance contract is usually written against." }
+  ];
+  var RULES_TYPE = {
+    water: [
+      { std: "AS/NZS 3666.3 and state public health law", kind: "Standard and state law", txt: "A cooling tower is a known Legionella source, so it is regulated in every state. In NSW, for example, the Public Health Act 2010 and Public Health Regulation 2022 require the tower to be registered with the local council, to have a risk management plan, to be sampled for Legionella and bacteria every month, and to be audited independently. AS/NZS 3666.3 sets out the performance-based maintenance of cooling water systems. This regime, with its water treatment contract, is a running cost that air-cooled plant avoids." }
+    ],
+    air: [
+      { std: "No cooling tower", kind: "What you avoid", txt: "Air-cooled plant has no cooling water system, so none of the cooling tower registration, sampling and audit regime applies. Condenser coils still need regular cleaning, and roof plant needs safe access for maintenance." }
+    ],
+    vrf: [
+      { std: "Refrigerant in occupied space", kind: "AS/NZS 5149 in practice", txt: "VRF runs refrigerant pipework through ceilings and into every zone, so leak checking happens across the building and not only in a plant room. The smallest room served sets how much charge a single system may hold, which can force more, smaller systems or leak detection in small rooms such as hotel bedrooms." }
+    ]
+  };
+
+  // ---------- state ----------
+  var EXAMPLE = { plant: "air", n: 2, cap: 450, elec: 150000, grid: "nsw", ref: "R-134a", charge: null, leak: null, rec: null, bld: 60 };
+  var S = JSON.parse(JSON.stringify(EXAMPLE));
+  var metric = "iplv";
+
+  function gridOf() { for (var i = 0; i < GRIDS.length; i++) if (GRIDS[i].id === S.grid) return GRIDS[i]; return GRIDS[0]; }
+  function refOf(id) { for (var i = 0; i < REFS.length; i++) if (REFS[i].id === id) return REFS[i]; return REFS[0]; }
+  function eff() {
+    var t = typical(S.plant, S.cap);
+    return {
+      t: t,
+      charge: S.charge != null ? S.charge : t.charge,
+      leak: S.leak != null ? S.leak : t.leak,
+      rec: S.rec != null ? S.rec : t.rec
+    };
+  }
+  function calc(ref) {
+    var e = eff(), r = ref || refOf(S.ref), g = gridOf();
+    var total = S.n * e.charge;
+    var leakKg = total * e.leak / 100;
+    var leakT = leakKg * r.gwp / 1000;
+    var eolKg = total * e.t.eol * (1 - e.rec / 100);
+    var eolT = eolKg * r.gwp / 1000;
+    var lifeT = leakT * e.t.life + eolT;
+    var elecT = S.elec * g.ef / 1000;
+    return { e: e, r: r, g: g, total: total, leakKg: leakKg, leakT: leakT, eolKg: eolKg, eolT: eolT, lifeT: lifeT, elecT: elecT, elecLifeT: elecT * e.t.life };
+  }
+
+  function isExample() {
+    return S.plant === EXAMPLE.plant && S.n === EXAMPLE.n && S.cap === EXAMPLE.cap && S.elec === EXAMPLE.elec &&
+      S.grid === EXAMPLE.grid && S.ref === EXAMPLE.ref && S.charge === null && S.leak === null && S.rec === null && S.bld === EXAMPLE.bld;
+  }
+  function unitWord(pl) { return S.plant === "vrf" ? (pl ? "VRF systems" : "VRF system") : (pl ? "chillers" : "chiller"); }
+
+  // ---------- rendering ----------
+  function renderSource() {
+    var el = $("dataSource");
+    var mine = !isExample();
+    var msg = mine
+      ? "Numbers on screen: <b>your plant</b> (" + S.n + " &times; " + fmt(S.cap) + (S.plant === "vrf" ? " kW VRF" : S.plant === "air" ? " kWr air-cooled" : " kWr water-cooled") + ", " + gridOf().name + ")."
+      : "Numbers on screen: <b>the worked example</b> (two 450 kWr air-cooled chillers in Sydney).";
+    el.classList.toggle("mine", mine);
+    if (el.innerHTML !== msg) el.innerHTML = msg;
+  }
+
+  function renderPlant() {
+    $("nUnitsLabel").textContent = S.plant === "vrf" ? "Number of VRF systems (outdoor units)" : "Number of chillers";
+    $("capLabel").textContent = "Capacity of each " + unitWord() + " (kW" + (S.plant === "vrf" ? "" : "r") + ")";
+    $("nUnitsHint").textContent = S.plant === "vrf"
+      ? "Each outdoor unit and its pipework is a separate refrigerant circuit."
+      : "Include a standby machine if you have one: it holds refrigerant too.";
+    var total = S.n * S.cap;
+    $("capHint").textContent = "Total installed: " + fmt(total) + " kW" + (S.plant === "vrf" ? "" : "r") + ".";
+    var g = gridOf();
+    $("gridHint").textContent = "Scope 2 factor " + g.ef.toFixed(2) + " kg CO₂-e/kWh (NGA Factors 2025).";
+    var c = calc();
+    $("plantSummary").innerHTML =
+      row("Installed cooling capacity", fmt(total) + " kW") +
+      row("Refrigerant held on site (typical charge, " + c.e.t.band + ")", fmt(c.total) + " kg") +
+      row("Cooling electricity emissions, this year's grid", fmtT(c.elecT) + " t CO₂-e/yr") +
+      row("Typical plant life (Cold Hard Facts 2022)", c.e.t.life + " years");
+  }
+  function row(k, v) { return '<div class="row"><span class="k">' + k + '</span><span class="v">' + v + "</span></div>"; }
+
+  function renderRefSelect() {
+    var sel = $("ref"), used = [], other = [];
+    REFS.forEach(function (r) { (r.use.indexOf(S.plant) >= 0 ? used : other).push(r); });
+    function opts(list) {
+      return list.map(function (r) {
+        return '<option value="' + r.id + '"' + (r.id === S.ref ? " selected" : "") + ">" + r.id + " · GWP " + (r.gwpShow || fmt(r.gwp)) + " · " + r.cls + (r.legacy ? " · legacy" : "") + "</option>";
+      }).join("");
+    }
+    sel.innerHTML = '<optgroup label="Used in ' + (S.plant === "vrf" ? "VRF" : S.plant === "air" ? "air-cooled chillers" : "water-cooled chillers") + '">' + opts(used) +
+      '</optgroup><optgroup label="Other refrigerants">' + opts(other) + "</optgroup>";
+  }
+
+  function renderRefrigerant() {
+    var c = calc(), e = c.e, r = c.r, cl = CLASS[r.cls];
+    $("chargeUnitWord").textContent = unitWord();
+    $("charge").value = e.charge;
+    $("leak").value = e.leak;
+    $("rec").value = e.rec;
+    $("chargeHint").textContent = "Typical for " + e.t.band + ": " + fmt(e.t.charge) + " kg (Cold Hard Facts 2022" + (S.plant === "vrf" ? ", an average across all VRF sizes; a large commercial system holds tens of kg" : "") + "). Use the manufacturer's figure if you have one.";
+    $("leakHint").textContent = "Typical: " + e.t.leak + "% (Cold Hard Facts 2022). NGER prescribes 9% for commercial air conditioning, an upper value.";
+    $("recHint").textContent = "Typical: " + e.t.rec + "%, the technical maximum. Real recovery is often lower.";
+    $("chargeReset").hidden = S.charge == null;
+    $("leakReset").hidden = S.leak == null;
+    $("recReset").hidden = S.rec == null;
+
+    $("refCard").innerHTML =
+      '<span class="badge">' + r.fam + "</span>" +
+      '<span class="badge">GWP ' + (r.gwpShow || fmt(r.gwp)) + "</span>" +
+      '<span class="badge ' + cl.tone + '">Safety class ' + r.cls + "</span>" +
+      (r.use.indexOf(S.plant) < 0 ? '<span class="badge warn">Not normally used in this plant type</span>' : "") +
+      "<p>" + r.note + "</p>" +
+      "<p><b>" + r.cls + ":</b> " + cl.say + " " + cl.imp + "</p>" +
+      (r.src ? '<p class="hint">' + r.src + "</p>" : "");
+
+    var share = c.leakT / (c.leakT + c.elecT) * 100;
+    $("leakHead").innerHTML =
+      '<div><div class="big">' + fmtT(c.leakT) + "<small>t CO₂-e/yr</small></div><div class=\"bigcap\">refrigerant leakage, every year</div></div>" +
+      '<div><div class="big">' + fmt(share, 0) + "<small>%</small></div><div class=\"bigcap\">of the plant's yearly emissions (leakage + cooling electricity)</div></div>";
+    $("leakRows").innerHTML =
+      row("Refrigerant lost each year", fmt(c.leakKg, 1) + " kg of " + fmt(c.total) + " kg") +
+      row("Cooling electricity, this year's grid", fmtT(c.elecT) + " t CO₂-e/yr") +
+      row("Lost at end of life", fmt(c.eolKg, 1) + " kg = " + fmtT(c.eolT) + " t CO₂-e") +
+      row("Refrigerant over one plant life (" + e.t.life + " years)", fmtT(c.lifeT) + " t CO₂-e") +
+      row("Equivalent years of cooling electricity", fmt(c.lifeT / c.elecT, 1) + " years");
+
+    // ranked bars: the plant's refrigerant list, plus the electricity reference
+    var list = REFS.filter(function (x) { return x.use.indexOf(S.plant) >= 0 || x.id === S.ref; });
+    var vals = list.map(function (x) { return { r: x, v: calc(x).lifeT }; });
+    vals.sort(function (a, b) { return b.v - a.v; });
+    var max = (vals.length ? vals[0].v : 0) || 1;
+    var html = vals.map(function (o) {
+      return '<div class="bar-row' + (o.r.id === S.ref ? " sel" : "") + '"><span class="nm">' + o.r.id + '</span><span class="track"><div class="fill" style="width:' + (o.v / max * 100).toFixed(1) + '%"></div></span><span class="val">' + fmtT(o.v) + " t</span></div>";
+    }).join("");
+    $("bars").innerHTML = html;
+    $("barsNote").textContent = "Tonnes CO₂-e from refrigerant over " + e.t.life + " years for " + S.n + " × " + fmt(e.charge) + " kg, with the same charge and leak rate for every refrigerant. For scale, your cooling electricity over the same years is " + fmtT(c.elecLifeT) + " t on this year's " + c.g.name + " grid.";
+  }
+
+  // ---------- part load scatter ----------
+  var X0 = 56, X1 = 624, Y0 = 300, Y1 = 16, CMIN = 300, CMAX = 6000;
+  function xs(cap) { return X0 + (Math.log(cap) - Math.log(CMIN)) / (Math.log(CMAX) - Math.log(CMIN)) * (X1 - X0); }
+  function median(a) { if (!a.length) return NaN; var s = a.slice().sort(function (p, q) { return p - q; }), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; }
+
+  function renderPartLoad() {
+    var k = metric === "cop" ? 2 : 3, ymax = metric === "cop" ? 8 : 14;
+    function ys(v) { return Y0 - v / ymax * (Y0 - Y1); }
+    var lo = S.cap * 0.7, hi = S.cap * 1.4;
+    var svg = $("scatter"), out = ['<title id="scatterTitle">Registered chillers: ' + (metric === "cop" ? "full-load COP" : "part-load IPLV") + " against capacity</title>"];
+    // gridlines
+    for (var v = 0; v <= ymax; v += 2) {
+      out.push('<line class="gl" x1="' + X0 + '" x2="' + X1 + '" y1="' + ys(v) + '" y2="' + ys(v) + '"/>');
+      out.push('<text x="' + (X0 - 8) + '" y="' + (ys(v) + 4) + '" text-anchor="end">' + v + "</text>");
+    }
+    [300, 500, 1000, 2000, 5000].forEach(function (t) {
+      out.push('<text x="' + xs(t) + '" y="' + (Y0 + 18) + '" text-anchor="middle">' + fmt(t) + "</text>");
+    });
+    out.push('<text x="' + ((X0 + X1) / 2) + '" y="' + (Y0 + 36) + '" text-anchor="middle">Capacity per chiller (kWr, log scale)</text>');
+    out.push('<text x="14" y="' + ((Y0 + Y1) / 2) + '" text-anchor="middle" transform="rotate(-90 14 ' + ((Y0 + Y1) / 2) + ')">' + (metric === "cop" ? "COP at full load" : "IPLV (part load)") + "</text>");
+    out.push('<line class="ax" x1="' + X0 + '" x2="' + X1 + '" y1="' + Y0 + '" y2="' + Y0 + '"/>');
+    var showBand = S.plant !== "vrf";
+    if (showBand) {
+      var bx0 = xs(Math.max(lo, CMIN)), bx1 = xs(Math.min(hi, CMAX));
+      if (bx1 > bx0) out.push('<rect class="band" x="' + bx0 + '" y="' + Y1 + '" width="' + (bx1 - bx0) + '" height="' + (Y0 - Y1) + '"/>');
+    }
+    CHILLERS.forEach(function (d, i) {
+      var inb = !showBand || (d[1] >= lo && d[1] <= hi);
+      var cx = xs(d[1]).toFixed(1), cy = ys(d[k]).toFixed(1), cls = "dot " + (d[0] ? "water" : "air") + (inb ? "" : " dim");
+      out.push(d[0]
+        ? '<rect class="' + cls + '" data-i="' + i + '" x="' + (cx - 4.5) + '" y="' + (cy - 4.5) + '" width="9" height="9"/>'
+        : '<circle class="' + cls + '" data-i="' + i + '" cx="' + cx + '" cy="' + cy + '" r="5"/>');
+    });
+    svg.innerHTML = out.join("");
+
+    // band statistics
+    var band = CHILLERS.filter(function (d) { return d[1] >= lo && d[1] <= hi; });
+    var A = band.filter(function (d) { return !d[0]; }), W = band.filter(function (d) { return d[0]; });
+    function stat(arr, j) { return arr.length ? fmt(median(arr.map(function (d) { return d[j]; })), 2) : "—"; }
+    $("bandHint").textContent = showBand ? "Highlighted: " + fmt(lo) + " to " + fmt(hi) + " kWr" : "VRF systems are not on the chiller register";
+    if (S.plant === "vrf") {
+      $("plRows").innerHTML = row("Registered chillers shown", CHILLERS.length);
+      $("plVerdict").textContent = "VRF systems are registered as air conditioners, with seasonal ratings measured differently, so they cannot be placed on this chart. The chart still shows the efficiency range of the central plant you would be comparing VRF against.";
+    } else if (S.cap < 350) {
+      $("plRows").innerHTML = row("Registered chillers in your size range", "none");
+      $("plVerdict").textContent = "The register has no chillers smaller than about 350 kWr. For a smaller machine, use the manufacturer's data, or check whether a few larger machines suit your load better.";
+    } else {
+      $("plRows").innerHTML =
+        row("Air-cooled in your size range (n = " + A.length + "): median COP / IPLV", stat(A, 2) + " / " + stat(A, 3)) +
+        row("Water-cooled in your size range (n = " + W.length + "): median COP / IPLV", stat(W, 2) + " / " + stat(W, 3));
+      var mA = median(A.map(function (d) { return d[3]; })), mW = median(W.map(function (d) { return d[3]; }));
+      var msg;
+      if (A.length && W.length) {
+        var cut = (1 - mA / mW) * 100;
+        var partMA = median(A.map(function (d) { return d[3] / d[2]; }));
+        msg = "Across the year, the typical water-cooled chiller in this range uses about " + fmt(cut, 0) + "% less compressor electricity than the typical air-cooled one. " +
+          "Every chiller here is much better at part load than at full load (air-cooled IPLV is about " + fmt(partMA, 1) + " times its COP), which is why sizing and staging matter. " +
+          (S.plant === "air"
+            ? "Before switching to water-cooled on this number, add back the cooling tower fans, condenser pumps, water use and the tower maintenance regime on tab 4."
+            : "Part of that gap is paid back in cooling tower fans, condenser pumps and water, which the water-cooled rating leaves out; see tab 4 for the tower's maintenance regime.");
+      } else {
+        msg = "Only one kind of chiller is registered in this size range, so the register cannot compare air- and water-cooled here.";
+      }
+      $("plVerdict").textContent = msg;
+    }
+    // table view: medians by capacity band
+    var bands = [[350, 500], [500, 1000], [1000, 2000], [2000, 6000]];
+    var t = '<thead><tr><th>Capacity band (kWr)</th><th class="num">Air-cooled n</th><th class="num">COP</th><th class="num">IPLV</th><th class="num">Water-cooled n</th><th class="num">COP</th><th class="num">IPLV</th></tr></thead><tbody>';
+    bands.forEach(function (b) {
+      var inb = CHILLERS.filter(function (d) { return d[1] >= b[0] && d[1] < b[1]; });
+      var a = inb.filter(function (d) { return !d[0]; }), w = inb.filter(function (d) { return d[0]; });
+      t += "<tr><td>" + fmt(b[0]) + " to " + fmt(b[1]) + '</td><td class="num">' + a.length + '</td><td class="num">' + stat(a, 2) + '</td><td class="num">' + stat(a, 3) +
+        '</td><td class="num">' + w.length + '</td><td class="num">' + stat(w, 2) + '</td><td class="num">' + stat(w, 3) + "</td></tr>";
+    });
+    $("plTable").innerHTML = t + "</tbody>";
+  }
+
+  // tooltip on the scatter
+  (function () {
+    var box = $("chartbox"), tip = $("tip");
+    $("scatter").addEventListener("mousemove", function (e) {
+      var i = e.target.getAttribute && e.target.getAttribute("data-i");
+      if (i == null) { tip.hidden = true; return; }
+      var d = CHILLERS[+i];
+      tip.innerHTML = (d[0] ? "Water-cooled" : "Air-cooled") + ", " + fmt(d[1]) + " kWr<br>COP " + d[2].toFixed(2) + " · IPLV " + d[3].toFixed(2);
+      tip.hidden = false;
+      var br = box.getBoundingClientRect(), tr = tip.getBoundingClientRect();
+      var x = e.clientX - br.left + 12, y = e.clientY - br.top - tr.height - 8;
+      if (x + tr.width > br.width) x = e.clientX - br.left - tr.width - 12;
+      if (y < 0) y = e.clientY - br.top + 16;
+      tip.style.left = Math.max(0, x) + "px"; tip.style.top = y + "px";
+    });
+    $("scatter").addEventListener("mouseleave", function () { tip.hidden = true; });
+  })();
+
+  // ---------- life and upkeep ----------
+  function renderLife() {
+    var c = calc(), life = c.e.t.life;
+    var installs = Math.ceil(S.bld / life), repl = installs - 1;
+    $("lifeRows").innerHTML =
+      row("Plant life assumed", life + " years") +
+      row("Replacements within " + S.bld + " years", repl + (repl === 1 ? " new plant" : " new plants")) +
+      row("Refrigerant over the building's life, if every plant used " + c.r.id, fmtT(c.leakT * S.bld + c.eolT * installs) + " t CO₂-e") +
+      row("…with a near-zero GWP refrigerant from the first replacement", fmtT(c.leakT * Math.min(life, S.bld) + c.eolT) + " t CO₂-e");
+    var rows = LIFE[S.plant];
+    var t = '<thead><tr><th>Component</th><th class="num">Australian plant life</th><th class="num">Replaced at (median)</th><th class="num">Still running, age (median)</th></tr></thead><tbody>';
+    rows.forEach(function (r) {
+      var chf = r[5] === "chiller" ? (S.plant === "vrf" ? "—" : c.e.t.life + " yrs") : r[5] === "vrf" ? "20 yrs" : "—";
+      t += "<tr><td>" + r[0] + '</td><td class="num">' + chf + '</td><td class="num">' + (r[1] == null ? "none recorded" : r[1] + " yrs (n = " + fmt(r[2]) + ")") +
+        '</td><td class="num">' + r[3] + " yrs (n = " + fmt(r[4]) + ")</td></tr>";
+    });
+    $("lifeTable").innerHTML = t + "</tbody>";
+    var rules = (RULES_TYPE[S.plant] || []).concat(RULES_COMMON);
+    $("rulesNote").textContent = S.plant === "water"
+      ? "The cooling tower is the biggest difference between these plant types. It is listed first."
+      : "What changes with plant type is listed first; the rest applies to all three.";
+    $("rules").innerHTML = rules.map(function (r) {
+      return '<li><span class="std">' + r.std + '</span><span class="kind">' + r.kind + "</span><p>" + r.txt + "</p></li>";
+    }).join("");
+  }
+
+  function renderAll() {
+    renderSource(); renderPlant(); renderRefrigerant(); renderPartLoad(); renderLife();
+    $("carry").hidden = true;
+  }
+
+  // ---------- inputs ----------
+  function num(id, lo, hi) { var v = parseFloat($(id).value); if (!isFinite(v)) return null; return Math.min(hi, Math.max(lo, v)); }
+  document.querySelectorAll('input[name="plant"]').forEach(function (r) {
+    r.addEventListener("change", function () {
+      /* Keep the installed capacity but re-split it into units that exist:
+         VRF outdoor units top out around 50 to 150 kW, while a chiller plant
+         is usually two to four machines. Without this, "2 x 450 kW VRF"
+         would badly undercount the refrigerant circuits. */
+      var total = S.n * S.cap, wasVrf = S.plant === "vrf";
+      S.plant = r.value; S.charge = null; S.leak = null; S.rec = null;
+      if (S.plant === "vrf" && !wasVrf && S.cap > 150) { S.cap = 50; S.n = Math.max(1, Math.ceil(total / 50)); }
+      else if (S.plant !== "vrf" && wasVrf) { S.n = total > 600 ? 2 : 1; S.cap = Math.round(total / S.n / 10) * 10; }
+      $("nUnits").value = S.n; $("capUnit").value = S.cap;
+      if (refOf(S.ref).use.indexOf(S.plant) < 0) S.ref = S.plant === "vrf" ? "R-410A" : S.plant === "water" ? "R-134a" : "R-134a";
+      renderRefSelect(); renderAll();
+    });
+  });
+  $("nUnits").addEventListener("input", function () { var v = num("nUnits", 1, 200); if (v != null) { S.n = Math.round(v); renderAll(); } });
+  $("capUnit").addEventListener("input", function () { var v = num("capUnit", 10, 10000); if (v != null) { S.cap = v; S.charge = null; renderAll(); } });
+  $("elec").addEventListener("input", function () { var v = num("elec", 0, 1e9); if (v != null) { S.elec = v; renderAll(); } });
+  $("grid").addEventListener("change", function () { S.grid = $("grid").value; renderAll(); });
+  $("ref").addEventListener("change", function () { S.ref = $("ref").value; renderAll(); });
+  // typed overrides: don't re-render the field being typed into
+  function override(id, key, lo, hi) {
+    $(id).addEventListener("input", function () {
+      var v = num(id, lo, hi); if (v == null) return;
+      S[key] = v;
+      renderSource(); renderPlant(); renderLife();
+      var keep = $(id).value; renderRefrigerant(); $(id).value = keep;
+    });
+  }
+  override("charge", "charge", 0, 100000);
+  override("leak", "leak", 0, 30);
+  override("rec", "rec", 0, 100);
+  $("chargeReset").addEventListener("click", function () { S.charge = null; renderAll(); });
+  $("leakReset").addEventListener("click", function () { S.leak = null; renderAll(); });
+  $("recReset").addEventListener("click", function () { S.rec = null; renderAll(); });
+  $("bldLife").addEventListener("input", function () { var v = num("bldLife", 10, 150); if (v != null) { S.bld = v; renderSource(); renderLife(); } });
+  document.querySelectorAll(".seg button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      metric = b.getAttribute("data-metric");
+      document.querySelectorAll(".seg button").forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+      renderPartLoad();
+    });
+  });
+
+  function syncInputs() {
+    $("pl_" + S.plant).checked = true;
+    $("nUnits").value = S.n; $("capUnit").value = S.cap; $("elec").value = S.elec; $("grid").value = S.grid; $("bldLife").value = S.bld;
+  }
+  $("resetBtn").addEventListener("click", function () {
+    S = JSON.parse(JSON.stringify(EXAMPLE));
+    syncInputs(); renderRefSelect(); renderAll();
+    activate(0, true);
+  });
+  $("printBtn").addEventListener("click", function () { window.print(); });
+  $("buildCarry").addEventListener("click", function () {
+    var c = calc(), e = c.e, life = e.t.life, repl = Math.ceil(S.bld / life) - 1;
+    var lines = [
+      "PLANT OVER ITS LIFE (BPSD6030, indicative figures)",
+      "Plant: " + S.n + " x " + fmt(S.cap) + " kW " + (S.plant === "vrf" ? "VRF systems" : S.plant === "air" ? "air-cooled chillers" : "water-cooled chillers + cooling tower") + ", " + c.g.name,
+      "Cooling electricity: " + fmt(S.elec) + " kWh/yr x " + c.g.ef.toFixed(2) + " kg/kWh (NGA 2025) = " + fmtT(c.elecT) + " t CO2-e/yr",
+      "Refrigerant: " + c.r.id + ", GWP " + (c.r.gwpShow || fmt(c.r.gwp)) + " (AR4), safety class " + c.r.cls,
+      "Charge " + fmt(e.charge) + " kg per unit" + (S.charge == null ? " (typical, Cold Hard Facts 2022)" : " (my figure)") + "; leak " + e.leak + "%/yr" + (S.leak == null ? " (typical)" : " (my figure)") + "; recovery " + e.rec + "%",
+      "Leakage: " + fmtT(c.leakT) + " t CO2-e/yr; " + fmtT(c.lifeT) + " t CO2-e over a " + life + "-year plant life",
+      "Plant replaced " + repl + " time(s) in a " + S.bld + "-year building life",
+      "Cooling tower regime (AS/NZS 3666.3 + state law): " + (S.plant === "water" ? "applies" : "avoided")
+    ];
+    if (S.plant !== "vrf" && S.cap >= 350) {
+      var band = CHILLERS.filter(function (d) { return d[1] >= S.cap * 0.7 && d[1] <= S.cap * 1.4; });
+      var A = band.filter(function (d) { return !d[0]; }).map(function (d) { return d[3]; }), W = band.filter(function (d) { return d[0]; }).map(function (d) { return d[3]; });
+      lines.push("GEMS register, median IPLV in my size range: air-cooled " + (A.length ? fmt(median(A), 2) : "n/a") + " (n=" + A.length + "), water-cooled " + (W.length ? fmt(median(W), 2) : "n/a") + " (n=" + W.length + ")");
+    }
+    var box = $("carry"); box.textContent = lines.join("\n"); box.hidden = false;
+    try { navigator.clipboard.writeText(box.textContent).catch(function () {}); } catch (err) {}
+  });
+
+  // ---------- tabs ----------
+  var tabs = Array.prototype.slice.call(document.querySelectorAll(".tab"));
+  var panels = [$("panel-1"), $("panel-2"), $("panel-3"), $("panel-4")];
+  var current = 0;
+  function activate(idx, focusTab) {
+    if (idx < 0 || idx >= panels.length) return;
+    current = idx;
+    tabs.forEach(function (t, i) {
+      var on = i === idx;
+      t.classList.toggle("active", on);
+      t.setAttribute("aria-selected", on ? "true" : "false");
+      t.tabIndex = on ? 0 : -1;
+      panels[i].hidden = !on;
+    });
+    if (focusTab) tabs[idx].focus();
+  }
+  tabs.forEach(function (t) {
+    t.addEventListener("click", function () { activate(+t.getAttribute("data-idx")); });
+    t.addEventListener("keydown", function (e) {
+      var i = +t.getAttribute("data-idx");
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); activate(Math.min(i + 1, tabs.length - 1), true); }
+      else if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); activate(Math.max(i - 1, 0), true); }
+      else if (e.key === "Home") { e.preventDefault(); activate(0, true); }
+      else if (e.key === "End") { e.preventDefault(); activate(tabs.length - 1, true); }
+    });
+  });
+  document.querySelectorAll("[data-nav]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      activate(current + (b.getAttribute("data-nav") === "next" ? 1 : -1), true);
+      window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    });
+  });
+
+  // ---------- accessible info popovers ----------
+  (function () {
+    var openPop = null;
+    function hasHover() { return matchMedia("(hover: hover)").matches; }
+    function close() { if (openPop) { openPop.pop.hidden = true; openPop.btn.setAttribute("aria-expanded", "false"); openPop = null; } }
+    document.addEventListener("click", function (e) {
+      var btn = e.target.closest ? e.target.closest(".info-tip") : null;
+      if (btn) {
+        e.stopPropagation();
+        var pop = btn.parentNode.querySelector(".popover"), isOpen = openPop && openPop.btn === btn;
+        close();
+        if (!isOpen && pop) { pop.hidden = false; btn.setAttribute("aria-expanded", "true"); openPop = { btn: btn, pop: pop }; }
+      } else { close(); }
+    });
+    document.addEventListener("mouseover", function (e) {
+      if (!hasHover() || !e.target.closest) return;
+      var wrap = e.target.closest(".info-wrap"); if (!wrap) return;
+      var btn = wrap.querySelector(".info-tip"), pop = wrap.querySelector(".popover");
+      if (pop) { pop.hidden = false; btn.setAttribute("aria-expanded", "true"); }
+    });
+    document.addEventListener("mouseout", function (e) {
+      if (!hasHover() || !e.target.closest) return;
+      var wrap = e.target.closest(".info-wrap"); if (!wrap || wrap.contains(e.relatedTarget)) return;
+      var btn = wrap.querySelector(".info-tip"), pop = wrap.querySelector(".popover");
+      if ((!openPop || openPop.btn !== btn) && pop) { pop.hidden = true; btn.setAttribute("aria-expanded", "false"); }
+    });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+  })();
+
+  // ---------- init ----------
+  $("grid").innerHTML = GRIDS.map(function (g) { return '<option value="' + g.id + '">' + g.name + "</option>"; }).join("");
+  syncInputs();
+  renderRefSelect();
+  renderAll();
+  /* Charts are styled through CSS variables, so a theme change needs no redraw. */
+})();
+</script>
+<script>
+  /* Theme control. The head script has already applied the theme; this reflects
+     it in the radios and handles changes. */
+  (function () {
+    var group = document.getElementById("themePick");
+    if (!group) return;
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    var pref = window.__ttPref || "system";
+    function apply() {
+      var dark = pref === "dark" || (pref === "system" && mq.matches);
+      document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+      if (window.__ttRedraw) window.__ttRedraw();
+    }
+    var sel = group.querySelector('input[value="' + pref + '"]');
+    if (sel) sel.checked = true;
+    group.addEventListener("change", function (e) {
+      if (e.target.name !== "theme") return;
+      pref = e.target.value;
+      try { localStorage.setItem("tt-theme", pref); } catch (err) {}
+      apply();
+    });
+    mq.addEventListener("change", function () { if (pref === "system") apply(); });
+  })();
+</script>
+</body>
+</html>
