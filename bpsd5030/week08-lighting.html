@@ -368,8 +368,8 @@
     <p class="note" id="heatcap"></p>
     <details class="maths">
       <summary>How the map is coloured</summary>
-      <div class="formula">t = (value &minus; min) / (max &minus; min)   ·   colour = viridis(t)</div>
-      <p class="deriv">Each filled cell is shaded on a perceptually-uniform, colourblind-friendly (viridis) colour ramp, normalised so the darkest reading sits at the low end and the brightest at the high end: t = (value &minus; min) &divide; (max &minus; min). Blank cells (no reading) are drawn as dashed outlines and excluded from the scale. The single lowest and highest readings are ringed so the extremes driving the uniformity ratio are easy to find on the plane.</p>
+      <div class="formula">t = (value &minus; lo) / (hi &minus; lo)   ·   colour = viridis(t)   ·   hi &minus; lo &ge; 0.5 &times; average</div>
+      <p class="deriv">Each filled cell is shaded on a perceptually-uniform, colourblind-friendly (viridis) colour ramp, normalised so the darkest reading sits at the low end and the brightest at the high end. Stretching every map to the full ramp would make a very even plane look patchy, though: readings of 480 and 520 lux would show as purple and yellow. So the scale always spans at least half the average illuminance. When the readings spread wider than that, lo and hi are simply the minimum and maximum; when they do not, the scale is widened evenly around them, the readings fall in the middle of the ramp, and a bracket on the legend marks where they sit. Blank cells (no reading) are drawn as dashed outlines and excluded from the scale. The single lowest and highest readings are ringed so the extremes driving the uniformity ratio are easy to find on the plane.</p>
     </details>
     <div class="tabnav">
       <button type="button" class="btn ghost" data-nav="prev">&larr; Back</button>
@@ -564,6 +564,18 @@
   }
   function rgb(c) { return "rgb(" + c[0] + "," + c[1] + "," + c[2] + ")"; }
 
+  // Colour-scale bounds for the heatmap. Min-max stretching alone paints a
+  // near-uniform plane (say 480-520 lux) from purple to yellow, so the scale
+  // spans at least HEAT_MIN_SPAN x the mean, centred on the readings; spread
+  // wider than that keeps the plain min-max stretch.
+  var HEAT_MIN_SPAN = 0.5;
+  function heatScale(mn, mx, m) {
+    var floor = HEAT_MIN_SPAN * m;
+    if (mx - mn >= floor) return {lo: mn, hi: mx, widened: false};
+    var lo = Math.max(0, (mn + mx) / 2 - floor / 2);
+    return {lo: lo, hi: lo + floor, widened: true};
+  }
+
   function redrawHeat() { if (lastG) drawHeat(lastG, lastMn, lastMx); }
   function redrawBox() { if (lastG) drawBox(lastG.vals); }
 
@@ -710,7 +722,9 @@
     lastG = g; lastMn = mn; lastMx = mx;
 
     drawHeat(g, mn, mx);
-    $("heatcap").innerHTML = "Illuminance across the measured plane (" + g.vals.length + " readings). Darkest = " + fmt(mn, 0) + " lux, brightest = " + fmt(mx, 0) + " lux.";
+    var sc = heatScale(mn, mx, m);
+    $("heatcap").innerHTML = "Illuminance across the measured plane (" + g.vals.length + " readings). Darkest = " + fmt(mn, 0) + " lux, brightest = " + fmt(mx, 0) + " lux." +
+      (sc.widened ? " The readings are very even, so the colour scale is widened to " + fmt(sc.lo, 0) + "&ndash;" + fmt(sc.hi, 0) + " lux (bracketed on the legend) rather than stretched from darkest to brightest; similar colours here mean similar light." : "");
 
     drawBox(g.vals);
     $("boxcap").innerHTML = "Distribution of the " + g.vals.length + " readings (lux). Median " + fmt(quantile(g.vals.slice().sort(function(a,b){return a-b;}), 0.5), 0) + " lux.";
@@ -737,7 +751,7 @@
     ctx.clearRect(0, 0, Wc, Hc);
     var css = getComputedStyle(document.documentElement);
     var ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
-    var span = mx - mn;
+    var sc = heatScale(mn, mx, mean(g.vals)), span = sc.hi - sc.lo;
     var minCell = null, maxCell = null;
     for (var r = 0; r < g.rows; r++) {
       for (var col = 0; col < g.cols; col++) {
@@ -749,7 +763,7 @@
           ctx.strokeRect(x + 0.5, y + 0.5, cell - 1, cell - 1); ctx.setLineDash([]);
           continue;
         }
-        var t = span > 0 ? (v - mn) / span : 0.5, col3 = ramp(t);
+        var t = span > 0 ? (v - sc.lo) / span : 0.5, col3 = ramp(t);
         ctx.fillStyle = rgb(col3);
         roundRect(ctx, x, y, cell, cell, 7); ctx.fill();
         // value label, contrast by luminance
@@ -777,8 +791,14 @@
     for (var i = 0; i < lw; i++) { ctx.fillStyle = rgb(ramp(i / (lw - 1))); ctx.fillRect(lx + i, ly, 1, lh); }
     ctx.strokeStyle = css.getPropertyValue("--line").trim(); ctx.lineWidth = 1; ctx.strokeRect(lx + 0.5, ly + 0.5, lw - 1, lh - 1);
     ctx.fillStyle = muted; ctx.font = "11px -apple-system, Segoe UI, sans-serif";
-    ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.fillText(fmt(mn, 0) + " lux", lx, ly + lh + 3);
-    ctx.textAlign = "right"; ctx.fillText(fmt(mx, 0) + " lux", lx + lw, ly + lh + 3);
+    ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.fillText(fmt(sc.lo, 0) + " lux", lx, ly + lh + 3);
+    ctx.textAlign = "right"; ctx.fillText(fmt(sc.hi, 0) + " lux", lx + lw, ly + lh + 3);
+    // on a widened scale, bracket the part of the bar the readings occupy
+    if (sc.widened && span > 0) {
+      var bx0 = lx + (mn - sc.lo) / span * lw, bx1 = lx + (mx - sc.lo) / span * lw;
+      ctx.strokeStyle = ink; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(bx0, ly - 3); ctx.lineTo(bx0, ly - 6); ctx.lineTo(bx1, ly - 6); ctx.lineTo(bx1, ly - 3); ctx.stroke();
+    }
   }
 
   function roundRect(ctx, x, y, w, h, r) {
