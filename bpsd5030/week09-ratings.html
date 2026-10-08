@@ -403,7 +403,7 @@ overall star = 0.30 thermal + 0.30 IAQ + 0.15 lighting + 0.15 acoustics + 0.10 l
     <details class="maths">
       <summary>How the points and bands work here</summary>
       <p class="deriv">The real WELL v2 standard certifies at 40 (Bronze), 50 (Silver), 60 (Gold), and 80 (Platinum) points out of about 100. This round models a representative slice of the health-relevant concepts (Air, Light, Thermal, Sound, Mind) worth <b id="wellMax"></b> points, so the band lines are scaled to that slice by the same 40/50/60/80 percent proportions.</p>
-      <p class="deriv">Point values are the real per-feature maximums from the WELL v2 scorecard (Q3 to Q4 2024). The effort costs and the occupant-benefit rating (three dots = high, two = partial, one = policy or awareness only) are teaching estimates, set to expose the gap between what scores points and what improves the space.</p>
+      <p class="deriv">Point values follow the public WELL v2 scorecard (Q3 to Q4 2024). Where a row is one option within a larger feature (the flexible dress code is one part of T04 Individual Thermal Control), it carries that option&#x27;s points, not the whole feature&#x27;s. The effort costs and the occupant-benefit rating (three dots = high, two = partial, one = policy or awareness only) are teaching estimates, set to expose the gap between what scores points and what improves the space.</p>
     </details>
 
     <div class="tabnav">
@@ -415,7 +415,7 @@ overall star = 0.30 thermal + 0.30 IAQ + 0.15 lighting + 0.15 acoustics + 0.10 l
   <footer class="page">
     NABERS bands and dimensions follow the Week 9 lecture; WELL point values are from the public WELL v2 scorecard (Q3 to Q4 2024). The scoring is deliberately simplified to make the gaming logic visible in a tutorial. It is not the NABERS or WELL algorithm; do not use its numbers in an assignment.
     Built for the BPSD5030 Week 9 tutorial by the IEQ Lab, Sydney School of Architecture, Design and Planning, because the point about gaming a rating lands faster once you have spent the budget yourself.
-    Revised September 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.
+    Revised October 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.
   </footer>
 </div>
 
@@ -540,7 +540,7 @@ overall star = 0.30 thermal + 0.30 IAQ + 0.15 lighting + 0.15 acoustics + 0.10 l
       return '<tr>' +
         '<td class="dimname">' + d.label + ' (' + Math.round(d.w * 100) + '%)<small>' + d.hint + '</small></td>' +
         '<td><div class="rangewrap">' +
-          '<input type="range" min="0" max="40" step="1" id="up_' + d.key + '" value="0">' +
+          '<input type="range" min="0" max="40" step="1" id="up_' + d.key + '" value="0" aria-label="Real upgrade to ' + d.label.toLowerCase() + '">' +
           '<span class="rangeval" id="upv_' + d.key + '">+0</span>' +
         '</div></td>' +
         '<td><div class="trick">' +
@@ -589,6 +589,10 @@ overall star = 0.30 thermal + 0.30 IAQ + 0.15 lighting + 0.15 acoustics + 0.10 l
     return s;
   }
 
+  // budget moves in half points (UPGRADE_RATE), so show the half rather than rounding it away
+  function fmtPts(x) { var r = Math.round(x * 2) / 2; return String(r) + " point" + (r === 1 ? "" : "s"); }
+  function fmtNum(x) { return String(Math.round(x * 2) / 2); }
+
   function meterRow(cls, k, v, frac) {
     return '<div class="meterrow"><div class="lab"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>' +
       '<div class="meter ' + cls + '"><span style="width:' + clamp(frac * 100, 0, 100).toFixed(0) + '%"></span></div></div>';
@@ -611,18 +615,18 @@ overall star = 0.30 thermal + 0.30 IAQ + 0.15 lighting + 0.15 acoustics + 0.10 l
       '<div class="bignum">' + round1(s.measStar) + ' stars</div>' +
       '<div class="note">target ' + round1(target) + ', baseline ' + round1(s.base) + '</div></div>';
 
-    html += meterRow("budget", "Budget spent", Math.round(spent) + " / " + P.budget + " pts", spent / P.budget);
+    html += meterRow("budget", "Budget spent", fmtNum(spent) + " / " + P.budget + " pts", spent / P.budget);
     html += meterRow("rating", "Rating gained (measured stars)", "+" + round1(ratingGain), ratingGain / GAIN_MAX);
     html += meterRow("real", "Real occupant improvement (true stars)", "+" + round1(realGain), realGain / GAIN_MAX);
 
     var v = "", cls = "";
     if (overBudget) {
-      cls = "bad"; v = "Over budget by " + Math.round(spent - P.budget) + " points.";
+      cls = "bad"; v = "Over budget by " + fmtPts(spent - P.budget) + ".";
       v += '<small>Trim a real upgrade or drop a tactic. Real upgrades cost the most, which is exactly why gaming the measurement is tempting.</small>';
     } else if (!hit) {
       cls = "warn"; v = "Not at target yet: " + round1(s.measStar) + " of " + round1(target) + " stars.";
       v += '<small>Keep spending, or reach for the cheaper measurement tactics if the budget is tight.</small>';
-    } else if (ratingGain > 0.2 && realGain < 0.34 * ratingGain) {
+    } else if (ratingGain > 0 && realGain < 0.34 * ratingGain) {
       cls = "bad"; v = "Target hit, but you gamed it.";
       v += '<small>The rating climbed ' + round1(ratingGain) + ' stars while occupants gained only ' + round1(realGain) + '. Almost all of that badge is measurement, not comfort. See what clean re-rating does to it.</small>';
     } else if (realGain > 0.85 * ratingGain) {
@@ -746,7 +750,7 @@ overall star = 0.30 thermal + 0.30 IAQ + 0.15 lighting + 0.15 acoustics + 0.10 l
     var targetPts = WELL_BANDS.filter(function (x) { return x.name === WELL_TARGET; })[0].pts;
     var overBudget = effort > WELL_BUDGET + 1e-9;
     var benPerPt = pts > 0 ? ben / pts : 0;   // real benefit per certification point
-    var BPP_MAX = 1.2;                          // meter scaling (a top-benefit credit is ~1.5/pt)
+    var BPP_MAX = 1.2;                          // meter scaling; the best honest Bronze in this set scores 1.2/pt
 
     var html = "";
     html += '<div class="headline">' +
