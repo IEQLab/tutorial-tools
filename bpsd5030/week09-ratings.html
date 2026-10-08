@@ -146,6 +146,7 @@
   table.dims td.dimname small { display:block; font-weight:400; color:var(--muted); font-size: var(--t-meta); }
   .rangewrap { display:flex; align-items:center; gap: var(--s-2); }
   .rangeval { min-width: 2.4em; text-align:right; font-variant-numeric: tabular-nums; font-weight:600; font-size: var(--t-label); }
+  .rangeval small { display:block; font-weight:400; color: var(--muted); font-size: var(--t-meta); white-space: nowrap; }
   .trick { display:flex; align-items:flex-start; gap: var(--s-2); }
   .trick label { margin:0; color: var(--ink); font-size: var(--t-label); cursor:pointer; }
   .cost { display: block; color: var(--muted); font-size: var(--t-meta); margin-top: var(--s-1); }
@@ -348,7 +349,7 @@
 
     <table class="dims">
       <thead>
-        <tr><th>Dimension</th><th style="width:38%">Real upgrade (raises true &amp; measured)</th><th style="width:34%">Measurement tactic (raises measured only)</th></tr>
+        <tr><th>Dimension</th><th style="width:38%">Real upgrade (raises true &amp; measured; each +2 costs 1 budget point)</th><th style="width:34%">Measurement tactic (raises measured only)</th></tr>
       </thead>
       <tbody id="dimBody"></tbody>
     </table>
@@ -549,7 +550,7 @@ overall star = 0.30 thermal + 0.30 IAQ + 0.15 lighting + 0.15 acoustics + 0.10 l
         '<td class="dimname">' + d.label + ' (' + Math.round(d.w * 100) + '%)<small>' + d.hint + '</small></td>' +
         '<td><div class="rangewrap">' +
           '<input type="range" min="0" max="40" step="1" id="up_' + d.key + '" value="0" aria-label="Real upgrade to ' + d.label.toLowerCase() + '">' +
-          '<span class="rangeval" id="upv_' + d.key + '">+0</span>' +
+          '<span class="rangeval" id="upv_' + d.key + '">+0<small>cost 0</small></span>' +
         '</div></td>' +
         '<td><div class="trick">' +
           '<input type="checkbox" id="tr_' + d.key + '">' +
@@ -568,7 +569,7 @@ overall star = 0.30 thermal + 0.30 IAQ + 0.15 lighting + 0.15 acoustics + 0.10 l
           budgetAlert("nabersAlert", "You have spent your " + PROFILES[prof].budget + "-point budget. Free up points elsewhere (lower another upgrade or untick a tactic) to raise " + d.label.toLowerCase() + " further.");
         } else budgetAlert("nabersAlert", null);
         realUp[d.key] = want;
-        $("upv_" + d.key).textContent = "+" + realUp[d.key];
+        $("upv_" + d.key).innerHTML = "+" + realUp[d.key] + "<small>cost " + fmtNum(realUp[d.key] * UPGRADE_RATE) + "</small>";
         computeNabers();
       });
       $("tr_" + d.key).addEventListener("change", function () {
@@ -843,7 +844,7 @@ overall star = 0.30 thermal + 0.30 IAQ + 0.15 lighting + 0.15 acoustics + 0.10 l
   function applyNabersInputs() {
     DIMS.forEach(function (d) {
       $("up_" + d.key).value = realUp[d.key];
-      $("upv_" + d.key).textContent = "+" + realUp[d.key];
+      $("upv_" + d.key).innerHTML = "+" + realUp[d.key] + "<small>cost " + fmtNum(realUp[d.key] * UPGRADE_RATE) + "</small>";
       $("tr_" + d.key).checked = tactic[d.key];
     });
     $("dropDays").checked = dropDays;
