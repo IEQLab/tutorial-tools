@@ -189,6 +189,10 @@
   .btn:disabled, .btn[disabled] { opacity: .45; cursor: not-allowed; transform: none; }
   .btn.ghost { background: transparent; color: var(--accent); border:1px solid var(--line); }
   .btn-row { display:flex; gap: var(--s-2); flex-wrap:wrap; margin-top: var(--s-4); }
+  /* budget notice: shown when a change would overspend, cleared by the next change that fits */
+  .budget-alert { margin: var(--s-3) 0 0; padding: var(--s-2) var(--s-3); border-radius: var(--r-md);
+    border: 1px solid var(--bad); color: var(--bad); font-size: var(--t-label); font-weight: 600; }
+  .budget-alert[hidden] { display: none; }
   .recert { margin-top: var(--s-4); padding: var(--s-3) var(--s-4); border-radius: var(--r-md);
     border:1px dashed var(--line); font-size: var(--t-label); }
   .recert.hidden { display:none; }
@@ -354,6 +358,8 @@
       <label for="dropDays">Drop the worst 3 days from every dataset <span class="cost">(+6 measured on all five, cost 6)</span></label>
     </div>
 
+    <p class="budget-alert" id="nabersAlert" role="alert" hidden></p>
+
     <div class="results" id="nabersResults" role="status" aria-live="polite" aria-atomic="true"></div>
 
     <div class="btn-row">
@@ -394,6 +400,8 @@ overall star = 0.30 thermal + 0.30 IAQ + 0.15 lighting + 0.15 acoustics + 0.10 l
     </div>
 
     <div id="featList"></div>
+
+    <p class="budget-alert" id="wellAlert" role="alert" hidden></p>
 
     <div class="results" id="wellResults" role="status" aria-live="polite" aria-atomic="true"></div>
     <div class="btn-row">
@@ -552,11 +560,24 @@ overall star = 0.30 thermal + 0.30 IAQ + 0.15 lighting + 0.15 acoustics + 0.10 l
     }).join("");
     DIMS.forEach(function (d) {
       $("up_" + d.key).addEventListener("input", function () {
-        realUp[d.key] = parseInt(this.value, 10) || 0;
+        var want = parseInt(this.value, 10) || 0;
+        // the most this slider can reach with what the rest of the plan has left
+        var cap = Math.floor((PROFILES[prof].budget - (nabersSpent() - realUp[d.key] * UPGRADE_RATE)) / UPGRADE_RATE + 1e-9);
+        if (want > cap) {
+          want = Math.max(cap, 0); this.value = want;
+          budgetAlert("nabersAlert", "You have spent your " + PROFILES[prof].budget + "-point budget. Free up points elsewhere (lower another upgrade or untick a tactic) to raise " + d.label.toLowerCase() + " further.");
+        } else budgetAlert("nabersAlert", null);
+        realUp[d.key] = want;
         $("upv_" + d.key).textContent = "+" + realUp[d.key];
         computeNabers();
       });
       $("tr_" + d.key).addEventListener("change", function () {
+        if (this.checked && nabersSpent() + d.tactic.cost > PROFILES[prof].budget + 1e-9) {
+          this.checked = false;
+          budgetAlert("nabersAlert", "Not enough budget left for that tactic (cost " + d.tactic.cost + ", " + fmtNum(PROFILES[prof].budget - nabersSpent()) + " left). Free up points elsewhere first.");
+          return;
+        }
+        budgetAlert("nabersAlert", null);
         tactic[d.key] = this.checked; computeNabers();
       });
     });
@@ -592,6 +613,12 @@ overall star = 0.30 thermal + 0.30 IAQ + 0.15 lighting + 0.15 acoustics + 0.10 l
   // budget moves in half points (UPGRADE_RATE), so show the half rather than rounding it away
   function fmtPts(x) { var r = Math.round(x * 2) / 2; return String(r) + " point" + (r === 1 ? "" : "s"); }
   function fmtNum(x) { return String(Math.round(x * 2) / 2); }
+
+  // show (msg) or clear (null) the inline budget notice for one act
+  function budgetAlert(id, msg) {
+    var el = $(id);
+    if (msg) { el.textContent = msg; el.hidden = false; } else { el.hidden = true; }
+  }
 
   function meterRow(cls, k, v, frac) {
     return '<div class="meterrow"><div class="lab"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>' +
@@ -734,8 +761,22 @@ overall star = 0.30 thermal + 0.30 IAQ + 0.15 lighting + 0.15 acoustics + 0.10 l
     });
     $("featList").innerHTML = html;
     FEATURES.forEach(function (f, i) {
-      $("wf_" + i).addEventListener("change", function () { wellSel[i] = this.checked; computeWell(); });
+      $("wf_" + i).addEventListener("change", function () {
+        if (this.checked && wellEffort() + f.cost > WELL_BUDGET) {
+          this.checked = false;
+          budgetAlert("wellAlert", "You have spent your effort budget: " + f.name.toLowerCase() + " costs " + f.cost + " and you have " + (WELL_BUDGET - wellEffort()) + " left. Drop another credit to make room.");
+          return;
+        }
+        budgetAlert("wellAlert", null);
+        wellSel[i] = this.checked; computeWell();
+      });
     });
+  }
+
+  function wellEffort() {
+    var e = 0;
+    FEATURES.forEach(function (f, i) { if (wellSel[i]) e += f.cost; });
+    return e;
   }
 
   function computeWell() {
@@ -814,17 +855,25 @@ overall star = 0.30 thermal + 0.30 IAQ + 0.15 lighting + 0.15 acoustics + 0.10 l
   // ---------- listeners ----------
   $("profile").addEventListener("change", function () {
     prof = this.value;
-    resetNabersState(); applyNabersInputs();
+    resetNabersState(); applyNabersInputs(); budgetAlert("nabersAlert", null);
     renderProfile(); computeNabers();
     $("recertOut").classList.add("hidden");
   });
-  $("dropDays").addEventListener("change", function () { dropDays = this.checked; computeNabers(); });
+  $("dropDays").addEventListener("change", function () {
+    if (this.checked && nabersSpent() + DROP_COST > PROFILES[prof].budget + 1e-9) {
+      this.checked = false;
+      budgetAlert("nabersAlert", "Not enough budget left to drop the worst days (cost " + DROP_COST + ", " + fmtNum(PROFILES[prof].budget - nabersSpent()) + " left). Free up points elsewhere first.");
+      return;
+    }
+    budgetAlert("nabersAlert", null);
+    dropDays = this.checked; computeNabers();
+  });
   $("recertBtn").addEventListener("click", showRecert);
   $("resetNabers").addEventListener("click", function () {
-    resetNabersState(); applyNabersInputs(); computeNabers();
+    resetNabersState(); applyNabersInputs(); budgetAlert("nabersAlert", null); computeNabers();
     $("recertOut").classList.add("hidden");
   });
-  $("resetWell").addEventListener("click", function () { resetWellInputs(); computeWell(); });
+  $("resetWell").addEventListener("click", function () { resetWellInputs(); budgetAlert("wellAlert", null); computeWell(); });
 
   // ---------- init ----------
   resetNabersState();
