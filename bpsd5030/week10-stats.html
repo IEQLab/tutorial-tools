@@ -484,6 +484,7 @@
 (function () {
   var $ = function (id) { return document.getElementById(id); };
   function fmt(x, d) { if (!isFinite(x)) return "—"; return x.toLocaleString(undefined, {minimumFractionDigits: d, maximumFractionDigits: d}); }
+  function fmtT(x) { return x === Infinity ? "&infin;" : x === -Infinity ? "&minus;&infin;" : fmt(x, 2); }
   function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
   var lastChart = null; // {means, sds, labels} — kept so the chart tab can redraw when revealed
@@ -710,6 +711,17 @@
     var t = mD / se, df = n - 1;
     var p = tTwoTailP(t, df);
     var dz = mD / sD;
+    /* Zero spread: every participant's difference is the same, so SE = 0 and
+       t = d̄ / 0. A non-zero shared difference is a perfectly consistent effect
+       (t → ±∞, p → 0); a shared difference of zero means the columns are
+       identical and there is nothing to test. The tolerance absorbs float noise
+       from decimal data (24.1 − 24 is not exactly 26.1 − 26). */
+    var zeroSpread = sD <= 1e-9 * Math.max(1, Math.abs(mD));
+    if (zeroSpread) {
+      sD = 0; se = 0;
+      if (Math.abs(mD) > 1e-9) { t = mD > 0 ? Infinity : -Infinity; p = 0; dz = t; }
+      else { mD = 0; t = NaN; p = NaN; dz = NaN; }
+    }
     var pct = mA !== 0 ? 100 * (mA - mB) / mA : NaN;
     var w = wilcoxon(diffs);
 
@@ -722,19 +734,29 @@
 
     // test results
     $("testResults").innerHTML =
-      '<div class="row"><span class="k">Paired-samples t</span><span class="v">t(' + df + ") = " + fmt(t, 2) + "</span></div>" +
+      '<div class="row"><span class="k">Paired-samples t</span><span class="v">t(' + df + ") = " + fmtT(t) + "</span></div>" +
       '<div class="row"><span class="k">p (two-tailed)</span><span class="v sig">p ' + pval(p) + "</span></div>" +
       '<div class="row"><span class="k">Mean difference</span><span class="v">' + fmt(mD, 2) + (isFinite(pct) ? " (" + fmt(pct, 1) + "% vs " + esc(labA) + ")" : "") + "</span></div>" +
-      '<div class="row"><span class="k">Effect size, Cohen\'s d<sub>z</sub></span><span class="v">' + fmt(dz, 2) + "</span></div>" +
+      '<div class="row"><span class="k">Effect size, Cohen\'s d<sub>z</sub></span><span class="v">' + fmtT(dz) + "</span></div>" +
       '<div class="row"><span class="k">Wilcoxon signed-rank</span><span class="v">W = ' + fmt(w.W, 1) + ", p " + pval(w.p) + "</span></div>" +
-      '<div class="callout">' + interpret(p, mA, mB, mD, pct, labA, labB) + "</div>";
+      '<div class="callout">' + interpret(p, mA, mB, mD, pct, labA, labB, zeroSpread) + "</div>";
 
     // dynamic "show the working" for the t-test, on the user's own numbers
-    $("tWork").innerHTML = tWorking(diffs, mD, sD, se, t, df, p, labA, labB);
+    $("tWork").innerHTML = tWorking(diffs, mD, sD, se, t, df, p, labA, labB, zeroSpread);
 
     // model prose
     var dir = mA === mB ? "did not differ between conditions" : (mA > mB ? "were higher in " + esc(labA) + " than " + esc(labB) : "were higher in " + esc(labB) + " than " + esc(labA));
     var sigWord = p < 0.05 ? "statistically significant" : "not statistically significant";
+    if (zeroSpread) {
+      $("modelProse").innerHTML =
+        "Scores " + dir + " (" + esc(labA) + ": M = " + fmt(mA, 1) + ", SD = " + fmt(sA, 1) +
+        "; " + esc(labB) + ": M = " + fmt(mB, 1) + ", SD = " + fmt(sB, 1) + "). " +
+        (mD === 0
+          ? "Every participant scored identically in both conditions, so there was no difference to test."
+          : "Every participant's " + esc(labA) + " score differed from their " + esc(labB) + " score by exactly " + fmt(Math.abs(mD), 2) +
+            " points, so the differences had no spread and the paired t statistic is undefined; the difference is reported directly rather than as a test result.") +
+        " <em>(Data with zero spread in the differences is unusual for a real experiment: check it before writing it up.)</em>";
+    } else
     $("modelProse").innerHTML =
       "Scores " + dir + " (" + esc(labA) + ": M = " + fmt(mA, 1) + ", SD = " + fmt(sA, 1) +
       "; " + esc(labB) + ": M = " + fmt(mB, 1) + ", SD = " + fmt(sB, 1) + "). A paired-samples t-test showed this difference was " +
@@ -750,10 +772,23 @@
     activate(2, false); // reveal the Descriptives tab with the fresh results
   }
 
-  function tWorking(diffs, mD, sD, se, t, df, p, labA, labB) {
+  function tWorking(diffs, mD, sD, se, t, df, p, labA, labB, zeroSpread) {
     var n = diffs.length;
     var list = diffs.map(function (d) { return fmt(d, 2); }).join(", ");
     var ss = 0; for (var i = 0; i < n; i++) ss += (diffs[i] - mD) * (diffs[i] - mD);
+    if (zeroSpread) {
+      return '<p>The t-test runs on the per-participant differences (' + esc(labA) + ' &minus; ' + esc(labB) + '):</p>' +
+        '<div class="work">' +
+        '<span class="step">1. differences (d): ' + esc(list) + '</span>' +
+        '<span class="step">2. mean difference (d&#772;) = <strong>' + fmt(mD, 3) + '</strong></span>' +
+        '<span class="step">3. SD of differences = <strong>0</strong>: every d is the same</span>' +
+        '<span class="step">4. standard error = 0 / sqrt(n) = <strong>0</strong></span>' +
+        '<span class="step">5. t = d&#772; / SE = ' + fmt(mD, 3) + ' / 0 &rarr; <strong>' + (mD === 0 ? 'undefined (0 / 0)' : fmtT(t)) + '</strong></span>' +
+        '</div>' +
+        (mD === 0
+          ? '<p>With every difference equal to zero the two columns are identical. There is no gap to test, so no t or p is reported.</p>'
+          : '<p>Dividing by a zero standard error sends t to infinity: a gap with no scatter at all can never be put down to chance, so p is effectively 0 (shown as p &lt; 0.001). Software handles this differently, and R stops with "data are essentially constant".</p>');
+    }
     return '<p>There is no magic in the t-test. It runs on the per-participant differences (' + esc(labA) + ' &minus; ' + esc(labB) + '):</p>' +
       '<div class="work">' +
       '<span class="step">1. differences (d): ' + esc(list) + '</span>' +
@@ -766,7 +801,9 @@
       '<p>A large t means the mean difference is large relative to how much the differences scatter. The p-value converts that into: how often a gap this big would appear if the two conditions truly had the same effect.</p>';
   }
 
-  function interpret(p, mA, mB, mD, pct, labA, labB) {
+  function interpret(p, mA, mB, mD, pct, labA, labB, zeroSpread) {
+    if (zeroSpread && mD === 0) return "<strong>There is no difference to test.</strong> Every participant scored the same in both conditions, so every difference is zero and the t statistic is undefined (0 / 0). Check the two columns are not copies of each other.";
+    if (zeroSpread) return "<strong>Every participant differs by exactly the same amount</strong> (" + fmt(Math.abs(mD), 2) + " points, " + (mD > 0 ? esc(labA) + " higher" : esc(labB) + " higher") + "). With no scatter in the differences the standard error is zero, so t is infinite and p is effectively 0. That is a perfectly consistent effect, which is rare in real data: check for a copy-and-shift before reporting it.";
     if (!isFinite(p)) return "Could not compute a p-value; check your data.";
     if (p < 0.05) {
       return "<strong>The difference is statistically significant</strong> (p " + pval(p) + "). That means a difference this large is unlikely if the two conditions truly had the same effect. It does <em>not</em> tell you the effect is large: report the size too (here, " + esc(labA) + " differs from " + esc(labB) + " by about " + fmt(Math.abs(mD), 2) + (isFinite(pct) ? ", roughly " + fmt(Math.abs(pct), 0) + "%" : "") + "). Always give the reader both the p-value and the size.";
