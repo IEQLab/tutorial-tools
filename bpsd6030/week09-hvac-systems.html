@@ -1,0 +1,1158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Put an HVAC System Together — BPSD6030</title>
+<style>
+  /* BPSD6030 Building Systems · indigo accent · IEQ Lab · rev. 2026-10 */
+  :root {
+    color-scheme: light;
+    --bg: #f4f6f7; --card: #fcfdfd; --ink: #1c2430; --muted: #5a6675;
+    --line: #dfe4ea; --accent: #4a52b5; --accent-ink: #fbfcfe;
+    --good: #1a7f4b; --warn: #9c5a0b; --bad: #b02a37;
+    --field: #fdfefe; --result-bg: #eef0f8; --chip: #eef2f5;
+    /* one radius scale, one shadow — do not add values outside these */
+    --r-sm: 3px; --r-md: 8px; --r-pill: 999px;
+    --shadow: 0 3px 8px rgba(26, 28, 62, .12);
+    --ease-out: cubic-bezier(.2, 0, 0, 1); --dur: 150ms;
+
+    --t-glyph: .68rem;
+    --t-meta:  .78rem;
+    --t-label: .875rem;
+    --t-body:  1rem;
+    --t-lead:  1.125rem;
+    --t-h2:    1.3rem;
+    --t-h1:    1.625rem;
+
+    --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px;
+    --s-5: 20px; --s-6: 24px; --s-8: 32px; --s-12: 48px;
+
+    /* schematic service palette: shared with the BPSD6030 lecture figures
+       (teachr bpsd6030/lectures/common/hvac_draw.py, PALETTE) and with
+       week05-hvac-selector.html. Change all three together. */
+    --heat: #c0392b; --cool: #0b5fa5; --elec: #c98a12; --gas: #7a4e2d;
+    --water: #0e7c86; --air: #8a8880; --refrig: #7b4bc9;
+    --plant: #cfd8e0; --plant-ink: #33414f; --floor: #f1f4f7;
+    /* services outside the loop in focus, as in the lecture figures */
+    --fade: #d3d0c8;
+    /* empty slots: tints of the accent */
+    --slot-bg: rgba(74, 82, 181, .05); --slot-armed: rgba(74, 82, 181, .14); --slot-over: rgba(74, 82, 181, .30);
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #10151b; --card: #171e27; --ink: #e7ecf2; --muted: #9aa7b6;
+    --line: #2a3441; --accent: #99a4ef; --accent-ink: #131635;
+    --good: #57c98a; --warn: #e0a955; --bad: #e2707a;
+    --field: #0f151c; --result-bg: #191f33; --chip: #1c2733;
+    --shadow: 0 3px 8px rgba(0, 0, 0, .34);
+    --heat: #e2707a; --cool: #6ba7e6; --elec: #e3b25a; --gas: #c9a079;
+    --water: #38b2bd; --air: #8d8b84; --refrig: #a583e0;
+    --plant: #2b3947; --plant-ink: #c4d0dc; --floor: #131c25;
+    --fade: #3a4450;
+    --slot-bg: rgba(153, 164, 239, .06); --slot-armed: rgba(153, 164, 239, .16); --slot-over: rgba(153, 164, 239, .32);
+  }
+  :root[data-theme="dark"] :is(body) { line-height: 1.6; letter-spacing: .004em; }
+  :root[data-theme="dark"] :is(.primer p, .sub, .hint, .note, .fb, .mapsto li) { font-weight: 450; }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: .01ms !important; animation-duration: .01ms !important; scroll-behavior: auto !important; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  /* wider than the other tools: the section drawing and the tray sit side by side */
+  .wrap { max-width: 1120px; margin: 0 auto; padding: var(--s-6) var(--s-4) var(--s-12); }
+  a.home { display: inline-block; color: var(--accent); text-decoration: none; font-size: var(--t-label); margin-bottom: var(--s-4); }
+  a.home:hover { text-decoration: underline; }
+  header.page { margin-bottom: var(--s-2); }
+  h1 { font-size: var(--t-h1); margin: 0 0 var(--s-1); letter-spacing: -.018em; }
+  .lede { color: var(--muted); margin: 0 0 var(--s-6); max-width: 75ch; }
+
+  /* ---- ordered tabs ---- */
+  .tabs { display: flex; gap: var(--s-2); margin: 0 0 var(--s-3); flex-wrap: wrap; }
+  .tab { border: 1px solid var(--line); background: var(--field); color: var(--muted);
+    border-radius: var(--r-pill); padding: var(--s-2) var(--s-4) var(--s-2) var(--s-2); font-size: var(--t-label); cursor: pointer;
+    display: inline-flex; align-items: center; gap: var(--s-2); font-family: inherit; }
+  .tab:hover { border-color: var(--accent); color: var(--ink); }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .tab:active { transform: translateY(1px); }
+  .tab:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+  .tab:disabled:hover { border-color: var(--line); color: var(--muted); }
+  .tab .n { display: inline-flex; align-items: center; justify-content: center;
+    width: 21px; height: 21px; border-radius: 50%; background: var(--line); color: var(--muted);
+    font-size: var(--t-meta); font-weight: 700; flex: none; }
+  .tab.active .n { background: var(--accent-ink); color: var(--accent); }
+
+  /* ---- orientation strip ---- */
+  .orient { margin: 0 0 var(--s-6); }
+  details.mapsto { border: 1px solid var(--line); border-radius: var(--r-md); background: var(--field); }
+  details.mapsto > summary { cursor: pointer; color: var(--muted); font-size: var(--t-label);
+    font-weight: 600; padding: var(--s-2) var(--s-3); list-style: none; border-radius: var(--r-md); }
+  details.mapsto > summary::-webkit-details-marker { display: none; }
+  details.mapsto > summary::before { content: "\25b8  "; }
+  details.mapsto[open] > summary::before { content: "\25be  "; }
+  details.mapsto > summary:hover { color: var(--ink); }
+  details.mapsto > summary:active { color: var(--accent); }
+  details.mapsto > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .mapsto ul { margin: 0; padding: 0 var(--s-3) var(--s-2); list-style: none; }
+  .mapsto li { font-size: var(--t-label); color: var(--muted); padding: var(--s-1) 0; }
+  .mapsto li b { color: var(--ink); font-weight: 600; }
+  .mapsto .none { font-size: var(--t-label); color: var(--muted); margin: 0;
+    padding: var(--s-2) var(--s-3) var(--s-3); border-top: 1px solid var(--line); }
+
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md);
+    padding: var(--s-6); margin: 0;
+  }
+  .primer { margin: 0 0 var(--s-6); padding: 0 0 var(--s-5); border-bottom: 1px solid var(--line); }
+  .primer .what { font-weight: 600; font-size: var(--t-lead); letter-spacing: -.011em; margin: 0 0 var(--s-2); max-width: 58ch; }
+  .primer p { margin: 0; color: var(--muted); font-size: var(--t-label); line-height: 1.62; max-width: 72ch; }
+  .note { color: var(--muted); font-size: var(--t-label); max-width: 72ch; }
+
+  /* ---- the game: drawing beside the tray ---- */
+  .game { display: grid; grid-template-columns: minmax(0, 1fr) 248px; gap: var(--s-5); align-items: start; }
+  .side { position: sticky; top: var(--s-4); display: flex; flex-direction: column; gap: var(--s-3); }
+  @media (max-width: 880px) {
+    .game { grid-template-columns: 1fr; }
+    .side { position: static; order: -1; }
+  }
+  .progress { margin: 0; font-size: var(--t-label); color: var(--muted); }
+  .progress b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .traylabel { margin: 0; font-size: var(--t-meta); color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  .tray { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-2); }
+  @media (max-width: 880px) { .tray { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); } }
+  .pcard { display: flex; flex-direction: column; align-items: center; gap: var(--s-1);
+    border: 1px solid var(--line); background: var(--field); color: var(--ink); border-radius: var(--r-md);
+    padding: var(--s-2) var(--s-1); font: inherit; font-size: var(--t-meta); line-height: 1.25; text-align: center;
+    cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
+    transition: border-color var(--dur) var(--ease-out), background var(--dur) var(--ease-out); }
+  .pcard svg { width: 64px; height: 40px; display: block; flex: none; }
+  .pcard:hover { border-color: var(--accent); }
+  .pcard:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .pcard:active { transform: translateY(1px); }
+  .pcard[aria-pressed="true"] { border-color: var(--accent); background: var(--result-bg); box-shadow: inset 0 0 0 1px var(--accent); }
+  .pcard:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+  .pcard.lifted { opacity: .35; }
+  .ghostcard { position: fixed; z-index: 50; pointer-events: none; margin: 0; box-shadow: var(--shadow); opacity: .94; cursor: grabbing; }
+  .trayempty { margin: 0; font-size: var(--t-meta); color: var(--muted); }
+
+  .fb { margin: 0; font-size: var(--t-label); line-height: 1.5; padding: var(--s-2) var(--s-3);
+    background: var(--field); border: 1px solid var(--line); border-left: 3px solid var(--line); border-radius: var(--r-sm); min-height: 4.5em; }
+  .fb.good { border-left-color: var(--good); }
+  .fb.bad { border-left-color: var(--bad); }
+  .fb b { font-weight: 600; }
+
+  .scene { background: var(--card); }
+  .scene svg { display: block; width: 100%; height: auto; }
+  /* on a phone the whole section would shrink the slots below a fingertip, so it scrolls sideways instead */
+  @media (max-width: 680px) { .scene { overflow-x: auto; } .scene svg { min-width: 640px; } }
+  .scene .slot { cursor: pointer; }
+  .scene .slot rect { fill: var(--slot-bg); stroke: var(--accent); stroke-width: 1.4; stroke-dasharray: 4 3;
+    transition: fill var(--dur) var(--ease-out); }
+  .scene .slot text { fill: var(--accent); font-weight: 700; pointer-events: none; }
+  .scene.armed .slot rect { fill: var(--slot-armed); stroke-width: 2; }
+  .scene .slot:hover rect, .scene .slot.over rect { fill: var(--slot-over); stroke-dasharray: none; }
+  .scene .slot:focus { outline: none; }
+  .scene .slot:focus-visible rect { stroke-width: 3; stroke-dasharray: none; }
+  .scene .slot.wrong rect { stroke: var(--bad); stroke-width: 2.5; stroke-dasharray: none; }
+  .legend { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-4); margin: var(--s-3) 0 0; font-size: var(--t-meta); color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: var(--s-1); }
+  .legend svg { display: block; flex: none; }
+
+  .follow { background: var(--result-bg); border-radius: var(--r-md); padding: var(--s-4); }
+  .follow[hidden] { display: none; }
+  .follow .ftitle { margin: 0 0 var(--s-1); font-weight: 600; }
+  .follow .ftext { margin: 0; font-size: var(--t-label); max-width: 72ch; }
+
+  .btn-row { display: flex; gap: var(--s-2); flex-wrap: wrap; margin-top: var(--s-3); }
+  .btn { background: var(--accent); color: var(--accent-ink); border: none; border-radius: var(--r-md);
+    padding: var(--s-2) var(--s-4); font-size: var(--t-label); cursor: pointer; font-family: inherit; white-space: nowrap; }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; filter: none; }
+  .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+  .btn.ghost:hover { border-color: var(--accent); filter: none; }
+  .btn.ghost:disabled:hover { border-color: var(--line); }
+
+  footer.page { color: var(--muted); font-size: var(--t-meta); margin-top: var(--s-8); border-top: 1px solid var(--line); padding-top: var(--s-4); }
+  footer.page p { margin: 0 0 var(--s-2); max-width: 100ch; }
+  footer.page a { color: var(--accent); }
+
+  .toprow { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; margin-bottom: var(--s-4); }
+  .toprow .home { margin-bottom: 0; }
+  .themepick { margin-left: auto; border: 0; padding: 0; min-width: 0; display: inline-flex; gap: var(--s-1); }
+  .themepick label { margin: 0; }
+  .themepick input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .themepick span { display: inline-block; cursor: pointer; border: 1px solid var(--line); border-radius: var(--r-pill);
+    padding: var(--s-1) var(--s-3); background: var(--field); color: var(--muted); font-size: var(--t-meta); }
+  .themepick span:hover { border-color: var(--accent); color: var(--ink); }
+  .themepick input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .themepick input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px;
+    padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  @media print {
+    .tabs, .toprow, .btn-row, .orient, .side { display: none !important; }
+    .game { grid-template-columns: 1fr; }
+  }
+</style>
+<script>
+  /* Resolve the colour theme before first paint. Storage is wrapped in
+     try/catch: a Canvas iframe with storage blocked throws, and the tool keeps
+     working without remembering the choice. */
+  (function () {
+    var pref = "system";
+    try {
+      var v = localStorage.getItem("tt-theme");
+      if (v === "light" || v === "dark") pref = v;
+    } catch (e) {}
+    window.__ttPref = pref;
+    var dark = pref === "dark" ||
+      (pref === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+  })();
+</script>
+</head>
+<body>
+<div class="wrap">
+  <div class="toprow">
+    <a class="home" href="index.html">&larr; BPSD6030 tutorial tools</a>
+    <fieldset class="themepick" id="themePick">
+    <legend class="visually-hidden">Colour theme</legend>
+    <label><input type="radio" name="theme" value="system"><span>System</span></label>
+    <label><input type="radio" name="theme" value="light"><span>Light</span></label>
+    <label><input type="radio" name="theme" value="dark"><span>Dark</span></label>
+    </fieldset>
+  </div>
+  <header class="page">
+    <h1>Put an HVAC System Together</h1>
+    <p class="lede">Every HVAC system is a chain of parts that carries heat between the rooms and the outdoors. Here you build systems from those parts on a section through a building. Drag a part from the tray into an empty slot, or select the part and then the slot. A part in the wrong place goes back to the tray with the reason.</p>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Levels">
+    <button class="tab active" role="tab" id="tab-1" aria-controls="panel-1" aria-selected="true" tabindex="0" data-idx="0"><span class="n">1</span><span>Follow the heat</span></button>
+    <button class="tab" role="tab" id="tab-2" aria-selected="false" tabindex="-1" data-idx="1" disabled title="Not built yet"><span class="n">2</span><span>Inside the air-handling unit</span></button>
+    <button class="tab" role="tab" id="tab-3" aria-selected="false" tabindex="-1" data-idx="2" disabled title="Not built yet"><span class="n">3</span><span>What reaches the zone</span></button>
+    <button class="tab" role="tab" id="tab-4" aria-selected="false" tabindex="-1" data-idx="3" disabled title="Not built yet"><span class="n">4</span><span>Trace the air</span></button>
+    <button class="tab" role="tab" id="tab-5" aria-selected="false" tabindex="-1" data-idx="4" disabled title="Not built yet"><span class="n">5</span><span>Spot the fault</span></button>
+  </div>
+
+  <!-- ===== Orientation: mirrors the Week 9 steps in teachr bpsd6030/summaries/tutorial_plan.md ===== -->
+  <div class="orient">
+    <details class="mapsto" open>
+      <summary>Where this fits in the Week 9 tutorial</summary>
+      <ul>
+        <li>Before the session &rarr; tabs <b>1 Follow the heat</b> and <b>2 Inside the air-handling unit</b></li>
+        <li>Step 4, <i>Schematic conventions</i> &rarr; tab <b>3 What reaches the zone</b>: build the case closest to your candidate system</li>
+        <li>Step 5, <i>Air path</i> &rarr; tab <b>4 Trace the air</b>, then trace the air on a typical floor of your own building</li>
+        <li>After the session, before the IOA &rarr; tab <b>5 Spot the fault</b></li>
+      </ul>
+      <p class="none">Steps 1, 2, 3 and 6 use no tab: <i>Sanity-check the input</i>, <i>Test the candidate system</i>, <i>Scale and size</i>, and <i>Plant room and riser sketch</i>.</p>
+    </details>
+  </div>
+
+  <!-- ===== Tab 1: Follow the heat ===== -->
+  <section class="card" role="tabpanel" id="panel-1" aria-labelledby="tab-1">
+    <div class="primer">
+      <h2 class="what">Build a central cooling system, then follow the heat out of the building.</h2>
+      <p>An office like this one is cooled by four loops in a chain. Air collects heat in the rooms and gives it up at a cooling coil. Chilled water carries it to the chiller. Refrigerant inside the chiller lifts it to a higher temperature. Condenser water carries it to the cooling tower, which throws it away. Nothing in the chain makes cold. Eight parts are missing from the drawing, and each loop lights up once all its parts are in. Some parts in the tray belong to other systems. Heating here is an electric element at each VAV box, so there are no heating-water pipes.</p>
+    </div>
+
+    <div class="game">
+      <div>
+        <div class="scene" id="scene1"></div>
+        <div class="legend" id="legend1"></div>
+      </div>
+      <div class="side">
+        <p class="progress" id="progress1"></p>
+        <p class="traylabel" id="trayLabel1">Parts</p>
+        <div class="tray" id="tray1" role="group" aria-labelledby="trayLabel1"></div>
+        <p class="fb" id="fb1" aria-live="polite"></p>
+        <div class="follow" id="follow1" hidden>
+          <p class="ftitle" id="fTitle1"></p>
+          <p class="ftext" id="fText1" aria-live="polite"></p>
+          <div class="btn-row">
+            <button type="button" class="btn ghost" id="fBack1">Back</button>
+            <button type="button" class="btn" id="fNext1">Follow the heat</button>
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:0">
+          <button type="button" class="btn ghost" id="reset1">Start again</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="page">
+    <p>The drawings follow the BPSD6030 drawing conventions shared with the lecture figures and the HVAC system selector: one colour per service, ducts as bands and pipes as hollow lines, and plant where Australian commercial buildings usually put it. They are stylised concept sections, not construction drawings. The water temperatures (chilled water 6 to 12&nbsp;°C, condenser water 29.5 to 35&nbsp;°C) are typical design values.</p>
+    <p>Built for the BPSD6030 Week 9 tutorial by the IEQ Lab, Sydney School of Architecture, Design and Planning. Nothing you do here is recorded or submitted; your progress is kept only in this browser. Self-contained, open-source, no tracking.</p>
+    <p>Revised October 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.</p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;"); }
+
+  // ---------- colours, read from the token block at draw time ----------
+  var COL = {};
+  function getVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim() || "#888"; }
+  function readCols() {
+    ["heat", "cool", "elec", "gas", "water", "air", "refrig", "plant", "plant-ink",
+     "floor", "line", "ink", "muted", "card", "fade"].forEach(function (k) {
+      COL[k === "plant-ink" ? "plantInk" : k] = getVar("--" + k);
+    });
+  }
+  readCols();
+
+  // ---------- drawing primitives (as in week05-hvac-selector.html) ----------
+  var FONT = ' font-family="-apple-system,Segoe UI,Roboto,sans-serif"';
+  function pts(a) { return a.map(function (p) { return p[0] + "," + p[1]; }).join(" "); }
+  function pl(a, col, w, extra) {
+    return '<polyline points="' + pts(a) + '" fill="none" stroke="' + col + '" stroke-width="' + w + '" stroke-linejoin="round"' + (extra || "") + '/>';
+  }
+  function txt(x, y, s, anchor, col, size, weight) {
+    return '<text x="' + x + '" y="' + y + '" fill="' + (col || COL.ink) + '" font-size="' + (size || 10.5) + '" text-anchor="' + (anchor || "middle") + '"' + (weight ? ' font-weight="' + weight + '"' : '') + FONT + '>' + s + '</text>';
+  }
+  function rect(x, y, w, h, fill, stroke, sw, rx) {
+    return '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + (rx == null ? 3 : rx) + '" fill="' + fill + '" stroke="' + (stroke || "none") + '" stroke-width="' + (sw || 0) + '"/>';
+  }
+  function kit(x, y, w, h) { return rect(x, y, w, h, COL.plant, COL.plantInk, 1.2, 3); }
+  function head(x, y, dir, col, s) {
+    s = s || 4; var p;
+    if (dir === "r") p = [[x, y], [x - s * 1.6, y - s], [x - s * 1.6, y + s]];
+    else if (dir === "l") p = [[x, y], [x + s * 1.6, y - s], [x + s * 1.6, y + s]];
+    else if (dir === "u") p = [[x, y], [x - s, y + s * 1.6], [x + s, y + s * 1.6]];
+    else p = [[x, y], [x - s, y - s * 1.6], [x + s, y - s * 1.6]];
+    return '<polygon points="' + pts(p) + '" fill="' + col + '"/>';
+  }
+  function arrow(a, col, w, dash) {
+    var p = a[a.length - 1], q = a[a.length - 2];
+    var dir = p[0] > q[0] ? "r" : p[0] < q[0] ? "l" : p[1] < q[1] ? "u" : "d";
+    var s = 3 + (w || 2) * 0.6, off = s * 1.5;
+    var end = dir === "r" ? [p[0] - off, p[1]] : dir === "l" ? [p[0] + off, p[1]] : dir === "u" ? [p[0], p[1] + off] : [p[0], p[1] - off];
+    return pl(a.slice(0, -1).concat([end]), col, w || 2, dash ? ' stroke-dasharray="' + dash + '"' : '') + head(p[0], p[1], dir, col, s);
+  }
+  function fan(cx, cy, r) {
+    var o = '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + COL.card + '" stroke="' + COL.plantInk + '" stroke-width="1.2"/>';
+    for (var k = 0; k < 3; k++) {
+      var a = (k * 120 - 90) * Math.PI / 180;
+      o += pl([[cx, cy], [cx + Math.cos(a) * (r - 1.5), cy + Math.sin(a) * (r - 1.5)]], COL.plantInk, 1.6);
+    }
+    return o;
+  }
+  function coil(x, y, w, h, col) {
+    var o = rect(x, y, w, h, COL.card, col, 1.4, 1);
+    for (var cx = x + 3; cx < x + w - 1; cx += 3.5) o += pl([[cx, y + 2], [cx, y + h - 2]], col, 1);
+    return o;
+  }
+  function zigzag(x, y, w, h, col) {
+    var a = [], n = 6;
+    for (var k = 0; k <= n; k++) a.push([x + w * k / n, k % 2 ? y : y + h]);
+    return pl(a, col, 1.4);
+  }
+  function vzig(x, y, w, h, col) {
+    var a = [], n = 6;
+    for (var k = 0; k <= n; k++) a.push([k % 2 ? x + w : x, y + h * k / n]);
+    return pl(a, col, 1.4);
+  }
+  function pump(cx, cy, r) {
+    r = r || 5;
+    return '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + COL.card + '" stroke="' + COL.plantInk + '" stroke-width="1.2"/>' +
+      '<polygon points="' + pts([[cx - r * .5, cy - r * .6], [cx + r * .7, cy], [cx - r * .5, cy + r * .6]]) + '" fill="' + COL.plantInk + '"/>';
+  }
+  function flame(cx, cy) {
+    return '<path d="M' + cx + ' ' + (cy - 7) + ' C' + (cx + 6) + ' ' + (cy - 1) + ' ' + (cx + 5) + ' ' + (cy + 5) + ' ' + cx + ' ' + (cy + 6) +
+      ' C' + (cx - 5) + ' ' + (cy + 5) + ' ' + (cx - 6) + ' ' + (cy) + ' ' + cx + ' ' + (cy - 7) + 'Z" fill="' + COL.gas + '"/>';
+  }
+
+  /* ---------- the building section ----------
+     Ported from drawSchematic() in week05-hvac-selector.html, with the same
+     geometry, so a system drawn here looks exactly as it does there and in the
+     lecture figures. Two changes. Every piece of equipment goes through part(),
+     which draws it, or an empty slot the student fills, or (on the floors below
+     the top one) a faint outline. And the colour of each service network comes
+     from the level, so a loop can be dimmed until its parts are in, or greyed
+     while another loop is followed. cfg = { system, cool, heat, floors }; V
+     supplies st(partId), slotLabel(partId), netColor(key, col), netOpacity(key). */
+  function drawScene(cfg, V) {
+    var id = cfg.system;
+    var nDraw = Math.max(1, Math.min(4, cfg.floors));
+    var vav = id === "vav", vrf = id === "vrf";
+    var allAir = vav;
+    var hyd = !vrf;                                // a chiller or heat pump makes chilled water
+    var floorWater = hyd && !allAir;               // beams or fan coils on every floor
+    var hp4 = hyd && cfg.cool === "hp4";
+    var wcc = hyd && cfg.cool === "water-chiller";
+    var eHeat = cfg.heat === "resistance";
+    var hhw = null;                                // where heating water is made, if anywhere
+    if (hyd && !eHeat) hhw = hp4 ? "hp4" : (cfg.heat === "heatpump" ? "hp" : "boiler");
+    var floorHhw = !!hhw && (floorWater || vav);
+    var basement = wcc || hhw === "boiler";
+    var pipeShaft = floorWater || floorHhw || basement || vrf;
+
+    // ---- geometry ----
+    var W = 760, bx = 160, bw = 460, fh = 92, RT = 140, plinth = 26;
+    var G = RT + nDraw * fh, BB = G + 104;
+    var H = (basement ? BB + 8 : G) + 34;
+    var psx = bx + 34, psw = 48;                   // pipe riser (left), inboard of the facade
+    var dsx = bx + bw - 52, dsw = 40;              // duct riser (right)
+    var zx0 = pipeShaft ? psx + psw + 14 : bx + 16;
+    var zx1 = dsx - 14;
+    var DS = { elec: dsx + 5, sup: dsx + 17, ret: dsx + 31 };
+    var itemBot = RT - plinth;
+    function floorY(i) { return RT + i * fh; }     // i = 0 is the top floor
+    var yLow = floorY(nDraw - 1);
+    function spread(n, a, b) {
+      var xs = []; for (var k = 0; k < n; k++) xs.push(Math.round(a + (b - a) * (k + 0.5) / n)); return xs;
+    }
+    var used = {};
+    function mark(k) { used[k] = true; }
+
+    // ---- equipment, slots and outlines ----
+    var labels = "";
+    function slot(pid, b) {
+      var w = Math.max(b.w, 30), h = Math.max(b.h, 30);
+      var x = b.x - (w - b.w) / 2, y = b.y - (h - b.h) / 2;
+      return '<g class="slot" data-slot="' + pid + '" tabindex="0" role="button" aria-label="' + esc(V.slotLabel(pid)) + '">' +
+        '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="4"/>' +
+        '<text x="' + (x + w / 2) + '" y="' + (y + h / 2 + 5) + '" text-anchor="middle" font-size="14"' + FONT + '>?</text></g>';
+    }
+    function outline(b) {
+      return rect(b.x, b.y, b.w, b.h, "none", COL.muted, 1, 3).replace("/>", ' stroke-opacity=".3" stroke-dasharray="3 3"/>');
+    }
+    // primary: the one instance that becomes the slot (the top floor's first)
+    function part(pid, b, svg, label, primary) {
+      if (primary === undefined) primary = true;
+      if (V.st(pid) === "slot") return primary ? slot(pid, b) : outline(b);
+      if (label && primary) labels += label;
+      return '<g data-part="' + pid + '">' + svg + '</g>';
+    }
+
+    // ---- service networks: every run of one service is outlined first and
+    // filled second, so tees and bends read as one continuous duct or pipe ----
+    var NET = {};
+    var STYLE = {
+      sup:  { col: COL.cool,   w: 11, duct: true,  mk: "supply" },
+      vent: { col: COL.air,    w: 7,  duct: true,  mk: "oa" },
+      ret:  { col: COL.air,    w: 9,  duct: true,  mk: "oa" },
+      chw:  { col: COL.cool,   w: 5,  mk: "chw" },
+      hhw:  { col: COL.heat,   w: 5,  mk: "hhw" },
+      cw:   { col: COL.water,  w: 5,  mk: "cw" },
+      ref:  { col: COL.refrig, w: 5,  mk: "refrig" },
+      flue: { col: COL.muted,  w: 6 }
+    };
+    function run(key, a) {
+      if (!NET[key]) NET[key] = [];
+      NET[key].push(a);
+      if (STYLE[key].mk) mark(STYLE[key].mk);
+    }
+    function drawNets(keys) {
+      var o = "";
+      keys.forEach(function (k) {
+        if (!NET[k]) return;
+        var st = STYLE[k], col = V.netColor(k, st.col), g = "";
+        NET[k].forEach(function (a) { g += pl(a, col, st.w, ' stroke-linecap="butt"'); });
+        NET[k].forEach(function (a) { g += pl(a, COL.card, st.duct ? st.w - 3 : 1.6, ' stroke-linecap="butt"'); });
+        if (st.duct) NET[k].forEach(function (a) { g += pl(a, col, st.w - 3, ' stroke-opacity=".3" stroke-linecap="butt"'); });
+        var op = V.netOpacity(k);
+        o += op < 1 ? '<g opacity="' + op + '">' + g + '</g>' : g;
+      });
+      return o;
+    }
+
+    var shell = "", thin = "", kits = "";
+    function lab(x, y, s, anchor, col) { labels += txt(x, y, s, anchor, col || COL.muted, 10); }
+    function name(x, y, s) { return txt(x, y, s, "middle", COL.plantInk, 10.5, "600"); }
+
+    // ---- building shell ----
+    shell += '<defs>' +
+      '<pattern id="hvSlab" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">' +
+        '<rect width="5" height="5" fill="' + COL.line + '"/><line x1="0" y1="0" x2="0" y2="5" stroke="' + COL.muted + '" stroke-opacity=".45" stroke-width="1"/></pattern>' +
+      '<pattern id="hvEarth" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">' +
+        '<line x1="0" y1="0" x2="0" y2="7" stroke="' + COL.muted + '" stroke-opacity=".22" stroke-width="1"/></pattern>' +
+      '</defs>';
+    shell += rect(12, G, W - 24, H - 6 - G, "url(#hvEarth)", null, 0, 0);
+    for (var i = 0; i < nDraw; i++) {
+      var y0 = floorY(i);
+      shell += rect(bx, y0, bw, fh, COL.card, null, 0, 0);
+      shell += rect(bx, y0, bw, 10, "url(#hvSlab)", null, 0, 0);
+      shell += pl([[bx, y0 + 38], [bx + bw, y0 + 38]], COL.muted, 1, ' stroke-dasharray="4 3" stroke-opacity=".6"');
+      var lvl = i === nDraw - 1 ? "Ground" : "Level " + (i === 0 ? cfg.floors - 1 : nDraw - 1 - i);
+      labels += txt(bx - 18, y0 + 58, lvl, "end", COL.muted, 10);
+    }
+    if (cfg.floors > nDraw) labels += txt(bx - 18, floorY(0) + 71, "(" + (cfg.floors - nDraw) + " more not drawn)", "end", COL.muted, 9);
+    if (basement) {
+      shell += rect(bx, G, bw, BB - G, COL.card, null, 0, 0);
+      shell += rect(bx, G, bw, 10, "url(#hvSlab)", null, 0, 0);
+      shell += rect(bx, BB, bw, 8, "url(#hvSlab)", null, 0, 0);
+      shell += pl([[bx, G], [bx, BB + 8], [bx + bw, BB + 8], [bx + bw, G]], COL.muted, 1.5);
+      labels += txt(bx - 18, G + 62, "Basement", "end", COL.muted, 10);
+      labels += txt(bx + bw - 8, BB - 6, "plant room", "end", COL.muted, 9.5);
+    } else {
+      shell += rect(bx, G, bw, 8, "url(#hvSlab)", null, 0, 0);
+    }
+    shell += rect(bx, RT - 8, 4, 8, "url(#hvSlab)", null, 0, 0) + rect(bx + bw - 4, RT - 8, 4, 8, "url(#hvSlab)", null, 0, 0);
+    shell += pl([[bx, G], [bx, RT - 8]], COL.muted, 1.5) + pl([[bx + bw, G], [bx + bw, RT - 8]], COL.muted, 1.5);
+    shell += pl([[12, G], [bx, G]], COL.muted, 1.5) + pl([[bx + bw, G], [W - 12, G]], COL.muted, 1.5);
+    labels += txt(bx - 18, RT - 4, "Roof", "end", COL.muted, 10);
+    var shaftBot = basement ? G + 10 : G;
+    if (pipeShaft) {
+      shell += rect(psx, RT, psw, shaftBot - RT, COL.card, COL.line, 1, 0);
+      labels += '<text transform="translate(' + (psx + psw + 11) + ',' + (G - 8) + ') rotate(-90)" fill="' + COL.muted + '" font-size="9"' + FONT + '>pipe riser</text>';
+    }
+    shell += rect(dsx, RT, dsw, G - RT, COL.card, COL.line, 1, 0);
+    labels += '<text transform="translate(' + (dsx + dsw + 11) + ',' + (G - 8) + ') rotate(-90)" fill="' + COL.muted + '" font-size="9"' + FONT + '>duct riser</text>';
+
+    // ---- pipe riser lanes: floor services nearest the floors ----
+    var lanes = [];
+    if (hyd && (floorWater || wcc)) lanes.push("chw");
+    if (hhw && (floorHhw || hhw === "boiler")) lanes.push("hhw");
+    if (vrf) lanes.push("ref");
+    if (wcc) lanes.push("cw");
+    if (hhw === "boiler") lanes.push("flue");
+    var LX = {};
+    lanes.forEach(function (k, j) { LX[k] = psx + psw - 8 - j * 9; });
+    var FY = { chw: 24, hhw: 31, ref: 26 };
+    var RY = { chw: RT - 13, hhw: RT - 6, cw: RT - 20, ref: RT - 8 };
+    var BY = { chw: G + 15, cw: G + 21, hhw: G + 28, flue: G + 36 };
+    var roofConn = { chw: [], hhw: [], cw: [], ref: [] };
+    var baseConn = { chw: [], hhw: [], cw: [], flue: [] };
+
+    // ---- roof: the air unit sits over the duct riser ----
+    var unitRight = dsx + 22, aH = 40, aTop = itemBot - aH;
+    var secs = allAir ? ["mix", "filter", "cc", "fan"] : vrf ? ["hrw", "filter", "dxc", "fan"] : ["hrw", "filter", "cc", eHeat ? "eh" : "hc", "fan"];
+    var sw = 36, unitW = secs.length * sw, unitX = unitRight - unitW;
+    var unit = kit(unitX, aTop, unitW, aH);
+    kits += rect(unitX + 6, itemBot, 6, plinth, "url(#hvSlab)", null, 0, 0) + rect(unitRight - 12, itemBot, 6, plinth, "url(#hvSlab)", null, 0, 0);
+    secs.forEach(function (s, k) {
+      var sx = unitX + k * sw, cx = sx + sw / 2, cy = aTop + aH / 2;
+      if (k > 0) unit += pl([[sx, aTop], [sx, aTop + aH]], COL.plantInk, 1, ' stroke-opacity=".5"');
+      if (s === "mix") unit += pl([[cx - 8, cy + 8], [cx + 8, cy - 8]], COL.plantInk, 1.6) + '<circle cx="' + cx + '" cy="' + cy + '" r="1.8" fill="' + COL.plantInk + '"/>';
+      if (s === "filter") unit += vzig(sx + 10, aTop + 8, sw - 20, aH - 16, COL.plantInk);
+      if (s === "cc") { unit += coil(sx + 7, aTop + 6, sw - 14, aH - 12, COL.cool); roofConn.chw.push(cx); mark("chw"); }
+      if (s === "hc") { unit += coil(sx + 7, aTop + 6, sw - 14, aH - 12, COL.heat); roofConn.hhw.push(cx); }
+      if (s === "dxc") { unit += coil(sx + 7, aTop + 6, sw - 14, aH - 12, COL.refrig); roofConn.ref.push(cx); }
+      if (s === "eh") unit += rect(sx + 7, aTop + 6, sw - 14, aH - 12, COL.card, COL.heat, 1.4, 1) + zigzag(sx + 10, cy - 5, sw - 20, 10, COL.heat);
+      if (s === "fan") unit += fan(cx, cy, 12);
+      if (s === "hrw") unit += '<circle cx="' + cx + '" cy="' + cy + '" r="13" fill="' + COL.card + '" stroke="' + COL.plantInk + '" stroke-width="1.2"/>' +
+        pl([[cx - 9, cy - 9], [cx + 9, cy + 9]], COL.plantInk, 1) + pl([[cx - 9, cy + 9], [cx + 9, cy - 9]], COL.plantInk, 1);
+    });
+    kits += part("ahu", { x: unitX, y: aTop, w: unitW, h: aH }, unit,
+      name(unitX + unitW / 2 + 12, aTop - 24, allAir ? "air-handling unit" : "outdoor air unit (DOAS)"));
+    thin += arrow([[unitX - 34, aTop + 12], [unitX - 1, aTop + 12]], COL.air, 2.5); mark("oa");
+    lab(unitX - 4, aTop + 28, "outdoor air", "end");
+    run(allAir ? "sup" : "vent", [[DS.sup, aTop + aH], [DS.sup, yLow + (allAir ? 19 : 17)]]);
+    var mixX = unitX + sw / 2;
+    run("ret", [[DS.ret, yLow + 32], [DS.ret, aTop - 12], [mixX, aTop - 12], [mixX, aTop]]);
+    run("ret", [[mixX, aTop - 12], [mixX, aTop - 26]]);
+    thin += head(mixX, aTop - 38, "u", COL.air, 5);
+    lab(mixX - 9, aTop - 30, "exhaust", "end");
+
+    // ---- roof plant, left to right, clear of the pipe riser so a flue can rise past ----
+    var cur = bx + 10;
+    function feet(x, w) { return rect(x + 5, itemBot, 6, plinth, "url(#hvSlab)", null, 0, 0) + rect(x + w - 11, itemBot, 6, plinth, "url(#hvSlab)", null, 0, 0); }
+    if (hhw === "boiler") cur = LX.flue + 12;
+    if (wcc) {
+      var tw = 60, th = 46, tx = cur; cur += tw + 16;
+      kits += feet(tx, tw);
+      var tower = kit(tx, itemBot - th, tw, th);
+      tower += rect(tx + 13, itemBot - th - 12, tw - 26, 12, COL.plant, COL.plantInk, 1.2, 2);
+      tower += pl([[tx + 19, itemBot - th - 6], [tx + tw - 19, itemBot - th - 6]], COL.plantInk, 1.6);
+      for (var ly = itemBot - 16; ly < itemBot - 4; ly += 4) tower += pl([[tx + 6, ly], [tx + tw - 6, ly]], COL.plantInk, 1, ' stroke-opacity=".6"');
+      for (var dxp = tx + 12; dxp < tx + tw - 8; dxp += 10) tower += pl([[dxp, itemBot - th + 8], [dxp, itemBot - th + 22]], COL.water, 1.4, ' stroke-dasharray="2 3"');
+      kits += part("tower", { x: tx, y: itemBot - th - 12, w: tw, h: th + 12 }, tower, name(tx + tw / 2, itemBot - th - 18, "cooling tower"));
+      roofConn.cw.push(tx + 20);
+    }
+    if (hp4) {
+      var qx = cur; cur += 116;
+      kits += feet(qx, 100);
+      var q = kit(qx, itemBot - 36, 100, 36);
+      for (var f3 = 0; f3 < 2; f3++) q += rect(qx + 8 + f3 * 46, itemBot - 43, 38, 7, COL.plant, COL.plantInk, 1.2, 2);
+      q += coil(qx + 6, itemBot - 31, 14, 26, COL.cool) + coil(qx + 80, itemBot - 31, 14, 26, COL.heat) + zigzag(qx + 26, itemBot - 28, 48, 20, COL.plantInk);
+      kits += part("hp4", { x: qx, y: itemBot - 43, w: 100, h: 43 }, q, name(qx + 50, itemBot - 50, "four-pipe heat pump"));
+      roofConn.chw.push(qx + 30); roofConn.hhw.push(qx + 70);
+      kits += part("pumpHhw", { x: qx + 65, y: itemBot + 2, w: 10, h: 10 }, pump(qx + 70, itemBot + 7));
+    }
+    if (hhw === "hp") {
+      var hx = cur; cur += 78;
+      kits += feet(hx, 62);
+      kits += part("hp", { x: hx, y: itemBot - 36, w: 62, h: 36 },
+        kit(hx, itemBot - 36, 62, 36) + fan(hx + 40, itemBot - 18, 12) + coil(hx + 6, itemBot - 31, 14, 26, COL.heat),
+        name(hx + 31, itemBot - 43, "heat pump"));
+      roofConn.hhw.push(hx + 20);
+      kits += part("pumpHhw", { x: hx + 15, y: itemBot + 2, w: 10, h: 10 }, pump(hx + 20, itemBot + 7));
+    }
+    if (hyd && !wcc && !hp4) {
+      var cxx = cur; cur += 100;
+      kits += feet(cxx, 84);
+      var ac = kit(cxx, itemBot - 34, 84, 34);
+      for (var f2 = 0; f2 < 3; f2++) ac += rect(cxx + 6 + f2 * 25, itemBot - 40, 22, 6, COL.plant, COL.plantInk, 1.2, 2);
+      ac += zigzag(cxx + 8, itemBot - 28, 68, 20, COL.plantInk);
+      kits += part("chiller", { x: cxx, y: itemBot - 40, w: 84, h: 40 }, ac, name(cxx + 42, itemBot - 48, "air-cooled chiller"));
+      roofConn.chw.push(cxx + 30);
+    }
+    if (vrf) {
+      var vo = "", ox0 = cur;
+      for (var u = 0; u < 2; u++) {
+        var ox = cur; cur += 46;
+        kits += feet(ox, 40);
+        vo += kit(ox, itemBot - 44, 40, 44) + fan(ox + 20, itemBot - 22, 13);
+        roofConn.ref.push(ox + 20);
+      }
+      kits += part("vrfOut", { x: ox0, y: itemBot - 44, w: 86, h: 44 }, vo, name(ox0 + 43, itemBot - 51, "VRF outdoor units"));
+    }
+
+    // ---- basement plant, left to right after the pipe riser ----
+    if (basement) {
+      var bcur = psx + psw + 18, iTop = G + 58, iH = BB - iTop - 2;
+      if (hhw === "boiler") {
+        var blx = bcur; bcur += 64 + 18;
+        kits += part("boiler", { x: blx, y: iTop, w: 64, h: iH }, kit(blx, iTop, 64, iH) + flame(blx + 44, iTop + iH / 2 + 2),
+          name(blx + 32, BB + 22, "gas boiler"));
+        baseConn.flue.push(blx + 46);
+        thin += pl([[12, G + 46], [blx + 54, G + 46], [blx + 54, iTop]], COL.gas, 2.5); mark("gas");
+        lab(16, G + 42, "gas", "start", COL.gas);
+        baseConn.hhw.push(blx + 16);
+        kits += part("pumpHhw", { x: blx + 11, y: BY.hhw + 8, w: 10, h: 10 }, pump(blx + 16, BY.hhw + 13));
+      }
+      if (wcc) {
+        var chx = bcur;
+        var rc = V.netColor("refc", COL.refrig), rop = V.netOpacity("refc");
+        // The refrigerant circuit joins the ends of the two barrels: expansion valve
+        // on the left, compressor on the right. The barrels are shorter than in the
+        // lecture symbol (72 against 88) to leave room for it, since this drawing has
+        // to show the refrigerant loop, which the lecture figures leave implicit.
+        var mY = iTop + iH / 2, eY = iTop + 11.5, cY = iTop + iH - 11.5;
+        var circ = pl([[chx + 16, eY], [chx + 9, eY], [chx + 9, cY], [chx + 16, cY]], rc, 2.2) +
+          pl([[chx + 88, eY], [chx + 95, eY], [chx + 95, cY], [chx + 88, cY]], rc, 2.2) +
+          '<polygon points="' + pts([[chx + 5, mY - 4], [chx + 13, mY + 4], [chx + 13, mY - 4], [chx + 5, mY + 4]]) + '" fill="' + rc + '"/>' +
+          '<circle cx="' + (chx + 95) + '" cy="' + mY + '" r="5" fill="' + COL.card + '" stroke="' + rc + '" stroke-width="1.8"/>';
+        var ch = kit(chx, iTop, 104, iH) + '<g opacity="' + rop + '">' + circ + '</g>' +
+          rect(chx + 16, iTop + 6, 72, 11, COL.card, COL.cool, 1.4, 5) + rect(chx + 16, iTop + iH - 17, 72, 11, COL.card, COL.water, 1.4, 5);
+        kits += part("chiller", { x: chx, y: iTop, w: 104, h: iH }, ch, name(chx + 52, BB + 22, "water-cooled chiller"));
+        mark("refrig");
+        baseConn.chw.push(chx + 24); baseConn.cw.push(chx + 80);
+        kits += part("pumpChw", { x: chx + 19, y: BY.chw + 17, w: 10, h: 10 }, pump(chx + 24, BY.chw + 22));
+        kits += part("pumpCw", { x: chx + 75, y: BY.cw + 13, w: 10, h: 10 }, pump(chx + 80, BY.cw + 18));
+      }
+    }
+
+    // ---- switchboard and the grid ----
+    var msbX = basement ? dsx : dsx - 52, msbY = basement ? G + 50 : G - 34;
+    kits += kit(msbX, msbY, 38, 30);
+    kits += '<polygon points="' + pts([[msbX + 21, msbY + 5], [msbX + 13, msbY + 16], [msbX + 19, msbY + 16], [msbX + 16, msbY + 25], [msbX + 25, msbY + 13], [msbX + 19, msbY + 13]]) + '" fill="' + COL.elec + '"/>';
+    lab(msbX - 5, msbY + 19, "switchboard", "end");
+    var gy = basement ? G + 66 : G + 14;
+    thin += pl(basement ? [[W - 12, gy], [msbX + 38, gy]] : [[W - 12, gy], [msbX + 19, gy], [msbX + 19, msbY + 30]], COL.elec, 2.5);
+    lab(W - 14, gy - 5, "grid", "end", COL.elec); mark("elec");
+    thin += pl((basement ? [[DS.elec, msbY]] : [[msbX + 38, msbY + 8], [DS.elec, msbY + 8]]).concat([[DS.elec, aTop + aH]]), COL.elec, 1.6, ' stroke-dasharray="4 3"');
+
+    // ---- floors ----
+    for (var f = 0; f < nDraw; f++) {
+      var y = floorY(f), top = f === 0;
+      var xs;
+      if (allAir) {
+        run("sup", [[DS.sup, y + 19], [zx0 + 6, y + 19]]);
+        xs = spread(3, zx0, zx1 - 80);
+        xs.forEach(function (x, k) {
+          thin += pl([[x, y + 24], [x, y + 36]], COL.cool, 2);
+          kits += part("diffuser", { x: x - 10, y: y + 36, w: 20, h: 12 }, pl([[x - 8, y + 39], [x, y + 46], [x + 8, y + 39]], COL.cool, 2.2),
+            txt(x, y + 62, "supply diffuser", "middle", COL.muted, 10), top && k === 0);
+        });
+        var vx = zx1 - 24;
+        kits += part("vav", { x: vx - 13, y: y + 10, w: 26, h: 18 }, rect(vx - 13, y + 10, 26, 18, COL.card, COL.cool, 1.4, 2) + pl([[vx - 7, y + 25], [vx + 7, y + 13]], COL.ink, 1.5),
+          txt(vx, y + 62, "VAV box", "middle", COL.muted, 10), top);
+        // reheat just downstream of the box: an electric element or a hot-water coil
+        var rhx = vx - 30;
+        if (eHeat) kits += part("reheat", { x: rhx - 7, y: y + 11, w: 14, h: 16 }, rect(rhx - 7, y + 11, 14, 16, COL.card, COL.heat, 1.4, 1) + zigzag(rhx - 4, y + 14, 8, 10, COL.heat),
+          txt(rhx, y + 76, "electric reheat", "middle", COL.muted, 10), top);
+        else if (hhw) {
+          kits += part("reheat", { x: rhx - 7, y: y + 11, w: 14, h: 16 }, coil(rhx - 7, y + 11, 14, 16, COL.heat), txt(rhx, y + 76, "reheat coil", "middle", COL.muted, 10), top);
+          run("hhw", [[LX.hhw, y + FY.hhw], [rhx, y + FY.hhw], [rhx, y + 27]]);
+        }
+        var rx = Math.round((xs[1] + xs[2]) / 2);
+        kits += part("grille", { x: rx - 9, y: y + 36, w: 18, h: 17 }, rect(rx - 8, y + 37, 16, 3, COL.muted, null, 0, 0) + arrow([[rx, y + 52], [rx, y + 41]], COL.air, 1.8),
+          txt(rx, y + 66, "return grille", "middle", COL.muted, 10), top);
+        var ry = floorHhw ? y + 36 : y + 32;
+        thin += arrow([[rx + 12, ry], [dsx - 2, ry]], COL.air, 1.8, "4 3");
+      } else {
+        // DOAS ventilation duct and an exhaust path on every floor
+        var ex = zx1 - 20;
+        kits += part("exhaust", { x: ex - 9, y: y + 36, w: 18, h: 17 }, rect(ex - 8, y + 37, 16, 3, COL.muted, null, 0, 0) + arrow([[ex, y + 52], [ex, y + 41]], COL.air, 1.8),
+          txt(ex, y + 66, "exhaust", "middle", COL.muted, 10), top);
+        thin += arrow([[ex + 10, y + 32], [dsx - 2, y + 32]], COL.air, 1.8, "4 3");
+        if (top) lab(zx1 + 2, y + 80, "ventilation air (DOAS)", "end");
+        var tEnd = zx1 - 46;
+        if (id === "beam") {
+          xs = spread(3, zx0, tEnd);
+          run("vent", [[DS.sup, y + 17], [xs[0], y + 17]]);
+          run("chw", [[LX.chw, y + FY.chw], [xs[2] - 14, y + FY.chw]]);
+          if (hhw) {
+            var phx = bx + 17;
+            run("hhw", [[LX.hhw, y + FY.hhw], [phx, y + FY.hhw], [phx, y + fh - 12]]);
+            kits += part("perimeter", { x: bx + 5, y: y + fh - 30, w: 24, h: 28 },
+              rect(bx + 5, y + fh - 12, 24, 10, COL.plant, COL.heat, 1.4, 1) + arrow([[phx - 6, y + fh - 14], [phx - 6, y + fh - 30]], COL.heat, 1.4) + arrow([[phx + 6, y + fh - 14], [phx + 6, y + fh - 30]], COL.heat, 1.4),
+              txt(psx + psw + 6, y + fh - 4, "◂ perimeter heater under the glazing", "start", COL.muted, 10), top);
+          }
+          xs.forEach(function (x, k) {
+            run("vent", [[x, y + 17], [x, y + 35]]);
+            run("chw", [[x - 14, y + FY.chw], [x - 14, y + 35]]);
+            var bm = rect(x - 26, y + 35, 52, 8, COL.plant, COL.cool, 1.4, 1);
+            for (var sl = x - 20; sl <= x + 20; sl += 5) bm += pl([[sl, y + 37], [sl, y + 41]], COL.cool, 1);
+            bm += arrow([[x - 22, y + 45], [x - 30, y + 58]], COL.cool, 1.6) + arrow([[x + 22, y + 45], [x + 30, y + 58]], COL.cool, 1.6);
+            kits += part("beam", { x: x - 30, y: y + 35, w: 60, h: 24 }, bm, txt(x, y + 72, "chilled beam", "middle", COL.muted, 10), top && k === 0);
+          });
+        } else if (id === "fcu") {
+          xs = spread(2, zx0 + 10, tEnd);
+          run("vent", [[DS.sup, y + 17], [xs[0] + 20, y + 17]]);
+          run("chw", [[LX.chw, y + FY.chw], [xs[1] + 12, y + FY.chw]]);
+          if (hhw) run("hhw", [[LX.hhw, y + FY.hhw], [xs[1] + 12, y + FY.hhw]]);
+          xs.forEach(function (x, k) {
+            var fc = kit(x - 26, y + 12, 52, 22) + fan(x - 13, y + 23, 8);
+            fc += eHeat ? coil(x + 1, y + 15, 11, 16, COL.cool) + zigzag(x + 14, y + 16, 8, 14, COL.heat) : coil(x + 2, y + 15, 16, 16, COL.cool);
+            fc += pl([[x - 13, y + 34], [x - 13, y + 38]], COL.cool, 2) + pl([[x - 21, y + 39], [x - 13, y + 46], [x - 5, y + 39]], COL.cool, 2.2);
+            fc += rect(x + 14, y + 37, 16, 3, COL.muted, null, 0, 0) + arrow([[x + 22, y + 52], [x + 22, y + 41]], COL.air, 1.8);
+            kits += part("fcu", { x: x - 26, y: y + 12, w: 56, h: 41 }, fc, txt(x, y + 62, "fan-coil unit", "middle", COL.muted, 10), top && k === 0);
+          });
+        } else if (vrf) {
+          var bcx = zx0 + 2;
+          run("ref", [[LX.ref, y + FY.ref], [bcx, y + FY.ref]]);
+          xs = spread(3, zx0 + 48, tEnd);
+          run("ref", [[bcx + 30, y + FY.ref], [xs[2], y + FY.ref]]);
+          kits += rect(bcx, y + 16, 30, 18, COL.plant, COL.refrig, 1.4, 2);
+          run("vent", [[DS.sup, y + 17], [xs[0] + 24, y + 17]]);
+          xs.forEach(function (x, k) {
+            run("ref", [[x, y + FY.ref], [x, y + 35]]);
+            var cs = rect(x - 20, y + 35, 40, 7, COL.plant, COL.refrig, 1.4, 1);
+            for (var s2 = x - 14; s2 <= x + 14; s2 += 4) cs += pl([[s2, y + 37], [s2, y + 40]], COL.refrig, 1);
+            cs += arrow([[x - 16, y + 44], [x - 24, y + 56]], COL.refrig, 1.6) + arrow([[x + 16, y + 44], [x + 24, y + 56]], COL.refrig, 1.6);
+            kits += part("cassette", { x: x - 24, y: y + 35, w: 48, h: 22 }, cs, txt(x, y + 70, "ceiling cassette", "middle", COL.muted, 10), top && k === 0);
+          });
+          var gx = Math.round((xs[0] + xs[1]) / 2);
+          run("vent", [[gx, y + 17], [gx, y + 36]]);
+          thin += pl([[gx - 6, y + 39], [gx, y + 44], [gx + 6, y + 39]], COL.air, 2);
+          if (top) lab(bcx - 2, y + 50, "branch box", "start");
+        }
+      }
+    }
+
+    // ---- pipe risers: each lane spans its lowest and highest connection ----
+    lanes.forEach(function (k) {
+      var x = LX[k];
+      var topY = roofConn[k] && roofConn[k].length ? RY[k] : (k === "flue" ? RT - 72 : floorY(0) + FY[k]);
+      var botY = baseConn[k] && baseConn[k].length ? BY[k] : yLow + FY[k];
+      run(k, [[x, topY], [x, botY]]);
+    });
+    ["chw", "hhw", "cw", "ref"].forEach(function (k) {
+      var xs2 = roofConn[k].slice();
+      if (!xs2.length) return;
+      if (LX[k] != null) xs2.push(LX[k]);
+      var lo = Math.min.apply(null, xs2), hi = Math.max.apply(null, xs2);
+      if (hi > lo) run(k, [[lo, RY[k]], [hi, RY[k]]]);
+      roofConn[k].forEach(function (x) { run(k, [[x, itemBot], [x, RY[k]]]); });
+    });
+    ["chw", "hhw", "cw", "flue"].forEach(function (k) {
+      baseConn[k].forEach(function (x) { run(k, [[LX[k], BY[k]], [x, BY[k]], [x, G + 58]]); });
+    });
+    if (hhw === "boiler") {
+      kits += rect(LX.flue - 6, RT - 76, 12, 4, COL.muted, null, 0, 1);
+      lab(LX.flue - 8, RT - 64, "flue", "end");
+    }
+
+    var nets = drawNets(["sup", "vent", "ret"]) + drawNets(["cw", "flue", "hhw", "chw", "ref"]);
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="group" aria-label="' + esc(V.aria) + '">' +
+      shell + thin + nets + kits + labels + '</svg>';
+    return { svg: svg, used: used };
+  }
+
+  function legendHtml(used) {
+    function sw(kind, col) {
+      var s = '<svg width="26" height="12" viewBox="0 0 26 12" aria-hidden="true">';
+      if (kind === "duct") s += '<rect x="1" y="1" width="24" height="10" fill="' + col + '" fill-opacity=".3" stroke="' + col + '" stroke-width="1.5"/>';
+      else if (kind === "pipe") s += '<line x1="1" y1="6" x2="25" y2="6" stroke="' + col + '" stroke-width="5"/><line x1="1" y1="6" x2="25" y2="6" stroke="' + COL.card + '" stroke-width="1.6"/>';
+      else if (kind === "box") s += '<rect x="4" y="1" width="18" height="10" rx="2" fill="' + COL.plant + '" stroke="' + COL.plantInk + '" stroke-width="1.2"/>';
+      else if (kind === "slot") s += '<rect x="4" y="1" width="18" height="10" rx="2" fill="none" stroke="' + getVar("--accent") + '" stroke-width="1.4" stroke-dasharray="3 2"/>';
+      else s += '<line x1="1" y1="6" x2="25" y2="6" stroke="' + col + '" stroke-width="2.5"/>';
+      return s + '</svg>';
+    }
+    var items = [];
+    if (used.supply) items.push(sw("duct", COL.cool) + "Supply air duct");
+    if (used.oa) items.push(sw("duct", COL.air) + "Outdoor, return or exhaust air");
+    if (used.chw) items.push(sw("pipe", COL.cool) + "Chilled water");
+    if (used.hhw) items.push(sw("pipe", COL.heat) + "Heating water");
+    if (used.cw) items.push(sw("pipe", COL.water) + "Condenser water");
+    if (used.refrig) items.push(sw("pipe", COL.refrig) + "Refrigerant");
+    if (used.elec) items.push(sw("line", COL.elec) + "Electricity");
+    if (used.gas) items.push(sw("line", COL.gas) + "Gas");
+    items.push(sw("box") + "Plant / equipment");
+    items.push(sw("slot") + "Empty slot");
+    return items.map(function (it) { return '<span>' + it + '</span>'; }).join("");
+  }
+
+  // ---------- tray icons: the section symbols at card size (viewBox 64 x 40) ----------
+  function icon(t) {
+    var s = "";
+    if (t === "ahu") {
+      s = kit(2, 9, 60, 22);
+      [17, 32, 47].forEach(function (x) { s += pl([[x, 9], [x, 31]], COL.plantInk, 1, ' stroke-opacity=".5"'); });
+      s += pl([[5, 26], [14, 14]], COL.plantInk, 1.6) + vzig(20, 12, 9, 16, COL.plantInk) + coil(34, 12, 11, 16, COL.cool) + fan(54.5, 20, 6);
+    } else if (t === "tower") {
+      s = kit(14, 13, 36, 25) + rect(22, 5, 20, 8, COL.plant, COL.plantInk, 1.2, 2);
+      for (var dx = 20; dx < 46; dx += 7) s += pl([[dx, 17], [dx, 27]], COL.water, 1.4, ' stroke-dasharray="2 3"');
+      s += pl([[17, 32], [47, 32]], COL.plantInk, 1, ' stroke-opacity=".6"');
+    } else if (t === "wcc") {
+      s = kit(4, 5, 56, 30) + rect(8, 9, 48, 8, COL.card, COL.cool, 1.4, 4) + rect(8, 23, 48, 8, COL.card, COL.water, 1.4, 4);
+    } else if (t === "acc") {
+      s = kit(4, 13, 56, 22);
+      for (var k = 0; k < 3; k++) s += rect(8 + k * 17, 7, 14, 5, COL.plant, COL.plantInk, 1.2, 2);
+      s += zigzag(8, 17, 48, 14, COL.plantInk);
+    } else if (t === "pump") {
+      s = pl([[6, 20], [23, 20]], COL.muted, 2) + pl([[41, 20], [58, 20]], COL.muted, 2) + pump(32, 20, 9);
+    } else if (t === "vav") {
+      s = rect(18, 10, 28, 20, COL.card, COL.cool, 1.4, 2) + pl([[24, 26], [40, 14]], COL.ink, 1.5);
+    } else if (t === "diffuser") {
+      s = pl([[6, 22], [58, 22]], COL.muted, 1, ' stroke-dasharray="4 3"') + pl([[32, 4], [32, 20]], COL.cool, 2) + pl([[22, 23], [32, 32], [42, 23]], COL.cool, 2.4);
+    } else if (t === "grille") {
+      s = pl([[6, 16], [22, 16]], COL.muted, 1, ' stroke-dasharray="4 3"') + pl([[42, 16], [58, 16]], COL.muted, 1, ' stroke-dasharray="4 3"') +
+        rect(22, 14, 20, 4, COL.muted, null, 0, 0) + arrow([[32, 36], [32, 20]], COL.air, 2);
+    } else if (t === "boiler") {
+      s = kit(16, 5, 32, 30) + flame(32, 21);
+    } else if (t === "fcu") {
+      s = kit(6, 10, 52, 20) + fan(20, 20, 7) + coil(34, 13, 16, 14, COL.cool);
+    } else if (t === "vrf") {
+      s = kit(18, 2, 28, 36) + fan(32, 20, 10);
+    }
+    return '<svg viewBox="0 0 64 40" aria-hidden="true">' + s + '</svg>';
+  }
+
+  // ---------- parts ----------
+  // what: what the part does and so where it has to sit, for a part placed in the wrong slot
+  var PARTS = {
+    ahu:      { name: "Air-handling unit", what: "An air-handling unit filters, cools and pushes the air, so it sits where outdoor air can reach it and its ducts can drop into the duct riser." },
+    tower:    { name: "Cooling tower", what: "A cooling tower throws heat away by evaporating water into the outdoor air, so it sits on the roof at the top of the condenser-water pipes." },
+    wcc:      { name: "Water-cooled chiller", what: "A water-cooled chiller moves heat out of the chilled water and into the condenser water, so it sits where the two sets of pipes meet, in the plant room." },
+    pump:     { name: "Pump", what: "A pump keeps water moving round its loop, so it sits on a pipe, usually beside the plant it serves." },
+    vav:      { name: "VAV box", what: "A VAV box sets how much supply air each zone gets, so it sits on the supply duct where the duct enters the floor." },
+    diffuser: { name: "Supply diffuser", what: "A supply diffuser lets conditioned air into the room and mixes it so nobody feels a draught, so it sits at the end of a supply duct, in the ceiling." },
+    grille:   { name: "Return grille", what: "A return grille lets room air back up into the ceiling void, so it sits in the ceiling with no duct behind it." },
+    acc:      { name: "Air-cooled chiller" },
+    boiler:   { name: "Gas boiler" },
+    fcu:      { name: "Fan-coil unit" },
+    vrf:      { name: "VRF outdoor unit" }
+  };
+
+  // ---------- level 1: follow the heat ----------
+  var L1 = {
+    key: "L1",
+    cfg: { system: "vav", cool: "water-chiller", heat: "resistance", floors: 10 },
+    aria: "Section through a ten-storey office cooled by a central VAV system, with a water-cooled chiller in the basement and a cooling tower on the roof. Eight parts are missing.",
+    // where: read out on the empty slot, and appended when a part is placed in it wrongly
+    slots: {
+      ahu:      { accepts: "ahu",      where: "This slot is on the roof over the duct riser, where outdoor air comes in and the ducts go down." },
+      tower:    { accepts: "tower",    where: "This slot is on the roof, open to the outdoor air, at the top of the condenser-water pipes." },
+      chiller:  { accepts: "wcc",      where: "This slot is in the basement plant room, where the chilled-water and condenser-water pipes meet." },
+      pumpChw:  { accepts: "pump",     where: "This slot is on the chilled-water pipe, just above the plant room." },
+      pumpCw:   { accepts: "pump",     where: "This slot is on the condenser-water pipe, just above the plant room." },
+      vav:      { accepts: "vav",      where: "This slot is on the supply duct where it enters the floor." },
+      diffuser: { accepts: "diffuser", where: "This slot is at the end of a supply-duct branch, in the ceiling." },
+      grille:   { accepts: "grille",   where: "This slot is in the ceiling, open to the void above, with no duct behind it." }
+    },
+    tray: ["ahu", "tower", "wcc", "pump", "pump", "vav", "diffuser", "grille", "acc", "boiler", "fcu", "vrf"],
+    // parts that belong to other systems: the reason, whichever slot they are tried in
+    notHere: {
+      acc: "An air-cooled chiller rejects its own heat with fans, straight to the outdoor air, so a building that has one needs no cooling tower and no condenser-water pipes. This building has both, so its chiller is water-cooled.",
+      boiler: "A gas boiler makes heating water. This building heats with an electric element at each VAV box, so it has no boiler and no heating-water pipes.",
+      fcu: "A fan-coil unit cools one room with its own fan and a chilled-water coil. Here the air does the cooling: the air-handling unit cools it centrally and the VAV boxes share it out, so no chilled water reaches the floors.",
+      vrf: "A VRF outdoor unit pipes refrigerant to units in each room. This building moves its heat with air and water, and its only refrigerant is sealed inside the chiller."
+    },
+    // a specific reason for the near misses, in place of the general one
+    wrong: {
+      "acc@chiller": "An air-cooled chiller rejects its own heat with fans, so it has to sit outdoors: in a basement it would have no air to reject heat into. It would also leave the cooling tower with nothing to do.",
+      "wcc@tower": "A water-cooled chiller needs a cooling tower to get rid of its heat; it is not one. The chiller sits in the plant room where the two water loops meet, and the tower sits outdoors.",
+      "tower@chiller": "A cooling tower has to evaporate water into the outdoor air, so it cannot work in a basement. Down here, where the chilled-water and condenser-water pipes meet, is where heat passes from one loop to the other.",
+      "diffuser@grille": "Close: both sit in the ceiling. A diffuser is fed by a supply duct and blows air into the room, but this slot has no duct behind it. Room air rises through it into the ceiling void.",
+      "grille@diffuser": "Close: both sit in the ceiling. This slot is at the end of a supply duct, so it needs the part that blows conditioned air into the room. A return grille has no duct behind it.",
+      "vav@diffuser": "The VAV box sits upstream, where the duct enters the floor, and sets how much air the zone gets. The air still needs a diffuser at the end of the duct to get into the room.",
+      "diffuser@vav": "The diffuser goes at the end of the duct, in the ceiling. Where the duct enters the floor something has to set how much air the zone gets."
+    },
+    loops: [
+      { id: "air", parts: ["ahu", "vav", "diffuser", "grille"], nets: ["sup", "ret"],
+        done: "The air loop is running: air carries the room's heat back to the cooling coil." },
+      { id: "chw", parts: ["ahu", "pumpChw", "chiller"], nets: ["chw"],
+        done: "The chilled-water loop is running: water carries the heat from the coil to the chiller." },
+      { id: "ref", parts: ["chiller"], nets: ["refc"],
+        done: "The refrigerant loop is running, sealed inside the chiller: it lifts the heat to a higher temperature." },
+      { id: "cw", parts: ["chiller", "pumpCw", "tower"], nets: ["cw"],
+        done: "The condenser-water loop is running: water carries the heat to the cooling tower, which throws it away." }
+    ],
+    follow: [
+      { title: "1. The air loop", text: "Supply air leaves the air-handling unit at about 13 °C and picks up the room's heat. It comes back through the ceiling void and up the duct riser. In the unit some of it is exhausted, outdoor air is mixed in for ventilation, and the mix passes over the cooling coil, which takes the heat out." },
+      { title: "2. The chilled-water loop", text: "Chilled water leaves the chiller at about 6 °C, collects the heat at the cooling coil, and comes back at about 12 °C. A pump keeps it moving." },
+      { title: "3. The refrigerant loop", text: "Inside the chiller, refrigerant boils in the evaporator and takes the heat out of the chilled water. The compressor squeezes the vapour until it condenses at a higher temperature, and the condenser hands that heat to the condenser water. The compressor's own electricity ends up as heat too, and it goes the same way." },
+      { title: "4. The condenser-water loop", text: "Condenser water carries the heat up to the cooling tower at about 35 °C. The tower evaporates a little of it into the outdoor air, the evaporation takes the heat away, and the rest comes back at about 29.5 °C." },
+      { title: "Nothing here makes cold", text: "Each loop hands the room's heat to the next, and the last one throws it away outdoors. On any schematic, ask which of these four loops are there and where each one crosses the building." }
+    ]
+  };
+
+  // ---------- progress, kept in this browser only ----------
+  var STORE = "tt-bpsd6030-systems";
+  var progress = {};
+  try { progress = JSON.parse(localStorage.getItem(STORE)) || {}; } catch (e) { progress = {}; }
+  function save() { try { localStorage.setItem(STORE, JSON.stringify(progress)); } catch (e) {} }
+
+  // ---------- one level's game ----------
+  function Game(lv, n) {
+    var el = { scene: $("scene" + n), legend: $("legend" + n), tray: $("tray" + n), fb: $("fb" + n), progress: $("progress" + n),
+      follow: $("follow" + n), fTitle: $("fTitle" + n), fText: $("fText" + n), fBack: $("fBack" + n), fNext: $("fNext" + n), reset: $("reset" + n) };
+    var slotIds = Object.keys(lv.slots);
+    var pr, cards, selected = null, fstep = -1;
+
+    function shuffle(a) {
+      for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+      return a;
+    }
+    function start(fresh) {
+      pr = (!fresh && progress[lv.key]) || { placed: {}, missed: {} };
+      progress[lv.key] = pr;
+      cards = shuffle(lv.tray.map(function (t) { return { type: t, used: false }; }));
+      // a card is used up for each placed slot that takes its type
+      slotIds.forEach(function (s) {
+        if (!pr.placed[s]) return;
+        for (var i = 0; i < cards.length; i++) if (!cards[i].used && cards[i].type === lv.slots[s].accepts) { cards[i].used = true; break; }
+      });
+      selected = null; fstep = -1;
+    }
+    function nPlaced() { return slotIds.filter(function (s) { return pr.placed[s]; }).length; }
+    function complete() { return nPlaced() === slotIds.length; }
+    function loopDone(lp) { return lp.parts.every(function (p) { return !lv.slots[p] || pr.placed[p]; }); }
+    function loopOf(net) { for (var i = 0; i < lv.loops.length; i++) if (lv.loops[i].nets.indexOf(net) >= 0) return lv.loops[i]; return null; }
+
+    var V = {
+      aria: lv.aria,
+      st: function (pid) { return lv.slots[pid] ? (pr.placed[pid] ? "placed" : "slot") : "fixed"; },
+      slotLabel: function (pid) { return "Empty slot. " + lv.slots[pid].where; },
+      netOpacity: function (k) { var lp = loopOf(k); return !lp || loopDone(lp) ? 1 : .5; },
+      netColor: function (k, col) {
+        if (fstep < 0 || fstep >= lv.loops.length) return col;
+        return lv.loops[fstep].nets.indexOf(k) >= 0 ? col : COL.fade;
+      }
+    };
+
+    function feedback(html, kind) {
+      if (!html) html = "Select a part in the tray, then an empty slot. Or drag the part onto the slot.";
+      el.fb.className = "fb" + (kind ? " " + kind : "");
+      el.fb.innerHTML = html;
+    }
+    function render() {
+      var out = drawScene(lv.cfg, V);
+      el.scene.innerHTML = out.svg;
+      el.scene.classList.toggle("armed", selected !== null);
+      el.legend.innerHTML = legendHtml(out.used);
+      renderTray();
+      var np = nPlaced();
+      var first = slotIds.filter(function (s) { return pr.placed[s] && !pr.missed[s]; }).length;
+      el.progress.innerHTML = "Placed <b>" + np + " of " + slotIds.length + "</b>" +
+        (complete() ? " &middot; first time <b>" + first + " of " + slotIds.length + "</b>" : "");
+      el.reset.disabled = np === 0 && !Object.keys(pr.missed).length;
+      renderFollow();
+    }
+    function renderTray() {
+      var html = "";
+      cards.forEach(function (c, i) {
+        if (c.used) return;
+        html += '<button type="button" class="pcard" data-idx="' + i + '" aria-pressed="' + (selected === i) + '">' +
+          icon(c.type) + '<span>' + PARTS[c.type].name + '</span></button>';
+      });
+      el.tray.innerHTML = html || '<p class="trayempty">The tray is empty.</p>';
+    }
+    function renderFollow() {
+      el.follow.hidden = !complete();
+      if (!complete()) return;
+      if (fstep < 0) {
+        el.fTitle.textContent = "All four loops are running.";
+        el.fText.textContent = "Follow the heat from the room to the outdoors, one loop at a time.";
+      } else {
+        el.fTitle.textContent = lv.follow[fstep].title;
+        el.fText.textContent = lv.follow[fstep].text;
+      }
+      el.fBack.disabled = fstep < 0;
+      el.fNext.disabled = fstep >= lv.follow.length - 1;
+      el.fNext.textContent = fstep < 0 ? "Follow the heat" : "Next";
+    }
+
+    function select(i) {
+      selected = selected === i ? null : i;
+      render();
+      if (selected === null) { feedback(""); return; }
+      var c = cards[selected];
+      if (complete() && lv.notHere[c.type]) feedback("<b>" + PARTS[c.type].name + ".</b> " + lv.notHere[c.type]);
+      else feedback("<b>" + PARTS[c.type].name + "</b> selected. Now choose an empty slot in the drawing.");
+    }
+    function focusCard(i) {
+      var b = el.tray.querySelector('.pcard[data-idx="' + i + '"]') || el.tray.querySelector(".pcard");
+      if (b) b.focus();
+    }
+    function flashWrong(sid) {
+      var g = el.scene.querySelector('[data-slot="' + sid + '"]');
+      if (!g) return;
+      g.classList.add("wrong");
+      setTimeout(function () { g.classList.remove("wrong"); }, 900);
+    }
+    function place(i, sid, fromKeys) {
+      if (i === null || pr.placed[sid] || !lv.slots[sid]) return;
+      var c = cards[i], s = lv.slots[sid];
+      selected = null;
+      if (c.type === s.accepts) {
+        var before = lv.loops.filter(loopDone);
+        pr.placed[sid] = true; c.used = true; save();
+        render();
+        var msg = "<b>" + PARTS[c.type].name + "</b> is in.";
+        lv.loops.forEach(function (lp) { if (before.indexOf(lp) < 0 && loopDone(lp)) msg += " " + lp.done; });
+        if (complete()) msg += " Every part is in. The parts left in the tray belong to other systems: select one to see why.";
+        feedback(msg, "good");
+        if (fromKeys) { if (complete()) el.fNext.focus(); else focusCard(-1); }
+      } else {
+        pr.missed[sid] = true; save();
+        render();
+        var why = lv.wrong[c.type + "@" + sid] || lv.notHere[c.type] || (PARTS[c.type].what + " " + s.where);
+        feedback("<b>Not there.</b> " + why, "bad");
+        flashWrong(sid);
+        if (fromKeys) focusCard(i);
+      }
+    }
+
+    // ---- tray: click or keyboard to select, pointer to drag ----
+    var drag = null, suppressClick = false;
+    function slotAt(x, y) {
+      var t = document.elementFromPoint(x, y);
+      var g = t && t.closest ? t.closest("[data-slot]") : null;
+      return g && el.scene.contains(g) ? g : null;
+    }
+    function markOver(g) {
+      var prev = el.scene.querySelector(".slot.over");
+      if (prev && prev !== g) prev.classList.remove("over");
+      if (g) g.classList.add("over");
+    }
+    el.tray.addEventListener("click", function (e) {
+      if (suppressClick) return;
+      var b = e.target.closest(".pcard"); if (!b) return;
+      var i = +b.getAttribute("data-idx");
+      select(i);
+      focusCard(i);
+    });
+    el.tray.addEventListener("pointerdown", function (e) {
+      var b = e.target.closest(".pcard");
+      if (!b || e.button > 0) return;
+      drag = { b: b, i: +b.getAttribute("data-idx"), x0: e.clientX, y0: e.clientY, on: false, ghost: null, id: e.pointerId };
+    });
+    document.addEventListener("pointermove", function (e) {
+      if (!drag || e.pointerId !== drag.id) return;
+      if (!drag.on) {
+        if (Math.abs(e.clientX - drag.x0) + Math.abs(e.clientY - drag.y0) < 6) return;
+        drag.on = true;
+        var w = drag.b.offsetWidth;
+        var g = drag.b.cloneNode(true);
+        g.classList.add("ghostcard"); g.setAttribute("aria-hidden", "true"); g.style.width = w + "px";
+        document.body.appendChild(g); drag.ghost = g; drag.w = w;
+        selected = drag.i; el.scene.classList.add("armed"); drag.b.classList.add("lifted");
+      }
+      e.preventDefault();
+      drag.ghost.style.left = (e.clientX - drag.w / 2) + "px";
+      drag.ghost.style.top = (e.clientY - 28) + "px";
+      markOver(slotAt(e.clientX, e.clientY));
+    });
+    function endDrag(e, drop) {
+      if (!drag || e.pointerId !== drag.id) return;
+      var d = drag; drag = null;
+      if (!d.on) return;
+      d.ghost.remove(); d.b.classList.remove("lifted"); markOver(null);
+      suppressClick = true; setTimeout(function () { suppressClick = false; }, 0);
+      var g = drop ? slotAt(e.clientX, e.clientY) : null;
+      if (g) place(d.i, g.getAttribute("data-slot"), false);
+      else { selected = null; render(); }
+    }
+    document.addEventListener("pointerup", function (e) { endDrag(e, true); });
+    document.addEventListener("pointercancel", function (e) { endDrag(e, false); });
+
+    // ---- slots: click or Enter/Space ----
+    el.scene.addEventListener("click", function (e) {
+      var g = e.target.closest ? e.target.closest("[data-slot]") : null;
+      if (!g) return;
+      if (selected === null) { feedback("Select a part from the tray first, then this slot."); return; }
+      place(selected, g.getAttribute("data-slot"), false);
+    });
+    el.scene.addEventListener("keydown", function (e) {
+      var g = e.target.closest ? e.target.closest("[data-slot]") : null;
+      if (!g || (e.key !== "Enter" && e.key !== " ")) return;
+      e.preventDefault();
+      if (selected === null) { feedback("Select a part from the tray first, then this slot."); return; }
+      place(selected, g.getAttribute("data-slot"), true);
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && selected !== null) { var i = selected; selected = null; render(); feedback(""); focusCard(i); }
+    });
+
+    // ---- follow the heat ----
+    el.fNext.addEventListener("click", function () { if (fstep < lv.follow.length - 1) { fstep++; render(); } });
+    el.fBack.addEventListener("click", function () { if (fstep > -1) { fstep--; render(); } });
+    el.reset.addEventListener("click", function () { start(true); save(); render(); feedback(""); });
+
+    start(false);
+    render();
+    feedback(complete() ? "Every part is in from your last visit. Follow the heat, or start again." : "");
+    return { render: render };
+  }
+
+  var games = [Game(L1, 1)];
+
+  // ---------- tabs: arrow keys skip the levels not built yet ----------
+  var tabs = Array.prototype.slice.call(document.querySelectorAll(".tab"));
+  tabs.forEach(function (t) {
+    t.addEventListener("keydown", function (e) {
+      var live = tabs.filter(function (x) { return !x.disabled; });
+      var i = live.indexOf(t), j = i;
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") j = Math.min(i + 1, live.length - 1);
+      else if (e.key === "ArrowLeft" || e.key === "ArrowUp") j = Math.max(i - 1, 0);
+      else if (e.key === "Home") j = 0;
+      else if (e.key === "End") j = live.length - 1;
+      else return;
+      e.preventDefault(); live[j].focus();
+    });
+  });
+
+  window.__ttRedraw = function () { readCols(); games.forEach(function (g) { g.render(); }); };
+})();
+</script>
+<script>
+  /* Theme control. The head script has already applied the theme; this reflects
+     it in the radios and handles changes. */
+  (function () {
+    var group = document.getElementById("themePick");
+    if (!group) return;
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    var pref = window.__ttPref || "system";
+    function apply() {
+      var dark = pref === "dark" || (pref === "system" && mq.matches);
+      document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+      if (window.__ttRedraw) window.__ttRedraw();
+    }
+    var sel = group.querySelector('input[value="' + pref + '"]');
+    if (sel) sel.checked = true;
+    group.addEventListener("change", function (e) {
+      if (e.target.name !== "theme") return;
+      pref = e.target.value;
+      try { localStorage.setItem("tt-theme", pref); } catch (err) {}
+      apply();
+    });
+    mq.addEventListener("change", function () { if (pref === "system") apply(); });
+  })();
+</script>
+</body>
+</html>
