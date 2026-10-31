@@ -114,6 +114,22 @@
 
   /* ---- the game: drawing beside the tray ---- */
   .game { display: grid; grid-template-columns: minmax(0, 1fr) 248px; gap: var(--s-5); align-items: start; }
+  .game[hidden] { display: none; }
+
+  /* ---- level 3: choose the case ---- */
+  .cases { display: flex; flex-wrap: wrap; gap: var(--s-2); margin: 0 0 var(--s-3); }
+  .case { border: 1px solid var(--line); background: var(--field); color: var(--muted); border-radius: var(--r-pill);
+    padding: var(--s-1) var(--s-3) var(--s-1) var(--s-1); font: inherit; font-size: var(--t-label); cursor: pointer;
+    display: inline-flex; align-items: center; gap: var(--s-2); }
+  .case .cl { display: inline-flex; align-items: center; justify-content: center; width: 21px; height: 21px; border-radius: 50%;
+    background: var(--chip); color: var(--muted); font-size: var(--t-meta); font-weight: 700; }
+  .case:hover { border-color: var(--accent); color: var(--ink); }
+  .case:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .case:active { transform: translateY(1px); }
+  .case[aria-pressed="true"] { border-color: var(--accent); background: var(--result-bg); color: var(--ink); font-weight: 600; box-shadow: inset 0 0 0 1px var(--accent); }
+  .case[aria-pressed="true"] .cl { background: var(--accent); color: var(--accent-ink); }
+  .case .tick { color: var(--good); font-weight: 700; }
+  .casedesc { margin: 0 0 var(--s-4); font-size: var(--t-label); color: var(--muted); max-width: 72ch; }
   .side { position: sticky; top: var(--s-4); display: flex; flex-direction: column; gap: var(--s-3); }
   @media (max-width: 880px) {
     .game { grid-template-columns: 1fr; }
@@ -244,7 +260,7 @@
   <div class="tabs" role="tablist" aria-label="Levels">
     <button class="tab active" role="tab" id="tab-1" aria-controls="panel-1" aria-selected="true" tabindex="0" data-idx="0"><span class="n">1</span><span>Follow the heat</span></button>
     <button class="tab" role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false" tabindex="-1" data-idx="1"><span class="n">2</span><span>Inside the air-handling unit</span></button>
-    <button class="tab" role="tab" id="tab-3" aria-selected="false" tabindex="-1" data-idx="2" disabled title="Not built yet"><span class="n">3</span><span>What reaches the zone</span></button>
+    <button class="tab" role="tab" id="tab-3" aria-controls="panel-3" aria-selected="false" tabindex="-1" data-idx="2"><span class="n">3</span><span>What reaches the zone</span></button>
     <button class="tab" role="tab" id="tab-4" aria-selected="false" tabindex="-1" data-idx="3" disabled title="Not built yet"><span class="n">4</span><span>Trace the air</span></button>
     <button class="tab" role="tab" id="tab-5" aria-selected="false" tabindex="-1" data-idx="4" disabled title="Not built yet"><span class="n">5</span><span>Spot the fault</span></button>
   </div>
@@ -343,6 +359,21 @@
       </div>
     </div>
 
+    <div class="nav">
+      <button type="button" class="btn ghost" data-nav="back">Back</button>
+      <button type="button" class="btn" data-nav="next">Next: what reaches the zone</button>
+    </div>
+  </section>
+
+  <!-- ===== Tab 3: What reaches the zone ===== -->
+  <section class="card" role="tabpanel" id="panel-3" aria-labelledby="tab-3" hidden>
+    <div class="primer">
+      <h2 class="what">Four ways to cool the same office: build each one and see what reaches the floors.</h2>
+      <p>The building is the same in every case. What changes is how the cooling and heating get from the roof to the rooms: by air, by water or by refrigerant. That decides what runs up the risers, how big the ducts are and what sits in the ceiling. Build the case closest to the system you are proposing for your building first, then at least one other, and compare what crosses each floor.</p>
+    </div>
+    <div class="cases" id="cases" role="group" aria-label="Choose a system"></div>
+    <p class="casedesc" id="caseDesc"></p>
+    <div id="caseGames"></div>
     <div class="nav">
       <button type="button" class="btn ghost" data-nav="back">Back</button>
     </div>
@@ -994,6 +1025,32 @@
       s = fan(32, 20, 15);
     } else if (t === "hrw") {
       s = wheel(24, 1, 16, 38);
+    } else if (t === "doas") {
+      s = kit(2, 9, 60, 22);
+      [17, 32, 47].forEach(function (x) { s += pl([[x, 9], [x, 31]], COL.plantInk, 1, ' stroke-opacity=".5"'); });
+      s += '<circle cx="9.5" cy="20" r="6" fill="' + COL.card + '" stroke="' + COL.plantInk + '" stroke-width="1.2"/>' +
+        pl([[5.5, 16], [13.5, 24]], COL.plantInk, 1) + pl([[5.5, 24], [13.5, 16]], COL.plantInk, 1);
+      s += vzig(20, 12, 9, 16, COL.plantInk) + coil(34, 12, 11, 16, COL.cool) + fan(54.5, 20, 6);
+    } else if (t === "hp") {
+      s = kit(6, 9, 52, 27) + coil(11, 13, 12, 19, COL.heat) + fan(40, 22, 10);
+    } else if (t === "hp4") {
+      s = kit(4, 11, 56, 25) + rect(9, 5, 21, 6, COL.plant, COL.plantInk, 1.2, 2) + rect(34, 5, 21, 6, COL.plant, COL.plantInk, 1.2, 2) +
+        coil(8, 14, 10, 19, COL.cool) + zigzag(21, 16, 22, 14, COL.plantInk) + coil(46, 14, 10, 19, COL.heat);
+    } else if (t === "rhc") {
+      s = pl([[4, 20], [60, 20]], COL.cool, 9, ' stroke-opacity=".3"') + coil(25, 10, 14, 20, COL.heat);
+    } else if (t === "beam") {
+      s = rect(8, 8, 48, 9, COL.plant, COL.cool, 1.4, 1);
+      for (var sl = 13; sl <= 51; sl += 5) s += pl([[sl, 10], [sl, 15]], COL.cool, 1);
+      s += arrow([[13, 19], [7, 32]], COL.cool, 1.6) + arrow([[51, 19], [57, 32]], COL.cool, 1.6);
+    } else if (t === "perim") {
+      s = rect(10, 27, 44, 10, COL.plant, COL.heat, 1.4, 1) + arrow([[24, 26], [24, 6]], COL.heat, 1.6) + arrow([[40, 26], [40, 6]], COL.heat, 1.6);
+    } else if (t === "cassette") {
+      s = rect(10, 8, 44, 8, COL.plant, COL.refrig, 1.4, 1);
+      for (var s2 = 15; s2 <= 49; s2 += 4) s += pl([[s2, 10], [s2, 14]], COL.refrig, 1);
+      s += arrow([[14, 18], [8, 31]], COL.refrig, 1.6) + arrow([[50, 18], [56, 31]], COL.refrig, 1.6);
+    } else if (t === "exgrille") {
+      s = pl([[6, 16], [22, 16]], COL.muted, 1, ' stroke-dasharray="4 3"') + pl([[42, 16], [58, 16]], COL.muted, 1, ' stroke-dasharray="4 3"') +
+        rect(22, 14, 20, 4, COL.muted, null, 0, 0) + arrow([[32, 36], [32, 20]], COL.air, 2);
     }
     return '<svg viewBox="0 0 64 40" aria-hidden="true">' + s + '</svg>';
   }
@@ -1008,10 +1065,18 @@
     vav:      { name: "VAV box", what: "A VAV box sets how much supply air each zone gets, so it sits on the supply duct where the duct enters the floor." },
     diffuser: { name: "Supply diffuser", what: "A supply diffuser lets conditioned air into the room and mixes it so nobody feels a draught, so it sits at the end of a supply duct, in the ceiling." },
     grille:   { name: "Return grille", what: "A return grille lets room air back up into the ceiling void, so it sits in the ceiling with no duct behind it." },
-    acc:      { name: "Air-cooled chiller" },
-    boiler:   { name: "Gas boiler" },
-    fcu:      { name: "Fan-coil unit" },
-    vrf:      { name: "VRF outdoor unit" },
+    acc:      { name: "Air-cooled chiller", what: "An air-cooled chiller makes chilled water and rejects the heat with its own fans, so it sits outdoors, on the roof." },
+    boiler:   { name: "Gas boiler", what: "A gas boiler burns gas to make heating water, so it sits in a plant room with a gas supply and a flue to the roof." },
+    fcu:      { name: "Fan-coil unit", what: "A fan-coil unit conditions one room's air with its own fan and coils, so it sits in that room's ceiling, at the end of the water pipes." },
+    vrf:      { name: "VRF outdoor unit", what: "A VRF outdoor unit drives refrigerant to the units in the rooms and rejects or collects heat with its fans, so it sits outdoors, on the roof." },
+    doas:     { name: "Outdoor air unit (DOAS)", what: "An outdoor air unit (DOAS) supplies only the outdoor air the rooms need for ventilation, so it sits on the roof over the duct riser." },
+    hp:       { name: "Heat pump", what: "An air-to-water heat pump takes heat from the outdoor air to make heating water, so it sits outdoors on the roof, at the top of the heating-water pipe." },
+    hp4:      { name: "Four-pipe heat pump", what: "A four-pipe heat pump makes chilled water and heating water at the same time, so it sits on the roof where both sets of pipes start." },
+    rhc:      { name: "Reheat coil", what: "A reheat coil warms one zone's supply air with heating water, so it sits on the duct just after that zone's VAV box." },
+    beam:     { name: "Chilled beam", what: "An active chilled beam cools the room with chilled water, using the ventilation air blown through it to draw room air across its coil, so it sits in the ceiling where the ventilation duct and the chilled-water pipe both reach." },
+    perim:    { name: "Perimeter heater", what: "A perimeter heater warms the cold edge of the room in winter, so it sits low under the glazing, on a heating-water pipe." },
+    cassette: { name: "Ceiling cassette", what: "A ceiling cassette is a VRF indoor unit: it cools or heats the room's air with refrigerant, so it sits in the ceiling at the end of a refrigerant pipe." },
+    exgrille: { name: "Exhaust grille", what: "An exhaust grille takes stale air out of the room, so it sits in the ceiling where the exhaust path starts." },
     // the sections inside an air-handling unit; fn: what it does, shown once it is in place
     mix:      { name: "Mixing box", fn: "It blends outdoor air with return air from the rooms. More outdoor air means better ventilation; more return air means less air to cool or heat. Return air that is not reused leaves as exhaust." },
     filter:   { name: "Filter", fn: "It takes the dust out of the air before it reaches the fan, the coils and the rooms." },
@@ -1144,6 +1209,142 @@
   var L2a = unitLevel("L2a", "mix");
   var L2b = unitLevel("L2b", "hrw");
 
+  /* ---------- level 3: what reaches the zone ----------
+     One building, four systems, drawn by the same engine as level 1. Plant and
+     terminals are slots; the heating-water pumps stay drawn in, since they sit
+     right under the roof plant and their slots would overlap it. */
+  function pick(o, keys) { var r = {}; keys.forEach(function (k) { r[k] = o[k]; }); return r; }
+  var W_ROOF = "This slot is on the roof over the duct riser, at the top of a small ventilation duct.";
+  var W_EXH = "This slot is in the ceiling, where stale air leaves the room on its way outdoors.";
+  var W_HP4 = "This slot is on the roof, where both the chilled-water and the heating-water pipes start.";
+  var NOT_GRILLE = "Close: from the room, a return grille and an exhaust grille look the same. But with a DOAS no air comes back to be reused: what leaves the rooms goes outdoors as exhaust, and gives up its heat at the wheel on the way.";
+  var NOT_BOILER_HP4 = "Heating water here comes from the four-pipe heat pump on the roof, so there is no gas boiler, no flue and no gas supply.";
+  var VENT_LOOP = { parts: ["ahu", "exhaust"], nets: ["vent", "ret"],
+    done: "The ventilation air is running: the DOAS supplies outdoor air to every floor, and the exhaust takes stale air back past its wheel." };
+  var TAIL = " The parts left in the tray belong to other systems: select one to see why.";
+
+  var L3 = {
+    a: {
+      key: "L3a", label: "All-air VAV",
+      desc: "Air does the cooling on every floor, through VAV boxes. An air-cooled chiller makes the chilled water and an air-to-water heat pump makes the heating water, both on the roof.",
+      cfg: { system: "vav", cool: "air-chiller", heat: "heatpump", floors: 10 },
+      aria: "Section through a ten-storey office with a central VAV system, an air-cooled chiller and a heat pump on the roof. Seven parts are missing.",
+      slots: {
+        ahu:      { accepts: "ahu",      where: "This slot is on the roof over the duct riser, where outdoor air comes in and the supply duct goes down." },
+        chiller:  { accepts: "acc",      where: "This slot is on the roof, on the chilled-water pipe that runs to the cooling coil in the air-handling unit." },
+        hp:       { accepts: "hp",       where: "This slot is on the roof, at the top of the heating-water pipe that runs down the riser." },
+        vav:      { accepts: "vav",      where: "This slot is on the supply duct where it enters the floor." },
+        reheat:   { accepts: "rhc",      where: "This slot is on the supply duct just after the VAV box, at the end of a heating-water pipe." },
+        diffuser: { accepts: "diffuser", where: "This slot is at the end of a supply-duct branch, in the ceiling." },
+        grille:   { accepts: "grille",   where: "This slot is in the ceiling, open to the void above, with no duct behind it." }
+      },
+      tray: ["ahu", "acc", "hp", "vav", "rhc", "diffuser", "grille", "tower", "wcc", "boiler", "fcu"],
+      notHere: {
+        tower: "A cooling tower serves a water-cooled chiller. The chiller here is air-cooled: its own fans reject the heat on the roof, so there is no condenser water and nothing for a tower to do.",
+        wcc: "A water-cooled chiller needs a cooling tower and condenser-water pipes, and this building has neither. Its chiller rejects heat with its own fans on the roof: it is air-cooled.",
+        boiler: "This building makes its heating water with a heat pump on the roof, so it has no gas boiler, no flue and no gas supply.",
+        fcu: L1.notHere.fcu
+      },
+      wrong: Object.assign({
+        "hp@chiller": "Close: an air-to-water heat pump looks much like an air-cooled chiller, a box on the roof with fans on top. This slot is on the chilled-water pipe to the cooling coil in the air-handling unit, so it needs the machine that makes chilled water.",
+        "acc@hp": "Close: an air-cooled chiller looks much like a heat pump. This slot is at the top of the heating-water pipe that runs down to the reheat coils, so it needs the machine that makes heating water.",
+        "rhc@vav": "The VAV box comes first, where the duct enters the floor, and sets how much air the zone gets. The reheat coil sits just after it and warms that air when the zone needs heat.",
+        "vav@reheat": "This slot is just after the VAV box, at the end of a heating-water pipe. Something here has to warm the zone's air when the zone needs heat."
+      }, pick(L1.wrong, ["diffuser@grille", "grille@diffuser", "vav@diffuser", "diffuser@vav"])),
+      loops: [
+        { parts: ["ahu", "vav", "diffuser", "grille"], nets: ["sup", "ret"], done: "The air loop is running: air carries all the cooling to the floors." },
+        { parts: ["ahu", "chiller"], nets: ["chw"], done: "The chilled-water loop is running, and it never leaves the roof: chiller to cooling coil and back." },
+        { parts: ["hp", "reheat"], nets: ["hhw"], done: "The heating-water loop is running: from the heat pump down the riser to the reheat coils." }
+      ],
+      done: "The cooling tower and the basement plant room have gone, because the chiller rejects its own heat on the roof. Chilled water now stops at the roof; air carries the cooling down the duct riser. Only heating water goes down the pipe riser, to the reheat coils." + TAIL
+    },
+    b: {
+      key: "L3b", label: "DOAS + fan-coil units",
+      desc: "A fan-coil unit in each room does the cooling and heating, and a DOAS supplies the outdoor air. One four-pipe heat pump on the roof makes both the chilled and the heating water.",
+      cfg: { system: "fcu", cool: "hp4", heat: "heatpump", floors: 10 },
+      aria: "Section through a ten-storey office with fan-coil units on every floor, a DOAS and a four-pipe heat pump on the roof. Four parts are missing.",
+      slots: {
+        ahu:     { accepts: "doas",     where: W_ROOF },
+        hp4:     { accepts: "hp4",      where: W_HP4 },
+        fcu:     { accepts: "fcu",      where: "This slot is in the room's ceiling, at the end of the chilled-water and heating-water pipes and of the ventilation duct." },
+        exhaust: { accepts: "exgrille", where: W_EXH }
+      },
+      tray: ["doas", "hp4", "fcu", "exgrille", "ahu", "vav", "boiler", "grille"],
+      notHere: {
+        ahu: "An air-handling unit mixes return air back in and supplies enough air to cool the rooms. Here the fan-coil units cool each room, so the roof unit only has to supply outdoor air for ventilation. That is a DOAS, and its duct is much smaller.",
+        vav: "A VAV box shares supply air out to the zones of an all-air system. Here each fan-coil unit looks after its own room, with its fan speed and its water valves, so there is no VAV box.",
+        boiler: NOT_BOILER_HP4,
+        grille: NOT_GRILLE
+      },
+      wrong: {},
+      loops: [
+        VENT_LOOP,
+        { parts: ["hp4", "ahu", "fcu"], nets: ["chw"], done: "Chilled water reaches every fan-coil unit and the DOAS cooling coil." },
+        { parts: ["hp4", "ahu", "fcu"], nets: ["hhw"], done: "Heating water reaches them too, so each room can heat or cool." }
+      ],
+      done: "Chilled water and heating water both go to every floor, to the fan-coil units, which condition each room's own air. The DOAS duct carries only the outdoor air for ventilation, so it is much thinner than an all-air supply duct. One machine makes both waters at once, moving heat from the chilled water into the heating water when the building needs both." + TAIL
+    },
+    c: {
+      key: "L3c", label: "DOAS + chilled beams",
+      desc: "Active chilled beams in the ceiling do the cooling, a DOAS supplies the outdoor air, and heaters under the glazing do the heating. One four-pipe heat pump on the roof makes both the chilled and the heating water.",
+      cfg: { system: "beam", cool: "hp4", heat: "heatpump", floors: 10 },
+      aria: "Section through a ten-storey office with chilled beams and perimeter heaters on every floor, a DOAS and a four-pipe heat pump on the roof. Five parts are missing.",
+      slots: {
+        ahu:       { accepts: "doas",     where: W_ROOF },
+        hp4:       { accepts: "hp4",      where: W_HP4 },
+        beam:      { accepts: "beam",     where: "This slot is in the ceiling, where the ventilation duct and the chilled-water pipe both reach. No heating-water pipe comes here." },
+        perimeter: { accepts: "perim",    where: "This slot is low on the outside wall, under the glazing, at the end of a heating-water pipe." },
+        exhaust:   { accepts: "exgrille", where: W_EXH }
+      },
+      tray: ["doas", "hp4", "beam", "perim", "exgrille", "ahu", "fcu", "boiler", "grille"],
+      notHere: {
+        ahu: "An air-handling unit mixes return air back in and supplies enough air to cool the rooms. Here the chilled beams do the cooling, so the roof unit only supplies outdoor air, dried enough that the beams never drip. That is a DOAS.",
+        fcu: "Close: a fan-coil unit also cools a room with chilled water, but with its own fan. In this building the ventilation air blowing through each beam draws room air across the beam's coil, so the room unit needs no fan: an active chilled beam.",
+        boiler: NOT_BOILER_HP4,
+        grille: NOT_GRILLE
+      },
+      wrong: {
+        "beam@perimeter": "These beams cool only, and they hang in the ceiling. This slot is low under the glazing, on a heating-water pipe, where the room loses heat in winter.",
+        "perim@beam": "A perimeter heater sits low, under the glazing. This slot is in the ceiling, where the ventilation duct and the chilled-water pipe both reach."
+      },
+      loops: [
+        VENT_LOOP,
+        { parts: ["hp4", "ahu", "beam"], nets: ["chw"], done: "Chilled water reaches every beam and the DOAS cooling coil." },
+        { parts: ["hp4", "ahu", "perimeter"], nets: ["hhw"], done: "Heating water reaches the perimeter heaters and the DOAS heating coil, but not the beams." }
+      ],
+      done: "The beams here cool only: warm air let out at the ceiling tends to stay there, so the heating goes to heaters under the glazing, where the winter heat loss is, and to the DOAS heating coil. The DOAS also dries the outdoor air enough that the beams stay above the room's dew point and never drip." + TAIL
+    },
+    d: {
+      key: "L3d", label: "VRF + DOAS",
+      desc: "Ceiling cassettes in the rooms do the cooling and heating, with refrigerant from VRF outdoor units on the roof. A DOAS supplies the outdoor air.",
+      cfg: { system: "vrf", cool: "vrf", heat: "heatpump", floors: 10 },
+      aria: "Section through a ten-storey office with VRF ceiling cassettes on every floor, VRF outdoor units and a DOAS on the roof. Four parts are missing.",
+      slots: {
+        ahu:      { accepts: "doas",     where: W_ROOF },
+        vrfOut:   { accepts: "vrf",      where: "This slot is on the roof, at the top of the refrigerant pipes." },
+        cassette: { accepts: "cassette", where: "This slot is in the ceiling, at the end of a refrigerant pipe from the branch box." },
+        exhaust:  { accepts: "exgrille", where: W_EXH }
+      },
+      tray: ["doas", "vrf", "cassette", "exgrille", "ahu", "pump", "fcu", "acc"],
+      notHere: {
+        ahu: "The cassettes cool and heat the rooms but only recirculate their air, so ventilation still needs its own unit. Since the cassettes do the room cooling, it only has to supply outdoor air: a DOAS.",
+        pump: "Nothing here needs a pump. There is no water loop at all: the compressors in the VRF outdoor units drive the refrigerant round.",
+        fcu: "A fan-coil unit takes chilled water, and this building has none. Refrigerant runs from the outdoor units straight to the rooms, so the room unit is a VRF indoor unit: here, a ceiling cassette.",
+        acc: "An air-cooled chiller makes chilled water, and this building has no chilled water. The VRF outdoor units do the cooling and heating, and refrigerant carries it to the rooms."
+      },
+      wrong: {},
+      loops: [
+        VENT_LOOP,
+        { parts: ["vrfOut", "cassette", "ahu"], nets: ["ref"], done: "The refrigerant loop is running: from the outdoor units to the cassettes in every room, and to the DOAS coil." }
+      ],
+      done: "There is no chilled-water loop at all. Refrigerant runs from the outdoor units on the roof, through a branch box on each floor, to the cassettes in the rooms. The cassettes only recirculate room air, so ventilation still needs its own unit: the DOAS, here with a refrigerant coil fed from the same outdoor units." + TAIL
+    }
+  };
+  Object.keys(L3).forEach(function (c) {
+    var lv = L3[c];
+    lv.doneMsg = (function (t) { return function () { return t; }; })(lv.done);
+  });
+
   // ---------- progress, kept in this browser only ----------
   var STORE = "tt-bpsd6030-systems";
   var progress = {};
@@ -1223,6 +1424,7 @@
         (complete() ? " &middot; first time <b>" + first + " of " + slotIds.length + "</b>" : "");
       el.reset.disabled = np === 0 && !Object.keys(pr.missed).length;
       renderFollow();
+      if (lv.onRender) lv.onRender(complete());
     }
     function renderTray() {
       var html = "";
@@ -1277,8 +1479,9 @@
         pr.placed[sid] = c.type; c.used = true; save();
         render();
         var msg = "<b>" + PARTS[c.type].name + "</b> is in." + (lv.onPlace ? " " + lv.onPlace(c.type) : "");
-        loops.forEach(function (lp) { if (before.indexOf(lp) < 0 && loopDone(lp)) msg += " " + lp.done; });
+        // the summary on completion covers the loops, so the last part's loop message is left out
         if (complete()) msg += " <b>Every part is in.</b> " + doneText();
+        else loops.forEach(function (lp) { if (before.indexOf(lp) < 0 && loopDone(lp)) msg += " " + lp.done; });
         feedback(msg, "good");
         if (fromKeys) { if (complete() && el.fNext) el.fNext.focus(); else focusCard(-1); }
       } else {
@@ -1375,6 +1578,45 @@
   }
 
   var games = [Game(L1, 1), Game(L2a, "2a"), Game(L2b, "2b")];
+
+  // ---------- level 3: one game per case, one case on screen at a time ----------
+  (function () {
+    var ids = Object.keys(L3), host = $("caseGames"), chooser = $("cases");
+    host.innerHTML = ids.map(function (c) {
+      var n = "3" + c;
+      return '<div class="game" id="game' + n + '" hidden>' +
+        '<div><div class="scene" id="scene' + n + '"></div><div class="legend" id="legend' + n + '"></div></div>' +
+        '<div class="side"><p class="progress" id="progress' + n + '"></p>' +
+        '<p class="traylabel" id="trayLabel' + n + '">Parts</p>' +
+        '<div class="tray" id="tray' + n + '" role="group" aria-labelledby="trayLabel' + n + '"></div>' +
+        '<p class="fb" id="fb' + n + '" aria-live="polite"></p>' +
+        '<div class="btn-row" style="margin-top:0"><button type="button" class="btn ghost" id="reset' + n + '">Start again</button></div></div></div>';
+    }).join("");
+    chooser.innerHTML = ids.map(function (c) {
+      return '<button type="button" class="case" data-case="' + c + '" aria-pressed="false"><span class="cl">' + c + '</span>' +
+        '<span>' + L3[c].label + '</span><span class="tick" id="tick3' + c + '"></span></button>';
+    }).join("");
+    ids.forEach(function (c) {
+      L3[c].onRender = function (done) {
+        var t = $("tick3" + c);
+        if (t) t.innerHTML = done ? '<span aria-hidden="true">&#10003;</span><span class="visually-hidden"> (built)</span>' : "";
+      };
+      games.push(Game(L3[c], "3" + c));
+    });
+    function show(c) {
+      ids.forEach(function (k) {
+        $("game3" + k).hidden = k !== c;
+        chooser.querySelector('[data-case="' + k + '"]').setAttribute("aria-pressed", k === c ? "true" : "false");
+      });
+      $("caseDesc").textContent = L3[c].desc;
+      progress.L3case = c; save();
+    }
+    chooser.addEventListener("click", function (e) {
+      var b = e.target.closest(".case");
+      if (b) show(b.getAttribute("data-case"));
+    });
+    show(L3[progress.L3case] ? progress.L3case : "a");
+  })();
 
   // ---------- tabs: only the levels built so far are live ----------
   var live = Array.prototype.slice.call(document.querySelectorAll(".tab")).filter(function (x) { return !x.disabled; });
