@@ -174,6 +174,11 @@
   .scene .slot:focus { outline: none; }
   .scene .slot:focus-visible rect { stroke-width: 3; stroke-dasharray: none; }
   .scene .slot.wrong rect { stroke: var(--bad); stroke-width: 2.5; stroke-dasharray: none; }
+  /* level 4: placed air labels become buttons while the student traces the path */
+  .scene .tracept { cursor: pointer; }
+  .scene .tracept:hover rect { stroke: var(--accent); }
+  .scene .tracept:focus { outline: none; }
+  .scene .tracept:focus-visible rect { stroke: var(--accent); stroke-width: 3; }
   .legend { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-4); margin: var(--s-3) 0 0; font-size: var(--t-meta); color: var(--muted); }
   .legend span { display: inline-flex; align-items: center; gap: var(--s-1); }
   .legend svg { display: block; flex: none; }
@@ -261,7 +266,7 @@
     <button class="tab active" role="tab" id="tab-1" aria-controls="panel-1" aria-selected="true" tabindex="0" data-idx="0"><span class="n">1</span><span>Follow the heat</span></button>
     <button class="tab" role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false" tabindex="-1" data-idx="1"><span class="n">2</span><span>Inside the air-handling unit</span></button>
     <button class="tab" role="tab" id="tab-3" aria-controls="panel-3" aria-selected="false" tabindex="-1" data-idx="2"><span class="n">3</span><span>What reaches the zone</span></button>
-    <button class="tab" role="tab" id="tab-4" aria-selected="false" tabindex="-1" data-idx="3" disabled title="Not built yet"><span class="n">4</span><span>Trace the air</span></button>
+    <button class="tab" role="tab" id="tab-4" aria-controls="panel-4" aria-selected="false" tabindex="-1" data-idx="3"><span class="n">4</span><span>Trace the air</span></button>
     <button class="tab" role="tab" id="tab-5" aria-selected="false" tabindex="-1" data-idx="4" disabled title="Not built yet"><span class="n">5</span><span>Spot the fault</span></button>
   </div>
 
@@ -374,6 +379,24 @@
     <div class="cases" id="cases" role="group" aria-label="Choose a system"></div>
     <p class="casedesc" id="caseDesc"></p>
     <div id="caseGames"></div>
+    <div class="nav">
+      <button type="button" class="btn ghost" data-nav="back">Back</button>
+      <button type="button" class="btn" data-nav="next">Next: trace the air</button>
+    </div>
+  </section>
+
+  <!-- ===== Tab 4: Trace the air ===== -->
+  <section class="card" role="tabpanel" id="panel-4" aria-labelledby="tab-4" hidden>
+    <div class="primer">
+      <h2 class="what">Label the air in two buildings, then follow the outdoor air from where it comes in to where it leaves.</h2>
+      <p>Both buildings bring in outdoor air for ventilation and send stale air back out. What differs is where the room air is recirculated: in one building it travels all the way back to the roof, in the other it never leaves the room. Put a label on each duct and opening, then trace the outdoor air through the building in order. Then do the same on a typical floor of your own building.</p>
+    </div>
+    <h3 class="stage first">All-air VAV</h3>
+    <p class="note">The air-handling unit on the roof serves every floor through the duct riser, and VAV boxes share the air out on each floor.</p>
+    <div id="air4a"></div>
+    <h3 class="stage">DOAS with fan-coil units</h3>
+    <p class="note">The DOAS on the roof serves every floor through the duct riser, and a fan-coil unit in each room does the cooling and heating.</p>
+    <div id="air4b"></div>
     <div class="nav">
       <button type="button" class="btn ghost" data-nav="back">Back</button>
     </div>
@@ -522,7 +545,7 @@
     o += duct([[W - 26, yTop], [x1, yTop]], COL.air, 14);
     lab(W - 26, yTop - 13, doas ? "exhaust air from the rooms" : "return air from the rooms", "end");
     o += duct([[x0, yTop], [30, yTop]], COL.air, 14);
-    lab(32, yTop - 13, "exhaust", "start");
+    lab(32, yTop - 13, doas ? "exhaust" : "relief air", "start");
 
     // casing, the deck divider, and the joints between sections
     o += rect(x0, tT, n * sw, sB - tT, COL.card, COL.plantInk, 1.4, 4);
@@ -734,13 +757,16 @@
     kits += part("ahu", { x: unitX, y: aTop, w: unitW, h: aH }, unit,
       name(unitX + unitW / 2 + 12, aTop - 24, allAir ? "air-handling unit" : "outdoor air unit (DOAS)"));
     thin += arrow([[unitX - 34, aTop + 12], [unitX - 1, aTop + 12]], COL.air, 2.5); mark("oa");
-    lab(unitX - 4, aTop + 28, "outdoor air", "end");
+    if (!cfg.quiet) lab(unitX - 4, aTop + 28, "outdoor air", "end");
     run(allAir ? "sup" : "vent", [[DS.sup, aTop + aH], [DS.sup, yLow + (allAir ? 19 : 17)]]);
     var mixX = unitX + sw / 2;
     run("ret", [[DS.ret, yLow + 32], [DS.ret, aTop - 12], [mixX, aTop - 12], [mixX, aTop]]);
     run("ret", [[mixX, aTop - 12], [mixX, aTop - 26]]);
     thin += head(mixX, aTop - 38, "u", COL.air, 5);
-    lab(mixX - 9, aTop - 30, "exhaust", "end");
+    if (!cfg.quiet) lab(mixX - 9, aTop - 30, allAir ? "relief air" : "exhaust", "end");
+    // where the air labels go (level 4): the intake, the outlet, and the riser two and three floors down
+    var A = { oa: [unitX - 48, aTop + 12], out: [mixX, aTop - 52],
+      sup: [DS.sup, floorY(Math.min(1, nDraw - 1)) + fh / 2], ret: [DS.ret, floorY(Math.min(2, nDraw - 1)) + fh / 2] };
 
     // ---- roof plant, left to right, clear of the pipe riser so a flue can rise past ----
     var cur = bx + 10;
@@ -875,7 +901,7 @@
         kits += part("exhaust", { x: ex - 9, y: y + 36, w: 18, h: 17 }, rect(ex - 8, y + 37, 16, 3, COL.muted, null, 0, 0) + arrow([[ex, y + 52], [ex, y + 41]], COL.air, 1.8),
           txt(ex, y + 66, "exhaust", "middle", COL.muted, 10), top);
         thin += arrow([[ex + 10, y + 32], [dsx - 2, y + 32]], COL.air, 1.8, "4 3");
-        if (top) lab(zx1 + 2, y + 80, "ventilation air (DOAS)", "end");
+        if (top && !cfg.quiet) lab(zx1 + 2, y + 80, "ventilation air (DOAS)", "end");
         var tEnd = zx1 - 46;
         if (id === "beam") {
           xs = spread(3, zx0, tEnd);
@@ -903,6 +929,7 @@
           if (hhw) run("hhw", [[LX.hhw, y + FY.hhw], [xs[1] + 12, y + FY.hhw]]);
           xs.forEach(function (x, k) {
             var fc = kit(x - 26, y + 12, 52, 22) + fan(x - 13, y + 23, 8);
+            if (top && k === 0) A.rec = [x, y + 78];   // under the unit's caption
             fc += eHeat ? coil(x + 1, y + 15, 11, 16, COL.cool) + zigzag(x + 14, y + 16, 8, 14, COL.heat) : coil(x + 2, y + 15, 16, 16, COL.cool);
             fc += pl([[x - 13, y + 34], [x - 13, y + 38]], COL.cool, 2) + pl([[x - 21, y + 39], [x - 13, y + 46], [x - 5, y + 39]], COL.cool, 2.2);
             fc += rect(x + 14, y + 37, 16, 3, COL.muted, null, 0, 0) + arrow([[x + 22, y + 52], [x + 22, y + 41]], COL.air, 1.8);
@@ -956,7 +983,7 @@
     var nets = drawNets(["sup", "vent", "ret"]) + drawNets(["cw", "flue", "hhw", "chw", "ref"]);
     var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="group" aria-label="' + esc(V.aria) + '">' +
       shell + thin + nets + kits + labels + '</svg>';
-    return { svg: svg, used: used };
+    return { svg: svg, used: used, anchors: A };
   }
 
   function legendHtml(used) {
@@ -971,7 +998,7 @@
     }
     var items = [];
     if (used.supply) items.push(sw("duct", COL.cool) + "Supply air duct");
-    if (used.oa) items.push(sw("duct", COL.air) + "Outdoor, return or exhaust air");
+    if (used.oa) items.push(sw("duct", COL.air) + "Outdoor, return, relief or exhaust air");
     if (used.chw) items.push(sw("pipe", COL.cool) + "Chilled water");
     if (used.hhw) items.push(sw("pipe", COL.heat) + "Heating water");
     if (used.cw) items.push(sw("pipe", COL.water) + "Condenser water");
@@ -1048,6 +1075,14 @@
       s = rect(10, 8, 44, 8, COL.plant, COL.refrig, 1.4, 1);
       for (var s2 = 15; s2 <= 49; s2 += 4) s += pl([[s2, 10], [s2, 14]], COL.refrig, 1);
       s += arrow([[14, 18], [8, 31]], COL.refrig, 1.6) + arrow([[50, 18], [56, 31]], COL.refrig, 1.6);
+    } else if (t.indexOf("air") === 0) {
+      // the air labels: a duct swatch pointing the way the air goes
+      var ac = t === "airSup" ? COL.cool : COL.air;
+      if (t === "airRec") s = arrow([[14, 13], [50, 13]], ac, 2.2) + pl([[50, 13], [56, 13], [56, 27], [50, 27]], ac, 2.2) +
+        arrow([[50, 27], [14, 27]], ac, 2.2);
+      else if (t === "airRet") s = duct([[60, 20], [4, 20]], ac, 12);
+      else if (t === "airRel" || t === "airExh") s = duct([[32, 38], [32, 2]], ac, 12);
+      else s = duct([[4, 20], [60, 20]], ac, 12);
     } else if (t === "exgrille") {
       s = pl([[6, 16], [22, 16]], COL.muted, 1, ' stroke-dasharray="4 3"') + pl([[42, 16], [58, 16]], COL.muted, 1, ' stroke-dasharray="4 3"') +
         rect(22, 14, 20, 4, COL.muted, null, 0, 0) + arrow([[32, 36], [32, 20]], COL.air, 2);
@@ -1076,9 +1111,16 @@
     beam:     { name: "Chilled beam", what: "An active chilled beam cools the room with chilled water, using the ventilation air blown through it to draw room air across its coil, so it sits in the ceiling where the ventilation duct and the chilled-water pipe both reach." },
     perim:    { name: "Perimeter heater", what: "A perimeter heater warms the cold edge of the room in winter, so it sits low under the glazing, on a heating-water pipe." },
     cassette: { name: "Ceiling cassette", what: "A ceiling cassette is a VRF indoor unit: it cools or heats the room's air with refrigerant, so it sits in the ceiling at the end of a refrigerant pipe." },
+    // air labels (level 4)
+    airOa:    { name: "Outdoor air", what: "Outdoor air is fresh air from outside, so it labels the place where air enters the building." },
+    airSup:   { name: "Supply air", what: "Supply air has been conditioned by a unit on the roof and is on its way to the rooms, so it labels the duct that leaves the unit." },
+    airRet:   { name: "Return air", what: "Return air is room air on its way back to the unit on the roof to be reused, so it labels the path from the rooms back to the unit." },
+    airRel:   { name: "Relief air", what: "Relief air is return air the unit does not reuse, let out to make room for the outdoor air coming in, so it labels where air leaves the unit." },
+    airExh:   { name: "Exhaust air", what: "Exhaust air is room air sent outdoors and never reused, so it labels the path that takes air from the rooms to the outside." },
+    airRec:   { name: "Recirculated room air", what: "Recirculated room air is drawn in and blown straight back into the room by a unit in the room, so it labels that unit's own air path." },
     exgrille: { name: "Exhaust grille", what: "An exhaust grille takes stale air out of the room, so it sits in the ceiling where the exhaust path starts." },
     // the sections inside an air-handling unit; fn: what it does, shown once it is in place
-    mix:      { name: "Mixing box", fn: "It blends outdoor air with return air from the rooms. More outdoor air means better ventilation; more return air means less air to cool or heat. Return air that is not reused leaves as exhaust." },
+    mix:      { name: "Mixing box", fn: "It blends outdoor air with return air from the rooms. More outdoor air means better ventilation; more return air means less air to cool or heat. Return air that is not reused leaves as relief air." },
     filter:   { name: "Filter", fn: "It takes the dust out of the air before it reaches the fan, the coils and the rooms." },
     cc:       { name: "Cooling coil", fn: "Chilled water in its tubes takes heat out of the air. It dries the air too: the air is chilled below its dew point, so water vapour condenses on the fins and drains away from the tray beneath." },
     hc:       { name: "Heating coil", fn: "Heating water in its tubes warms the air, in winter or after the cooling coil has chilled it to dry it." },
@@ -1131,7 +1173,7 @@
         done: "The condenser-water loop is running: water carries the heat to the cooling tower, which throws it away." }
     ],
     follow: [
-      { title: "1. The air loop", text: "Supply air leaves the air-handling unit at about 13 °C and picks up the room's heat. It comes back through the ceiling void and up the duct riser. In the unit some of it is exhausted, outdoor air is mixed in for ventilation, and the mix passes over the cooling coil, which takes the heat out." },
+      { title: "1. The air loop", text: "Supply air leaves the air-handling unit at about 13 °C and picks up the room's heat. It comes back through the ceiling void and up the duct riser. In the unit some of it is let out as relief air, outdoor air is mixed in for ventilation, and the mix passes over the cooling coil, which takes the heat out." },
       { title: "2. The chilled-water loop", text: "Chilled water leaves the chiller at about 6 °C, collects the heat at the cooling coil, and comes back at about 12 °C. A pump keeps it moving." },
       { title: "3. The refrigerant loop", text: "Inside the chiller, refrigerant boils in the evaporator and takes the heat out of the chilled water. The compressor squeezes the vapour until it condenses at a higher temperature, and the condenser hands that heat to the condenser water. The compressor's own electricity ends up as heat too, and it goes the same way." },
       { title: "4. The condenser-water loop", text: "Condenser water carries the heat up to the cooling tower at about 35 °C. The tower evaporates a little of it into the outdoor air, the evaporation takes the heat away, and the rest comes back at about 29.5 °C." },
@@ -1345,6 +1387,117 @@
     lv.doneMsg = (function (t) { return function () { return t; }; })(lv.done);
   });
 
+  /* ---------- level 4: trace the air ----------
+     The section from drawScene with its own air labels left out (cfg.quiet),
+     and a label slot at each anchor it reports: the intake, the outlet, the
+     supply riser, the return or exhaust riser and (fan coils) the room unit.
+     Once every label is in, the student traces the outdoor air through them
+     in order; the placed labels become buttons for that. */
+  function drawAir(lv, V) {
+    var out = drawScene(lv.cfg, V), A = out.anchors, ov = "";
+    var acc = getVar("--accent"), accInk = getVar("--accent-ink");
+    Object.keys(lv.slots).forEach(function (sid) {
+      var a = A[lv.slots[sid].at];
+      if (!a) return;
+      if (V.st(sid) === "slot") { ov += slotG(sid, { x: a[0] - 16, y: a[1] - 12, w: 32, h: 24 }, V.slotLabel(sid)); return; }
+      var t = V.type(sid), nm = PARTS[t].name, tr = V.trace(sid), on = !!(tr && tr.step);
+      var label = (on ? tr.step + " · " : "") + nm;
+      var w = Math.round(label.length * 5.9 + 16), h = 19, x = a[0] - w / 2, y = a[1] - h / 2;
+      var g = rect(x, y, w, h, on ? acc : COL.card, on ? acc : (t === "airSup" ? COL.cool : COL.air), 1.6, 9.5) +
+        txt(a[0], y + 13, esc(label), "middle", on ? accInk : COL.ink, 10, "600");
+      ov += tr ? '<g class="tracept" data-trace="' + sid + '" tabindex="0" role="button" aria-label="' + esc(nm + (on ? ", step " + tr.step : "")) + '">' + g + '</g>'
+        : '<g>' + g + '</g>';
+    });
+    return { svg: out.svg.replace(/<\/svg>$/, ov + "</svg>"), used: out.used };
+  }
+  var LABELS_DONE = "Now press <b>Trace the outdoor air</b> and follow it through the building. The labels left in the tray do not belong in this building: select one to see why.";
+  var L4 = {
+    a: {
+      key: "L4a",
+      cfg: { system: "vav", cool: "air-chiller", heat: "resistance", floors: 10, quiet: true },
+      aria: "Section through a ten-storey office with an all-air VAV system. Four air labels are missing.",
+      slots: {
+        a_oa:  { at: "oa",  accepts: "airOa",  where: "This is where air enters the air-handling unit from outside." },
+        a_sup: { at: "sup", accepts: "airSup", where: "This duct runs down the riser from the air-handling unit to every floor." },
+        a_ret: { at: "ret", accepts: "airRet", where: "This duct runs up the riser from every floor's ceiling void to the air-handling unit." },
+        a_out: { at: "out", accepts: "airRel", where: "This is where air leaves the air-handling unit to the outdoors." }
+      },
+      tray: ["airOa", "airSup", "airRet", "airRel", "airExh", "airRec"],
+      notHere: {
+        airExh: "Exhaust is air taken out of toilets and kitchens because it is dirty, and it is never reused. This drawing leaves those systems out: every duct and opening here belongs to the air-handling unit's own loop.",
+        airRec: "There is no unit in the room to recirculate air here. Room air is recirculated, but centrally: it travels back to the air-handling unit as return air and is mixed with outdoor air there."
+      },
+      wrong: {
+        "airExh@a_out": "Close, and many drawings call it exhaust. Strictly it is relief air: return air the unit does not reuse, let out to make room for the outdoor air coming in. Exhaust is air taken out because it is dirty, from toilets and kitchens, and never reused."
+      },
+      trace: {
+        order: ["a_oa", "a_sup", "a_ret", "a_out"],
+        steps: {
+          a_oa: "Outdoor air enters the air-handling unit, is mixed with return air, filtered and cooled.",
+          a_sup: "The mix goes down the riser as supply air, and along each floor through the VAV boxes to the diffusers.",
+          a_ret: "In the room it picks up heat and moisture, then returns through the ceiling void and up the riser as return air.",
+          a_out: "Back at the unit most of it is mixed in again and reused. Only as much as the outdoor air coming in leaves as relief air, so the air goes round the loop several times before it leaves."
+        },
+        hint: {
+          a_oa: "Start where the outdoor air enters the building.",
+          a_sup: "Once the unit has conditioned the air, where does it go?",
+          a_ret: "After the room, which way does the air travel?",
+          a_out: "Back at the unit, where does the air that is not reused go?"
+        },
+        offPath: {},
+        done: "<b>The whole path is traced.</b> In an all-air system the air-handling unit does the recirculating: room air travels back to the roof to be mixed and reused. That is why its ducts are big: they carry the cooling as well as the ventilation."
+      }
+    },
+    b: {
+      key: "L4b",
+      cfg: { system: "fcu", cool: "hp4", heat: "heatpump", floors: 10, quiet: true },
+      aria: "Section through a ten-storey office with fan-coil units on every floor and a DOAS on the roof. Five air labels are missing.",
+      slots: {
+        a_oa:  { at: "oa",  accepts: "airOa",  where: "This is where air enters the DOAS from outside." },
+        a_sup: { at: "sup", accepts: "airSup", where: "This duct runs down the riser from the DOAS to every floor. It is much thinner than the supply duct of an all-air system." },
+        a_rec: { at: "rec", accepts: "airRec", where: "This is the air path through the fan-coil unit: in from the room at one end, and back into the room at the other." },
+        a_ret: { at: "ret", accepts: "airExh", where: "This duct runs up the riser from every floor's exhaust grilles to the DOAS." },
+        a_out: { at: "out", accepts: "airExh", where: "This is where air leaves the DOAS to the outdoors, after passing the heat-recovery wheel." }
+      },
+      tray: ["airOa", "airSup", "airRec", "airExh", "airExh", "airRet", "airRel"],
+      notHere: {
+        airRel: "Relief air is return air an air-handling unit lets out because it cannot reuse all of it. Nothing returns to a DOAS to be reused, so there is no relief air: all the air leaving the rooms is exhaust.",
+        airRet: "Nothing here goes back to the roof to be reused. The air that leaves the rooms goes outdoors as exhaust, and the only air reused is the room's own, recirculated through the fan-coil unit."
+      },
+      wrong: {
+        "airOa@a_sup": "True, every bit of this air is outdoor air. But it has been filtered, cooled and dried in the DOAS, and once it leaves the unit it is supply air. Outdoor air is what comes in at the intake.",
+        "airRet@a_ret": "In an all-air building this duct would carry return air. Here nothing goes back to the roof to be reused: the air leaving the rooms goes outdoors past the wheel, so it is exhaust.",
+        "airRet@a_rec": "Close: the fan-coil unit does draw in room air, and some drawings call that its return. But that air never leaves the room: the unit blows it straight back, so it is recirculated room air.",
+        "airSup@a_rec": "The fan-coil unit does blow air into the room, but it is the room's own air, drawn in and blown back. The supply air in this building is the outdoor air from the DOAS."
+      },
+      trace: {
+        order: ["a_oa", "a_sup", "a_ret", "a_out"],
+        steps: {
+          a_oa: "Outdoor air enters the DOAS, passes the heat-recovery wheel, and is filtered, cooled and dried.",
+          a_sup: "It goes down the riser as supply air, every bit of it outdoor air, in a much smaller duct, and into each room.",
+          a_ret: "Stale air leaves each room through the exhaust grilles and goes up the riser.",
+          a_out: "At the roof it passes the wheel, handing its heat or coolness to the air coming in, and leaves as exhaust. None of it is reused."
+        },
+        hint: {
+          a_oa: "Start where the outdoor air enters the building.",
+          a_sup: "Once the DOAS has conditioned the air, where does it go?",
+          a_ret: "After the room, how does the air leave the floor?",
+          a_out: "Back at the roof, where does that air go?"
+        },
+        offPath: {
+          a_rec: "That loop stays in the room: the fan-coil unit draws room air in, cools or heats it, and blows it back. The outdoor air mixes into it in the room, but leaves another way."
+        },
+        done: "<b>The whole path is traced.</b> With a DOAS, the fan-coil unit does the recirculating, inside the room, and the DOAS carries outdoor air only, once through. So the ducts carry only the ventilation air, and the cooling reaches the rooms as water."
+      }
+    }
+  };
+  Object.keys(L4).forEach(function (c) {
+    var lv = L4[c];
+    lv.draw = function (V) { return drawAir(lv, V); };
+    lv.doneMsg = function () { return LABELS_DONE; };
+    lv.allIn = "Every label is in.";
+  });
+
   // ---------- progress, kept in this browser only ----------
   var STORE = "tt-bpsd6030-systems";
   var progress = {};
@@ -1359,10 +1512,11 @@
      on what is already placed. loops, follow, onPlace and doneMsg are optional. */
   function Game(lv, n) {
     var el = { scene: $("scene" + n), legend: $("legend" + n), tray: $("tray" + n), fb: $("fb" + n), progress: $("progress" + n),
-      follow: $("follow" + n), fTitle: $("fTitle" + n), fText: $("fText" + n), fBack: $("fBack" + n), fNext: $("fNext" + n), reset: $("reset" + n) };
+      follow: $("follow" + n), fTitle: $("fTitle" + n), fText: $("fText" + n), fBack: $("fBack" + n), fNext: $("fNext" + n), reset: $("reset" + n), trace: $("trace" + n) };
     var slotIds = Object.keys(lv.slots);
     var loops = lv.loops || [];
     var pr, cards, selected = null, fstep = -1;
+    var tr = -1;   // level 4: the next step of the trace, or -1 when not tracing
     // the part type in a slot; progress saved before types were stored holds true
     function typeIn(s) { var v = pr.placed[s]; return v === true ? lv.slots[s].accepts : v || null; }
     function placedMap() { var m = {}; slotIds.forEach(function (s) { if (pr.placed[s]) m[s] = typeIn(s); }); return m; }
@@ -1387,7 +1541,7 @@
         if (!t) return;
         for (var i = 0; i < cards.length; i++) if (!cards[i].used && cards[i].type === t) { cards[i].used = true; break; }
       });
-      selected = null; fstep = -1;
+      selected = null; fstep = -1; tr = -1;
     }
     function nPlaced() { return slotIds.filter(function (s) { return pr.placed[s]; }).length; }
     function complete() { return nPlaced() === slotIds.length; }
@@ -1399,6 +1553,11 @@
       st: function (pid) { return lv.slots[pid] ? (pr.placed[pid] ? "placed" : "slot") : "fixed"; },
       type: function (pid) { return typeIn(pid); },
       done: function () { return complete(); },
+      trace: function (sid) {
+        if (tr < 0) return null;
+        var k = lv.trace.order.indexOf(sid);
+        return { step: k >= 0 && k < tr ? k + 1 : 0 };
+      },
       slotLabel: function (pid) { return "Empty slot. " + lv.slots[pid].where; },
       netOpacity: function (k) { var lp = loopOf(k); return !lp || loopDone(lp) ? 1 : .5; },
       netColor: function (k, col) {
@@ -1424,6 +1583,10 @@
         (complete() ? " &middot; first time <b>" + first + " of " + slotIds.length + "</b>" : "");
       el.reset.disabled = np === 0 && !Object.keys(pr.missed).length;
       renderFollow();
+      if (el.trace) {
+        el.trace.hidden = !complete();
+        el.trace.textContent = tr < 0 ? "Trace the outdoor air" : "Start the trace again";
+      }
       if (lv.onRender) lv.onRender(complete());
     }
     function renderTray() {
@@ -1480,10 +1643,10 @@
         render();
         var msg = "<b>" + PARTS[c.type].name + "</b> is in." + (lv.onPlace ? " " + lv.onPlace(c.type) : "");
         // the summary on completion covers the loops, so the last part's loop message is left out
-        if (complete()) msg += " <b>Every part is in.</b> " + doneText();
+        if (complete()) msg += " <b>" + (lv.allIn || "Every part is in.") + "</b> " + doneText();
         else loops.forEach(function (lp) { if (before.indexOf(lp) < 0 && loopDone(lp)) msg += " " + lp.done; });
         feedback(msg, "good");
-        if (fromKeys) { if (complete() && el.fNext) el.fNext.focus(); else focusCard(-1); }
+        if (fromKeys) { var nx = el.fNext || el.trace; if (complete() && nx) nx.focus(); else focusCard(-1); }
       } else {
         pr.missed[sid] = true; save();
         render();
@@ -1546,14 +1709,40 @@
     document.addEventListener("pointerup", function (e) { endDrag(e, true); });
     document.addEventListener("pointercancel", function (e) { endDrag(e, false); });
 
+    // ---- trace the outdoor air (level 4): the placed labels, in order ----
+    function traceAt(sid, fromKeys) {
+      var T = lv.trace;
+      if (tr < 0 || tr >= T.order.length) return;
+      var k = T.order.indexOf(sid);
+      if (k >= 0 && k < tr) { feedback("Already traced. " + T.hint[T.order[tr]]); return; }
+      if (sid !== T.order[tr]) {
+        feedback(T.offPath[sid] ? "<b>Not on this path.</b> " + T.offPath[sid] : "<b>Not next.</b> " + T.hint[T.order[tr]], "bad");
+        return;
+      }
+      tr++;
+      render();
+      var m = "<b>" + tr + ". " + PARTS[typeIn(sid)].name + ".</b> " + T.steps[sid];
+      if (tr === T.order.length) m += " " + T.done;
+      feedback(m, "good");
+      if (fromKeys) { var g = el.scene.querySelector('[data-trace="' + sid + '"]'); if (g) g.focus(); }
+    }
+    if (el.trace) el.trace.addEventListener("click", function () {
+      tr = 0; render();
+      feedback("Select the labels in the order the outdoor air passes them, from where it comes in to where it leaves.");
+    });
+
     // ---- slots: click or Enter/Space ----
     el.scene.addEventListener("click", function (e) {
+      var tp = e.target.closest ? e.target.closest("[data-trace]") : null;
+      if (tp) { traceAt(tp.getAttribute("data-trace"), false); return; }
       var g = e.target.closest ? e.target.closest("[data-slot]") : null;
       if (!g) return;
       if (selected === null) { feedback("Select a part from the tray first, then this slot."); return; }
       place(selected, g.getAttribute("data-slot"), false);
     });
     el.scene.addEventListener("keydown", function (e) {
+      var tp = e.target.closest ? e.target.closest("[data-trace]") : null;
+      if (tp && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); traceAt(tp.getAttribute("data-trace"), true); return; }
       var g = e.target.closest ? e.target.closest("[data-slot]") : null;
       if (!g || (e.key !== "Enter" && e.key !== " ")) return;
       e.preventDefault();
@@ -1579,19 +1768,23 @@
 
   var games = [Game(L1, 1), Game(L2a, "2a"), Game(L2b, "2b")];
 
+  // the markup for one game, for the levels that build theirs in script
+  function gameHtml(n, trayName, traceBtn) {
+    return '<div class="game" id="game' + n + '">' +
+      '<div><div class="scene" id="scene' + n + '"></div><div class="legend" id="legend' + n + '"></div></div>' +
+      '<div class="side"><p class="progress" id="progress' + n + '"></p>' +
+      '<p class="traylabel" id="trayLabel' + n + '">' + trayName + '</p>' +
+      '<div class="tray" id="tray' + n + '" role="group" aria-labelledby="trayLabel' + n + '"></div>' +
+      '<p class="fb" id="fb' + n + '" aria-live="polite"></p>' +
+      '<div class="btn-row" style="margin-top:0">' +
+      (traceBtn ? '<button type="button" class="btn" id="trace' + n + '" hidden>Trace the outdoor air</button>' : '') +
+      '<button type="button" class="btn ghost" id="reset' + n + '">Start again</button></div></div></div>';
+  }
+
   // ---------- level 3: one game per case, one case on screen at a time ----------
   (function () {
     var ids = Object.keys(L3), host = $("caseGames"), chooser = $("cases");
-    host.innerHTML = ids.map(function (c) {
-      var n = "3" + c;
-      return '<div class="game" id="game' + n + '" hidden>' +
-        '<div><div class="scene" id="scene' + n + '"></div><div class="legend" id="legend' + n + '"></div></div>' +
-        '<div class="side"><p class="progress" id="progress' + n + '"></p>' +
-        '<p class="traylabel" id="trayLabel' + n + '">Parts</p>' +
-        '<div class="tray" id="tray' + n + '" role="group" aria-labelledby="trayLabel' + n + '"></div>' +
-        '<p class="fb" id="fb' + n + '" aria-live="polite"></p>' +
-        '<div class="btn-row" style="margin-top:0"><button type="button" class="btn ghost" id="reset' + n + '">Start again</button></div></div></div>';
-    }).join("");
+    host.innerHTML = ids.map(function (c) { return gameHtml("3" + c, "Parts", false); }).join("");
     chooser.innerHTML = ids.map(function (c) {
       return '<button type="button" class="case" data-case="' + c + '" aria-pressed="false"><span class="cl">' + c + '</span>' +
         '<span>' + L3[c].label + '</span><span class="tick" id="tick3' + c + '"></span></button>';
@@ -1617,6 +1810,12 @@
     });
     show(L3[progress.L3case] ? progress.L3case : "a");
   })();
+
+  // ---------- level 4: two buildings, one under the other ----------
+  Object.keys(L4).forEach(function (c) {
+    $("air4" + c).innerHTML = gameHtml("4" + c, "Labels", true);
+    games.push(Game(L4[c], "4" + c));
+  });
 
   // ---------- tabs: only the levels built so far are live ----------
   var live = Array.prototype.slice.call(document.querySelectorAll(".tab")).filter(function (x) { return !x.disabled; });
