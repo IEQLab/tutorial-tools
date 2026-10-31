@@ -210,6 +210,14 @@
   .formula { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: var(--t-meta);
     background: var(--result-bg); border-radius: var(--r-md); padding: var(--s-3); margin: var(--s-2) 0; overflow-x: auto; white-space: pre; }
 
+  .results { margin-top: var(--s-3); background: var(--result-bg); border-radius: var(--r-md); padding: var(--s-1) var(--s-4); }
+  .row { display: flex; justify-content: space-between; gap: var(--s-3); padding: var(--s-2) 0; border-bottom: 1px solid var(--line); font-size: var(--t-label); }
+  .row:last-child { border-bottom: 0; }
+  .row .k { color: var(--muted); }
+  .row .v { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; white-space: nowrap; }
+  label .v { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  input[type="range"] { padding: 0; accent-color: var(--accent); height: 38px; }
+  .tabnav { display: flex; justify-content: space-between; margin-top: var(--s-6); gap: var(--s-2); }
   footer.page { color: var(--muted); font-size: var(--t-meta); margin-top: var(--s-8); border-top: 1px solid var(--line); padding-top: var(--s-4); }
   footer.page p { margin: 0 0 var(--s-2); max-width: 90ch; }
   footer.page a { color: var(--accent); }
@@ -263,6 +271,7 @@
 
   <div class="tabs" role="tablist" aria-label="Chart views">
     <button class="tab active" role="tab" id="tab-1" aria-controls="panel-1" aria-selected="true" tabindex="0" data-idx="0"><span class="n">1</span><span>Your building&#x27;s climate</span></button>
+    <button class="tab" role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false" tabindex="-1" data-idx="1"><span class="n">2</span><span>Design day and the sizing arrow</span></button>
   </div>
 
   <div class="orient">
@@ -270,8 +279,9 @@
       <summary>Where this fits in Week 3 and Assignment 1</summary>
       <ul>
         <li>Lecture, <i>The chart is a coordinate system</i> &rarr; tab <b>1</b> with no file loaded: switch the chart lines on one at a time and read a state with the cross-hair</li>
+        <li>Lecture, the box an engineer draws and <i>The distance from outside to that box is the plant</i> &rarr; tab <b>2</b>: the outside design point, the arrow to the band, and the band&#x27;s edge moved</li>
         <li>Lecture, <i>A climate on the psychrometric chart</i>, and its closing question (is your bigger problem sensible or latent?) &rarr; tab <b>1</b> with a weather file loaded</li>
-        <li>Assignment 1, the building description&#x27;s climate (design conditions, seasonal pattern) &rarr; tab <b>1</b> with your own building&#x27;s weather file: the hours by process and the month-by-month pattern</li>
+        <li>Assignment 1, the building description&#x27;s climate (design conditions, seasonal pattern) &rarr; tab <b>1</b> with your own building&#x27;s weather file for the hours by process and the month-by-month pattern, then tab <b>2</b> for the design conditions and where they come from</li>
       </ul>
       <p class="none">The tutorial uses no tab: the chart work lives in the lecture. Nothing here is submitted or marked.</p>
     </details>
@@ -369,6 +379,54 @@ pressure at altitude  p  = 101.325 (1 &minus; 2.25577&times;10&#8315;&#8309; Z)^
       <p class="deriv"><b>How an hour is sorted.</b> Moisture first, because only a coil colder than the air&#x27;s dew point can take water out. If the hour holds more water than the wettest air in the band, it needs <i>cooling and dehumidifying</i>. If it holds less than the driest air in the band, it needs <i>humidifying</i> (and usually heating). Otherwise its moisture is already acceptable and a horizontal move brings it in: <i>heating</i> if it sits left of the band at that humidity ratio, <i>sensible cooling</i> if right. With a relative-humidity limit the band&#x27;s edges lean, so the test uses the band&#x27;s width at the hour&#x27;s own humidity ratio rather than the setpoints alone.</p>
       <p class="deriv"><b>Occupied hours.</b> Weekdays, 08:00 to 18:00, with the day of the week taken from the weather file&#x27;s own calendar. Public holidays are not removed. A weather file&#x27;s hour 9 is the hour ending at 09:00, so this counts file hours 9 to 18.</p>
     </details>
+    <div class="tabnav">
+      <span></span>
+      <button type="button" class="btn" data-nav="next">Next: design day &rarr;</button>
+    </div>
+  </section>
+
+  <!-- ===== Tab 2: Design day and the sizing arrow ===== -->
+  <section class="card" role="tabpanel" id="panel-2" aria-labelledby="tab-2" tabindex="0" hidden>
+    <div class="primer">
+      <p class="what">The outside condition the plant is sized for, and what the plant has to do to it.</p>
+      <p>A design day is not the hottest hour in the file. It is a percentile: the 0.4% cooling condition is exceeded in about 35 hours of a typical year, so the plant copes with every other hour and falls short in those few. The arrow from that outside state to the edge of the band is the job the cooling plant is sized for. Across is heat to remove (the sensible leg); down is water to condense (the latent leg).</p>
+      <p>Two sets of numbers sit side by side here. The ASHRAE design conditions come from many years of records at the station and travel in the weather file&#x27;s header; simulation tools build their design days from tables like these. The same rule applied to the file&#x27;s own 8,760 hours gives a second answer, because a typical year is stitched together from typical months rather than being the long record.</p>
+    </div>
+    <p class="empty" id="ddEmpty">Load a weather file on tab 1 first. This tab reads its design conditions and its hours.</p>
+    <div id="ddBody" hidden>
+      <div class="grid">
+        <div>
+          <label for="ddCase">Design condition</label>
+          <select id="ddCase"><option value="cool" selected>Cooling: hottest dry bulb</option><option value="dehum">Dehumidifying: wettest air</option></select>
+        </div>
+        <div>
+          <label for="ddPct">Annual exceedance</label>
+          <select id="ddPct"><option value="0.4" selected>0.4% (about 35 hours)</option><option value="1">1% (about 88 hours)</option></select>
+        </div>
+        <div>
+          <label for="ddSrc">Taken from</label>
+          <select id="ddSrc"><option value="header" selected>ASHRAE (file header)</option><option value="hours">The file&#x27;s hours</option></select>
+        </div>
+        <div>
+          <label for="ddSet">Cooling setpoint (the band&#x27;s right edge): <span class="v" id="ddSetVal">24</span>&nbsp;&deg;C</label>
+          <input id="ddSet" type="range" min="21" max="28" step="0.5" value="24">
+        </div>
+      </div>
+      <div class="chartbox"><canvas id="chart2" role="img" aria-label="Sizing arrow on the psychrometric chart"></canvas></div>
+      <div class="results" id="ddLegs" role="status" aria-live="polite"></div>
+      <h3>Design conditions for this station</h3>
+      <div id="ddTable"></div>
+      <p class="note" id="ddNote"></p>
+      <details class="maths">
+        <summary>The maths behind the design day</summary>
+        <p class="deriv"><b>From the hours.</b> Sort the year&#x27;s dry bulbs from hottest down; the 0.4% value is the 35th (0.4% of 8,760). Its coincident wet bulb is the mean wet bulb of every hour within half a degree of that dry bulb. The dehumidifying condition does the same with dew point, carrying the mean coincident dry bulb. The 99.6% heating value is the 35th coldest hour. These follow the definitions of the ASHRAE <i>Fundamentals</i> climatic design tables, applied to one typical year instead of the multi-year record.</p>
+        <p class="deriv"><b>The arrow.</b> It runs from the outside design state to the band&#x27;s corner at the cooling setpoint and the upper humidity limit, or straight across if the outside air is already drier than the limit. The share of the work that is drying is the enthalpy drop across the latent leg over the drop across the whole arrow, using h = 1.006 t + W (2501 + 1.86 t). It is per kilogram of outside air: how much outside air there is, and what the room adds, is what a load calculation settles.</p>
+      </details>
+    </div>
+    <div class="tabnav">
+      <button type="button" class="btn ghost" data-nav="prev">&larr; Back: your climate</button>
+      <span></span>
+    </div>
   </section>
 
   <footer class="page">
@@ -593,7 +651,7 @@ var EPW = (function () {
   var REG_BY = {}; REG.forEach(function (r) { REG_BY[r.key] = r; });
 
   var state = {
-    p: P.P_STD, data: null, cls: null, layers: { rh: true, wb: true, h: false, band: true, regions: true, hours: true },
+    p: P.P_STD, data: null, cls: null, axis: { tMin: 0, tMax: 45 }, layers: { rh: true, wb: true, h: false, band: true, regions: true, hours: true },
     ind: { t: 25, w: P.wFromRh(25, 0.5, P.P_STD) }
   };
 
@@ -643,13 +701,17 @@ var EPW = (function () {
   }
 
   // ---------- chart geometry ----------
-  var G = { tMin: 0, tMax: 45, wMax: 0.030, L: 14, R: 58, T: 14, B: 44, W: 0, H: 0 };
+  var G = { tMin: 0, tMax: 45, wMax: 0.030, L: 14, R: 58, T: 14, B: 44, W: 0, H: 0 };   // the chart being drawn
   function X(t) { return G.L + (t - G.tMin) / (G.tMax - G.tMin) * (G.W - G.L - G.R); }
   function Y(w) { return G.T + (1 - w / G.wMax) * (G.H - G.T - G.B); }
   function invX(x) { return G.tMin + (x - G.L) / (G.W - G.L - G.R) * (G.tMax - G.tMin); }
   function invY(y) { return (1 - (y - G.T) / (G.H - G.T - G.B)) * G.wMax; }
 
-  var cv = $("chart"), ctx = cv.getContext("2d");
+  /* Two charts share one engine. draw(ch) points cv, ctx, LAY and G at the chart
+     being drawn, and each chart keeps its own geometry, so a pointer on one chart
+     never reads the other's scale. */
+  var CH1 = { cv: $("chart"), layers: state.layers, indicator: true, hours: "class", aspect: 0.56, label: chartLabel };
+  var cv, ctx, LAY, current = 0;
   function sizeCanvas(c, aspect, minH) {
     var dpr = window.devicePixelRatio || 1, w = c.clientWidth || c.parentNode.clientWidth || 800;
     var h = Math.max(minH, Math.round(w * aspect));
@@ -668,9 +730,13 @@ var EPW = (function () {
     g.closePath();
   }
 
-  function draw() {
+  function draw(ch) {
+    ch = ch || CH1;
+    cv = ch.cv; ctx = cv.getContext("2d"); LAY = ch.layers;
+    G = ch.G || (ch.G = { wMax: 0.030, L: 14, R: 58, T: 14, B: 44, W: 0, H: 0 });
+    G.tMin = state.axis.tMin; G.tMax = state.axis.tMax;
     cssCache = {};
-    var sz = sizeCanvas(cv, 0.56, 320);
+    var sz = sizeCanvas(cv, ch.aspect, 320);
     G.W = sz.w; G.H = sz.h;
     G.R = sz.w < 560 ? 44 : 58;
     var g = ctx, p = state.p, b = state.band;
@@ -682,7 +748,7 @@ var EPW = (function () {
     g.save(); satPath(g); g.fillStyle = css("--ch-field"); g.fill(); g.clip();
 
     // process regions, row by row, under the saturation curve
-    if (state.layers.regions && b && !b.err) {
+    if (LAY.regions && b && !b.err) {
       g.globalAlpha = 0.11;
       var rowPx = 2, y0 = Y(G.wMax), y1 = Y(0);
       for (var y = y0; y < y1; y += rowPx) {
@@ -702,7 +768,7 @@ var EPW = (function () {
     for (var wg = 0.002; wg < G.wMax; wg += 0.002) { g.beginPath(); g.moveTo(X(G.tMin), Y(wg)); g.lineTo(X(G.tMax), Y(wg)); g.stroke(); }
 
     // enthalpy lines every 10 kJ/kg, dashed
-    if (state.layers.h) {
+    if (LAY.h) {
       g.strokeStyle = css("--ch-h"); g.lineWidth = 0.9; g.setLineDash([5, 4]);
       for (var hh = -10; hh <= 140; hh += 10) {
         g.beginPath();
@@ -716,7 +782,7 @@ var EPW = (function () {
       g.setLineDash([]);
     }
     // wet-bulb lines every 5 C, from saturation down to W = 0
-    if (state.layers.wb) {
+    if (LAY.wb) {
       g.strokeStyle = css("--ch-wb"); g.lineWidth = 1;
       for (var twb = Math.ceil(G.tMin / 5) * 5; twb <= 35; twb += 5) {
         g.beginPath(); var first = true;
@@ -729,7 +795,7 @@ var EPW = (function () {
       }
     }
     // relative humidity 10..90%
-    if (state.layers.rh) {
+    if (LAY.rh) {
       g.strokeStyle = css("--ch-rh"); g.lineWidth = 1;
       for (var rh = 10; rh < 100; rh += 10) {
         g.beginPath();
@@ -742,7 +808,7 @@ var EPW = (function () {
     }
 
     // the band
-    if (state.layers.band && b && !b.err) {
+    if (LAY.band && b && !b.err) {
       var poly = [], n = 40, k, tb2;
       for (k = 0; k <= n; k++) { tb2 = b.tLo + (b.tHi - b.tLo) * k / n; poly.push([tb2, bandBot(b, tb2, p)]); }
       for (k = n; k >= 0; k--) { tb2 = b.tLo + (b.tHi - b.tLo) * k / n; poly.push([tb2, bandTop(b, tb2, p)]); }
@@ -754,12 +820,15 @@ var EPW = (function () {
     }
 
     // the hours
-    if (state.layers.hours && state.data) {
+    if (LAY.hours && state.data && (ch.hours === "faint" || state.cls)) {
       var occOnly = $("hoursSel").value === "occ";
       var ps = small ? 2 : 2.4, hl = ps / 2;
       g.globalAlpha = 0.5;
       var rows = state.data.rows;
-      REG.forEach(function (r) {
+      if (ch.hours === "faint") {
+        g.globalAlpha = 0.28; g.fillStyle = css("--muted");
+        for (var fi = 0; fi < rows.length; fi++) { var fy = Y(rows[fi].w); if (fy >= G.T - 2) g.fillRect(X(rows[fi].db) - hl, fy - hl, ps, ps); }
+      } else REG.forEach(function (r) {
         g.fillStyle = css(r.tok);
         for (var i = 0; i < rows.length; i++) {
           if (state.cls[i] !== r.key || (occOnly && !rows[i].occ)) continue;
@@ -782,9 +851,9 @@ var EPW = (function () {
     g.stroke();
 
     // labels: region names
-    if (state.layers.regions && b && !b.err) regionLabels(g, b, p, fs);
+    if (LAY.regions && b && !b.err) regionLabels(g, b, p, fs);
     // RH labels
-    if (state.layers.rh) {
+    if (LAY.rh) {
       g.fillStyle = css("--ch-rh-text"); g.textAlign = "center"; g.textBaseline = "middle";
       g.font = "600 " + (fs - 1) + "px -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
       for (var rh2 = 10; rh2 < 100; rh2 += 10) {
@@ -793,7 +862,7 @@ var EPW = (function () {
         haloText(g, rh2 + "%", X(tl), Y(wl));
       }
     }
-    if (state.layers.wb) {
+    if (LAY.wb) {
       g.fillStyle = css("--ch-axis"); g.textAlign = "right"; g.textBaseline = "bottom";
       g.font = (fs - 1) + "px -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
       for (var twb2 = Math.ceil(G.tMin / 5) * 5; twb2 <= 30; twb2 += 5) {
@@ -802,7 +871,7 @@ var EPW = (function () {
         g.fillText(twb2 + "° wb", X(twb2) - 3, Y(ws2) - 2);
       }
     }
-    if (state.layers.h) {
+    if (LAY.h) {
       g.fillStyle = css("--ch-h"); g.textAlign = "left"; g.textBaseline = "bottom";
       for (var hh2 = 10; hh2 <= 120; hh2 += 20) {
         // label where the line meets the top of the chart or the saturation curve
@@ -836,8 +905,9 @@ var EPW = (function () {
     g.fillText("Chart at " + fmt(state.p / 1000, 1) + " kPa" + (state.data ? " (" + fmt(state.data.loc.elev, 0) + " m)" : ", sea level"), X(G.tMin) + 6, G.T + 4);
 
     // the cross-hair
-    drawIndicator(g);
-    cv.setAttribute("aria-label", chartLabel());
+    if (ch.indicator) drawIndicator(g);
+    if (ch.overlay) ch.overlay(g, p, b, fs);
+    cv.setAttribute("aria-label", ch.label());
   }
 
   function haloText(g, s, x, y) {
@@ -898,20 +968,21 @@ var EPW = (function () {
     if (fromKeys) $("readoutLive").textContent = fmt(t, 1) + " degrees, " + fmt(w * 1000, 1) + " grams per kilogram, " + fmt(100 * rh, 0) + " percent RH" + (k ? ", " + REG_BY[k].name : "");
   }
   function setInd(t, w, fromKeys) {
-    var p = state.p;
+    var p = state.p; G = CH1.G;
     t = Math.max(G.tMin, Math.min(G.tMax, t));
     w = Math.max(0.0001, Math.min(G.wMax, w, P.wSat(t, p)));
     state.ind = { t: t, w: w };
     draw(); readout(fromKeys);
   }
   function ptr(e) {
+    G = CH1.G; var cv = CH1.cv;
     var r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
     if (x < G.L || x > G.W - G.R || y < G.T || y > G.H - G.B) return;
     setInd(invX(x), invY(y), false);
   }
-  cv.addEventListener("pointermove", ptr);
-  cv.addEventListener("pointerdown", function (e) { ptr(e); });
-  cv.addEventListener("keydown", function (e) {
+  CH1.cv.addEventListener("pointermove", ptr);
+  CH1.cv.addEventListener("pointerdown", function (e) { ptr(e); });
+  CH1.cv.addEventListener("keydown", function (e) {
     var k = e.shiftKey ? 5 : 1, t = state.ind.t, w = state.ind.w;
     if (e.key === "ArrowRight") t += 0.5 * k; else if (e.key === "ArrowLeft") t -= 0.5 * k;
     else if (e.key === "ArrowUp") w += 0.0005 * k; else if (e.key === "ArrowDown") w -= 0.0005 * k;
@@ -1012,8 +1083,8 @@ var EPW = (function () {
       r.w = P.wFromPw(pw, p);
       if (r.db < tmin) tmin = r.db; if (r.db > tmax) tmax = r.db;
     });
-    G.tMin = tmin < 0 ? Math.floor(tmin / 5) * 5 : 0;
-    G.tMax = tmax > 45 ? Math.ceil(tmax / 5) * 5 : 45;
+    state.axis.tMin = tmin < 0 ? Math.floor(tmin / 5) * 5 : 0;
+    state.axis.tMax = tmax > 45 ? Math.ceil(tmax / 5) * 5 : 45;
     state.data = d;
     var loc = d.loc, src = [loc.source, d.period].filter(Boolean).join(", ");
     $("fileMeta").hidden = false;
@@ -1047,7 +1118,11 @@ var EPW = (function () {
   dz.addEventListener("drop", function (e) { loadFile(e.dataTransfer && e.dataTransfer.files[0]); });
 
   // ---------- controls ----------
-  function update() { state.band = readBand(); recount(); draw(); readout(false); }
+  function update() {
+    state.band = readBand(); recount();
+    if (current === 1) { renderDesign(); return; }
+    draw(); readout(false);
+  }
   ["tLo", "tHi", "upVal", "loVal"].forEach(function (id) { $(id).addEventListener("input", update); });
   ["upUnit", "loUnit", "hoursSel"].forEach(function (id) { $(id).addEventListener("change", function () {
     // switching a limit's unit swaps in that unit's usual value rather than reading 60 g/kg
@@ -1079,13 +1154,217 @@ var EPW = (function () {
     });
   });
 
-  window.__ttRedraw = function () { draw(); readout(false); if (state.counts) renderResults(); };
+  // ================= Tab 2: design day and the sizing arrow =================
+  function num(v) { var x = parseFloat(v); return isFinite(x) ? x : null; }
+  /* The DESIGN CONDITIONS line of an EPW, by field position after the "Heating"
+     and "Cooling" markers, in the ASHRAE Fundamentals ch. 14 table order:
+     Cooling, hottest month, daily range, 0.4% DB, MCWB, 1% DB, MCWB, 2% DB, MCWB,
+     0.4% WB, MCDB, 1% WB, MCDB, 2% WB, MCDB, wind speed, wind direction,
+     0.4% DP, HR, MCDB, 1% DP, HR, MCDB, ... */
+  function designFromHeader(dc) {
+    if (!dc) return null;
+    var h = dc.indexOf("Heating"), c = dc.indexOf("Cooling");
+    if (c < 0) return null;
+    var out = {
+      title: dc[1] || "",
+      heat996: h >= 0 ? num(dc[h + 2]) : null,
+      cool: { "0.4": [num(dc[c + 3]), num(dc[c + 4])], "1": [num(dc[c + 5]), num(dc[c + 6])] },
+      dehum: { "0.4": [num(dc[c + 17]), num(dc[c + 19])], "1": [num(dc[c + 20]), num(dc[c + 22])] }
+    };
+    // a header too short or out of order fails this, and the tab falls back to the hours
+    var v = out.cool["0.4"];
+    if (v[0] === null || v[1] === null || v[1] > v[0] || v[0] < 10 || v[0] > 55) return null;
+    return out;
+  }
+  function designFromHours(rows, p) {
+    var n = rows.length, out = { heat996: null, cool: {}, dehum: {} };
+    var byDb = rows.slice().sort(function (a, b) { return b.db - a.db; });
+    var byDp = rows.map(function (r) { return { db: r.db, w: r.w, td: P.dewPoint(r.w, p) }; }).sort(function (a, b) { return b.td - a.td; });
+    ["0.4", "1"].forEach(function (pc) {
+      var k = Math.max(1, Math.round(n * parseFloat(pc) / 100));
+      var db = byDb[k - 1].db, s = 0, m = 0;
+      rows.forEach(function (r) { if (Math.abs(r.db - db) <= 0.5) { s += P.wetBulb(r.db, r.w, p); m++; } });
+      out.cool[pc] = [db, s / m];
+      var td = byDp[k - 1].td; s = 0; m = 0;
+      byDp.forEach(function (r) { if (Math.abs(r.td - td) <= 0.5) { s += r.db; m++; } });
+      out.dehum[pc] = [td, s / m];
+    });
+    out.heat996 = byDb[n - Math.max(1, Math.round(n * 0.004))].db;
+    return out;
+  }
+  var DD = { refSet: null, label: "" };
+  var CH2 = { cv: $("chart2"), layers: { rh: true, wb: true, h: false, band: true, regions: false, hours: true },
+    indicator: false, hours: "faint", aspect: 0.56, label: function () { return DD.label || "Sizing arrow on the psychrometric chart"; } };
+
+  /* The outside design state for the chosen case, percentile and source. */
+  function outsideState() {
+    var d = state.data, p = state.p, cs = $("ddCase").value, pc = $("ddPct").value, src = $("ddSrc").value;
+    var set = (src === "header" && d.hdr) ? d.hdr : d.hrs;
+    var v = set[cs][pc];
+    if (!v || v[0] === null || v[1] === null) { v = d.hrs[cs][pc]; src = "hours"; }
+    if (cs === "cool") return { t: v[0], w: P.wFromTWb(v[0], v[1], p), src: src, a: v[0], b: v[1] };
+    return { t: v[1], w: P.wFromTd(v[0], p), src: src, a: v[0], b: v[1] };
+  }
+  /* The band corner the arrow ends on, and the two legs. */
+  function bandAt(b, tHi, p) {
+    var b0 = Object.assign({}, b, { tHi: tHi });
+    b0.wHi = Math.min(b0.upU === "rh" ? P.wFromRh(tHi, b0.up, p) : b0.up, P.wSat(tHi, p));
+    return b0;
+  }
+  function arrowTo(b, oa) {
+    var wt = Math.min(oa.w, b.wHi), tT = b.tHi;
+    var dhs = (1.006 + 1.86 * oa.w) * (oa.t - tT), dhl = (oa.w - wt) * (2501 + 1.86 * tT);
+    // the share of the enthalpy taken out that is drying; where the air ends warmer
+    // than it arrived (a dehumidifying state below the setpoint) all of it is
+    var dl = Math.max(0, dhl), ds = Math.max(0, dhs);
+    return { t: tT, w: wt, dT: oa.t - tT, dW: oa.w - wt, latent: (dl + ds) > 0 ? dl / (dl + ds) : 0 };
+  }
+  function arrow(g, x1, y1, x2, y2, col, lw, dash) {
+    var a = Math.atan2(y2 - y1, x2 - x1), hl = 9 + lw;
+    g.save(); g.strokeStyle = col; g.fillStyle = col; g.lineWidth = lw; if (dash) g.setLineDash(dash);
+    g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2 - Math.cos(a) * hl * 0.8, y2 - Math.sin(a) * hl * 0.8); g.stroke();
+    g.setLineDash([]);
+    g.beginPath(); g.moveTo(x2, y2);
+    g.lineTo(x2 - hl * Math.cos(a - 0.38), y2 - hl * Math.sin(a - 0.38));
+    g.lineTo(x2 - hl * Math.cos(a + 0.38), y2 - hl * Math.sin(a + 0.38)); g.closePath(); g.fill();
+    g.restore();
+  }
+  function dot(g, x, y, label, toRight) {
+    g.save(); g.fillStyle = css("--ink"); g.strokeStyle = css("--card"); g.lineWidth = 2;
+    g.beginPath(); g.arc(x, y, 5, 0, 2 * Math.PI); g.fill(); g.stroke();
+    g.font = "600 12px -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
+    // keep the label off the arrow: right of the dot when the arrow runs left
+    var right = !toRight || x > (G.W - G.R) - 150;
+    g.textAlign = right ? "right" : "left"; g.textBaseline = "bottom"; g.fillStyle = css("--ink");
+    haloText(g, label, x + (right ? -8 : 8), y - 6);
+    g.restore();
+  }
+  function ghostOn(b) { return DD.refSet !== null && DD.refSet !== b.tHi && DD.refSet > b.tLo; }
+  CH2.overlay = function (g, p, b) {
+    if (!state.data || !b || b.err) return;
+    var oa = outsideState(), tg = arrowTo(b, oa), col = css("--cool");
+    var f = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
+    // the ghost: the same arrow to the edge the tab opened with
+    if (ghostOn(b)) {
+      var t0 = arrowTo(bandAt(b, DD.refSet, p), oa);
+      arrow(g, X(oa.t), Y(oa.w), X(t0.t), Y(t0.w), css("--muted"), 1.6, [5, 4]);
+      g.save(); g.fillStyle = css("--muted"); g.font = "11px " + f;
+      g.textAlign = "center"; g.textBaseline = "top"; haloText(g, fmt(DD.refSet, 1) + " °C edge", X(t0.t), Y(t0.w) + 8); g.restore();
+    }
+    // the two legs, dotted, then the arrow over them
+    g.save(); g.strokeStyle = col; g.lineWidth = 2; g.setLineDash([6, 4]);
+    g.beginPath(); g.moveTo(X(oa.t), Y(oa.w)); g.lineTo(X(tg.t), Y(oa.w)); g.lineTo(X(tg.t), Y(tg.w)); g.stroke(); g.restore();
+    arrow(g, X(oa.t), Y(oa.w), X(tg.t), Y(tg.w), col, 3);
+    g.save(); g.font = "600 12px " + f; g.fillStyle = col;
+    // label a leg only where it is long enough to carry one
+    var leftward = tg.dT >= 0;
+    if (Math.abs(X(oa.t) - X(tg.t)) > 64) { g.textAlign = "center"; g.textBaseline = "bottom"; haloText(g, "sensible", (X(oa.t) + X(tg.t)) / 2, Y(oa.w) - 6); }
+    if (Y(tg.w) - Y(oa.w) > 22) { g.textAlign = leftward ? "right" : "left"; g.textBaseline = "middle"; haloText(g, "latent", X(tg.t) + (leftward ? -7 : 7), (Y(oa.w) + Y(tg.w)) / 2); }
+    g.restore();
+    dot(g, X(oa.t), Y(oa.w), "outside design state", leftward);
+  };
+
+  function renderDesign() {
+    var d = state.data, b = state.band;
+    $("ddEmpty").hidden = !!d; $("ddBody").hidden = !d;
+    $("ddSetVal").textContent = fmt(parseFloat($("tHi").value), 1);
+    if (!d) return;
+    var p = state.p;
+    if (!d.hrs || d.hrsP !== p) { d.hrs = designFromHours(d.rows, p); d.hrsP = p; d.hdr = designFromHeader(d.design); }
+    $("ddSrc").querySelector('[value="header"]').disabled = !d.hdr;
+    if (!d.hdr) $("ddSrc").value = "hours";
+    draw(CH2);
+    if (!b || b.err) { $("ddLegs").innerHTML = '<div class="row"><span class="k">Fix the band on tab 1 to draw the arrow.</span></div>'; return; }
+    var oa = outsideState(), tg = arrowTo(b, oa), cs = $("ddCase").value;
+    function row(k, v) { return '<div class="row"><span class="k">' + k + '</span><span class="v">' + v + "</span></div>"; }
+    var html = row("Outside design state" + (oa.src === "header" ? " (ASHRAE)" : " (this file&#x27;s hours)"),
+        fmt(oa.t, 1) + " °C, " + fmt(oa.w * 1000, 1) + " g/kg") +
+      row("Sensible leg: from " + fmt(oa.t, 1) + " to " + fmt(tg.t, 1) + " °C", tg.dT >= 0 ? "cool " + fmt(tg.dT, 1) + " K" : "warm " + fmt(-tg.dT, 1) + " K") +
+      row("Latent leg: from " + fmt(oa.w * 1000, 1) + " to " + fmt(tg.w * 1000, 1) + " g/kg", fmt(tg.dW * 1000, 1) + " g/kg") +
+      row("Share of the work on each kilogram of outside air that is drying", fmt(100 * tg.latent, 0) + "%");
+    if (ghostOn(b)) {
+      var t0 = arrowTo(bandAt(b, DD.refSet, p), oa);
+      html += row("Moving the edge from " + fmt(DD.refSet, 1) + " to " + fmt(b.tHi, 1) + " °C changes the sensible leg", fmt(t0.dT, 1) + " → " + fmt(tg.dT, 1) + " K");
+    }
+    if (cs === "cool" && tg.dW <= 0.0001) html += '<div class="row"><span class="k">At this condition the outside air is already drier than the band&#x27;s humidity limit, so the cooling design day asks for no drying. The hottest hours here are dry ones. Switch to <b>Dehumidifying: wettest air</b> for the condition that sizes the coil&#x27;s drying.</span></div>';
+    $("ddLegs").innerHTML = html;
+    DD.label = "Sizing arrow from the outside design state, " + fmt(oa.t, 1) + " degrees and " + fmt(oa.w * 1000, 1) +
+      " g/kg, to the band at " + fmt(tg.t, 1) + " degrees and " + fmt(tg.w * 1000, 1) + " g/kg" + (cs === "cool" ? "" : ", for the dehumidifying condition") + ".";
+    CH2.cv.setAttribute("aria-label", DD.label);
+
+    // the comparison table
+    var H = d.hdr, R = d.hrs;
+    function pair(v) { return v && v[0] !== null && v[1] !== null ? fmt(v[0], 1) + " / " + fmt(v[1], 1) : "–"; }
+    function diff(a, c) {
+      if (a === null || c === null || !isFinite(a) || !isFinite(c)) return "–";
+      var d = Math.round((c - a) * 10) / 10;
+      return d === 0 ? "0.0" : (d > 0 ? "+" : "−") + fmt(Math.abs(d), 1);
+    }
+    var lines = [
+      ["Cooling 0.4%: dry bulb / mean coincident wet bulb, °C", H && H.cool["0.4"], R.cool["0.4"]],
+      ["Cooling 1%: dry bulb / mean coincident wet bulb, °C", H && H.cool["1"], R.cool["1"]],
+      ["Dehumidifying 0.4%: dew point / mean coincident dry bulb, °C", H && H.dehum["0.4"], R.dehum["0.4"]],
+      ["Dehumidifying 1%: dew point / mean coincident dry bulb, °C", H && H.dehum["1"], R.dehum["1"]],
+      ["Heating 99.6%: dry bulb, °C", H ? [H.heat996, null] : null, [R.heat996, null], true]
+    ];
+    var tb = '<table class="counts"><caption class="visually-hidden">Design conditions from the ASHRAE header and from the file&#x27;s hours</caption><thead><tr><th>Condition</th><th class="num">ASHRAE (file header)</th><th class="num">This file&#x27;s hours</th><th class="num">Hours minus ASHRAE (first value)</th></tr></thead><tbody>';
+    lines.forEach(function (L) {
+      var a = L[1] ? (L[3] ? fmt(L[1][0], 1) : pair(L[1])) : "–", c = L[3] ? fmt(L[2][0], 1) : pair(L[2]);
+      tb += "<tr><td>" + L[0] + '</td><td class="num">' + a + '</td><td class="num">' + c + '</td><td class="num">' + (L[1] ? diff(L[1][0], L[2][0]) : "–") + "</td></tr>";
+    });
+    $("ddTable").innerHTML = tb + "</tbody></table>";
+    var note;
+    if (H) {
+      var dc = R.cool["0.4"][0] - H.cool["0.4"][0], dh = (H.heat996 !== null) ? R.heat996 - H.heat996 : null;
+      note = "The header values are from the " + esc(H.title.replace(/\s+-+\s+/g, ", ")) + ". Simulation tools build their summer and winter design days from tables like these, so compare them with the design conditions in your model&#x27;s location settings: a mismatch usually means a different station or a different edition. " +
+        "This file&#x27;s own hours put the 0.4% cooling dry bulb " + fmt(Math.abs(dc), 1) + " K " + (dc >= 0 ? "higher" : "lower") +
+        (dh !== null ? " and the 99.6% heating dry bulb " + fmt(Math.abs(dh), 1) + " K " + (dh >= 0 ? "higher" : "lower") : "") +
+        ". Neither is wrong: a typical year is assembled from typical months, so it can miss the extremes of the long record or, in a hot typical month, exceed them.";
+    } else {
+      note = "This file carries no usable ASHRAE design conditions in its header, so only its own hours are shown. Check the design conditions in your model&#x27;s location settings by hand.";
+    }
+    $("ddNote").innerHTML = note;
+  }
+  ["ddCase", "ddPct", "ddSrc"].forEach(function (id) { $(id).addEventListener("change", renderDesign); });
+  $("ddSet").addEventListener("input", function () { $("tHi").value = parseFloat(this.value); update(); });
+
+  // ---------- tabs ----------
+  var panels = [$("panel-1"), $("panel-2")];
+  function activate(idx, focusTab) {
+    if (idx < 0 || idx >= panels.length) return;
+    current = idx;
+    tabs.forEach(function (t, i) {
+      var on = i === idx;
+      t.classList.toggle("active", on); t.setAttribute("aria-selected", on ? "true" : "false"); t.tabIndex = on ? 0 : -1;
+      panels[i].hidden = !on;
+    });
+    if (focusTab) tabs[idx].focus();
+    if (idx === 0) { draw(); readout(false); if (state.counts) renderResults(); }
+    if (idx === 1) {
+      // the ghost arrow keeps the edge the tab opened with
+      DD.refSet = parseFloat($("tHi").value);
+      $("ddSet").value = DD.refSet;
+      renderDesign();
+    }
+  }
+  tabs.forEach(function (t) { t.addEventListener("click", function () { activate(+t.getAttribute("data-idx")); }); });
+  document.querySelectorAll("[data-nav]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      activate(current + (btn.getAttribute("data-nav") === "next" ? 1 : -1), true);
+      window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    });
+  });
+
+  window.__ttRedraw = function () {
+    if (current === 1) { renderDesign(); return; }
+    draw(); readout(false); if (state.counts) renderResults();
+  };
   if (window.ResizeObserver) {
     var lastW = 0;
     new ResizeObserver(function () { var w = $("chartbox").clientWidth; if (w !== lastW) { lastW = w; window.__ttRedraw(); } }).observe($("chartbox"));
   }
   // test hook for the headless checks; reads state, sends nothing anywhere
-  window.__psych = { state: state, setData: setData, update: update, EPW: EPW };
+  window.__psych = { state: state, setData: setData, update: update, EPW: EPW, activate: activate };
   update();
 })();
 </script>
