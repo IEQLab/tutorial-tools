@@ -282,6 +282,7 @@
   <div class="tabs" role="tablist" aria-label="Chart views">
     <button class="tab active" role="tab" id="tab-1" aria-controls="panel-1" aria-selected="true" tabindex="0" data-idx="0"><span class="n">1</span><span>Your building&#x27;s climate</span></button>
     <button class="tab" role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false" tabindex="-1" data-idx="1"><span class="n">2</span><span>Design day and the sizing arrow</span></button>
+    <button class="tab" role="tab" id="tab-3" aria-controls="panel-3" aria-selected="false" tabindex="-1" data-idx="2"><span class="n">3</span><span>Inside the AHU</span></button>
   </div>
 
   <div class="orient">
@@ -290,6 +291,7 @@
       <ul>
         <li>Lecture, <i>The chart is a coordinate system</i> &rarr; tab <b>1</b> with no file loaded: switch the chart lines on one at a time and read a state with the cross-hair</li>
         <li>Lecture, the box an engineer draws and <i>The distance from outside to that box is the plant</i> &rarr; tab <b>2</b>: the outside design point, the arrow to the band, and the band&#x27;s edge moved</li>
+        <li>Lecture, <i>Two air streams, one box</i> and <i>The cooling coil for dehumidification</i> &rarr; tab <b>3</b>: the mixed state, the coil and its apparatus dew point, the reheat leg, and the same job done by a DOAS</li>
         <li>Lecture, <i>A climate on the psychrometric chart</i>, and its closing question (is your bigger problem sensible or latent?) &rarr; tab <b>1</b> with a weather file loaded</li>
         <li>Assignment 1, the building description&#x27;s climate (design conditions, seasonal pattern) &rarr; tab <b>1</b> with your own building&#x27;s weather file for the hours by process and the month-by-month pattern, then tab <b>2</b> for the design conditions and where they come from</li>
       </ul>
@@ -471,6 +473,62 @@ pressure at altitude  p  = 101.325 (1 &minus; 2.25577&times;10&#8315;&#8309; Z)^
     </div>
     <div class="tabnav">
       <button type="button" class="btn ghost" data-nav="prev">&larr; Back: your climate</button>
+      <button type="button" class="btn" data-nav="next">Next: inside the AHU &rarr;</button>
+    </div>
+  </section>
+
+  <!-- ===== Tab 3: Inside the AHU ===== -->
+  <section class="card" role="tabpanel" id="panel-3" aria-labelledby="tab-3" tabindex="0" hidden>
+    <div class="primer">
+      <p class="what">What an air-handling unit does to the air, one state at a time.</p>
+      <p>Return air from the room and outside air meet at the mixing dampers, and the <b>mixed state</b> sits on the straight line between them, closer to whichever stream there is more of. The cooling coil then moves that air down and left, toward its <b>apparatus dew point</b>, the saturated state its surface behaves as if it were at; the air leaves a little short of it because some passes between the fins. To take water out, the coil has to cool the air below its dew point, and if the room needs drier air than it needs cold air, the air leaves colder than the room asked for and is warmed back up: the <b>reheat</b> leg.</p>
+      <p>A dedicated outdoor air system (DOAS) splits the two jobs. Its coil dries only the outside air, and units in each zone cool the room air without going below its dew point, so nothing is overcooled to dry it and the reheat leg goes. The chart shows states and temperatures only; how much energy each leg costs is a question for the load calculation.</p>
+    </div>
+    <div class="grid">
+      <div style="grid-column: span 2">
+        <label for="ahuOut">Outside air</label>
+        <select id="ahuOut"></select>
+      </div>
+      <div>
+        <label for="ahuRoomT">Room (return air), &deg;C</label>
+        <input id="ahuRoomT" type="number" step="0.5" min="18" max="28" value="24">
+      </div>
+      <div>
+        <label for="ahuRoomRh">Room relative humidity, %</label>
+        <input id="ahuRoomRh" type="number" step="1" min="20" max="80" value="50">
+      </div>
+      <div>
+        <label for="ahuF">Outside air in the mix: <span class="v" id="ahuFVal">25</span>%</label>
+        <input id="ahuF" type="range" min="0" max="100" step="5" value="25">
+      </div>
+      <div>
+        <label for="ahuTs">Supply temperature the room asks for: <span class="v" id="ahuTsVal">17.0</span>&nbsp;&deg;C</label>
+        <input id="ahuTs" type="range" min="12" max="20" step="0.5" value="17">
+      </div>
+      <div>
+        <label for="ahuWs">Supply moisture the room needs, g/kg</label>
+        <input id="ahuWs" type="number" step="0.1" min="4" max="12" value="8.0">
+      </div>
+      <div>
+        <label for="ahuBf">Air that slips past the fins (bypass): <span class="v" id="ahuBfVal">0.10</span></label>
+        <input id="ahuBf" type="range" min="0" max="0.3" step="0.01" value="0.1">
+      </div>
+      <div>
+        <label class="check"><input type="checkbox" id="ahuDoas"> Dedicated outdoor air system (DOAS)</label>
+      </div>
+    </div>
+    <div class="chartbox"><canvas id="chart3" role="img" aria-label="Air-handling unit states on the psychrometric chart"></canvas></div>
+    <p class="note" id="ahuKey" hidden></p>
+    <div class="results" id="ahuStates" role="status" aria-live="polite"></div>
+    <p class="verdict" id="ahuVerdict"></p>
+    <details class="maths">
+      <summary>The maths behind the states</summary>
+      <p class="deriv"><b>Mixing.</b> The mixed state is the mass-weighted average of the two streams&#x27; humidity ratio and enthalpy, which puts it on the straight line between them; the outside-air share here is by mass of dry air.</p>
+      <p class="deriv"><b>The coil.</b> The air moves on a straight line from the on-coil state toward the apparatus dew point (ADP) on the saturation curve, and leaves a bypass fraction of the way back: off-coil = ADP + bypass &times; (on-coil &minus; ADP), in both dry bulb and humidity ratio. The ADP is set by whichever target is harder to meet: the supply moisture the room needs, or the supply temperature. When the moisture sets it, the air leaves colder than the room asked for, and the difference is the reheat. A real coil&#x27;s path curves along the saturation curve; the straight line is a good stand-in except when the on-coil air is already close to saturated, where it would leave the air wetter than saturated. There the off-coil state is held on the saturation curve. If the mixed air is already dry enough, the coil only cools; if it is colder than the supply temperature, it is heated instead.</p>
+      <p class="deriv"><b>DOAS.</b> The unit treats outside air only and dries it to the supply moisture; the zone units cool room air from the room temperature toward the supply temperature at constant moisture. If that supply temperature is at or below the room&#x27;s dew point, the zone coil would condense, which is what the DOAS exists to prevent, and the tool says so.</p>
+    </details>
+    <div class="tabnav">
+      <button type="button" class="btn ghost" data-nav="prev">&larr; Back: design day</button>
       <span></span>
     </div>
   </section>
@@ -570,6 +628,63 @@ var PSY = (function () {
     wFromTd: wFromTd, wFromTWb: wFromTWb, wetBulb: wetBulb, tAtRh: tAtRh, mix: mix };
 })();
 
+/* ============================================================
+   Inside the AHU: the states an air-handling unit takes the air through.
+   Pure functions, no DOM, validated in psyValidate().
+   Coil model: the coil moves air along a straight line on the chart from
+   its on-coil state toward the apparatus dew point (ADP, on the saturation
+   curve); a bypass factor bf leaves the off-coil state bf of the way back
+   from the ADP, C = ADP + bf (M - ADP), in both dry bulb and humidity ratio.
+   There are two candidate ADPs: one that brings the air down to the supply
+   moisture the room needs, and one that brings it down to the supply
+   temperature. The coil has to meet both, so it works to the colder of the
+   two; when that is the moisture one, the air leaves colder than the room
+   asked for and has to be reheated.
+   ============================================================ */
+var AHU = (function () {
+  "use strict";
+  var P = PSY;
+  /* Coil from state M, aiming at supply moisture wSup and temperature tSup. */
+  function coil(M, tSup, wSup, bf, p) {
+    if (M.w > wSup) {
+      var wA = (wSup - bf * M.w) / (1 - bf);              // ADP humidity ratio for the moisture target
+      var tW = wA > 0 ? P.dewPoint(wA, p) : -60;
+      var tT = (tSup - bf * M.t) / (1 - bf);               // ADP dry bulb for the temperature target
+      var tA = Math.min(tW, tT);
+      var A = { t: tA, w: P.wSat(tA, p) };
+      var C = { t: A.t + bf * (M.t - A.t), w: A.w + bf * (M.w - A.w) };
+      /* A straight coil line from a near-saturated on-coil state cuts above the
+         (convex) saturation curve, which no real coil does. Where the off-coil
+         state would land above saturation, it is moved along its humidity
+         ratio onto the curve: the air leaves saturated. */
+      var capped = false;
+      // a saturated leaving state is its own apparatus dew point
+      if (P.rhFromW(C.t, C.w, p) > 1 + 1e-9) { C = { t: P.dewPoint(C.w, p), w: C.w }; A = { t: C.t, w: C.w }; capped = true; }
+      return { mode: "dehum", adp: A, off: C, capped: capped, setBy: tW <= tT ? "moisture" : "temperature" };
+    }
+    if (M.t > tSup) return { mode: "cool", adp: null, off: { t: tSup, w: M.w }, setBy: "temperature" };
+    return { mode: "heat", adp: null, off: { t: M.t, w: M.w }, setBy: "temperature" };
+  }
+  /* o: { p, out: {t, w}, room: {t, w}, f (outside-air mass fraction), tSup, wSup, bf, doas } */
+  function solve(o) {
+    var p = o.p;
+    if (!o.doas) {
+      var mx = P.mix(o.out.t, o.out.w, o.f, o.room.t, o.room.w, 1 - o.f);
+      var M = { t: mx.t, w: mx.w };
+      var k = coil(M, o.tSup, o.wSup, o.bf, p);
+      var S = { t: Math.max(k.off.t, o.tSup), w: k.off.w };
+      return { doas: false, mix: M, coil: k, sup: S, reheat: Math.max(0, o.tSup - k.off.t) };
+    }
+    // DOAS: the unit treats outside air only and dries it; zone units cool the room
+    // air sensibly, so nothing is overcooled to dry it and there is no reheat leg
+    var kd = coil(o.out, Math.min(o.out.t, o.room.t), o.wSup, o.bf, p);
+    var zone = { from: o.room, to: { t: o.tSup, w: o.room.w } };
+    return { doas: true, mix: null, coil: kd, sup: kd.off, reheat: 0, zone: zone,
+      zoneWet: o.tSup <= P.dewPoint(o.room.w, p) };
+  }
+  return { solve: solve, coil: coil };
+})();
+
 /* Reference values from the 2009 ASHRAE Handbook: Fundamentals (SI), ch. 1:
    Table 2 (moist air at 101.325 kPa), Table 3 (water at saturation), Table 1
    (standard atmosphere), Examples 1, 3 and 4, and the sea-level against 1500 m
@@ -632,6 +747,39 @@ function psyValidate() {
     chk("p. 1.10 " + r[1] + " RH, %", 100 * P.rhFromW(40, w, r[0]), r[4], 0.6);
     chk("p. 1.10 " + r[1] + " v, m3/kg", P.volume(40, w, r[0]), r[5], 0.003);
   });
+  // ---- the AHU states (tab 3) ----
+  // Example 3 as a coil: 30 C / 50% on-coil, leaving saturated at 10 C. With no
+  // bypass the off-coil state is the ADP, and the duty is the handbook's 197 kW.
+  var e3 = AHU.coil({ t: 30, w: w3 }, 10, P.wSat(10, p0), 0, p0);
+  chk("Ex. 3 via AHU, apparatus dew point, C", e3.adp.t, 10, 0.05);
+  chk("Ex. 3 via AHU, off-coil W, g/kg", e3.off.w * 1000, 7.66, 0.05);
+  var m3 = 5 / P.volume(30, w3, p0);
+  var q3 = m3 * ((P.enthalpy(30, w3) - P.enthalpy(e3.off.t, e3.off.w)) - (w3 - e3.off.w) * 4.186 * e3.off.t);
+  chk("Ex. 3 via AHU, coil duty, kW", q3, 197, 2);
+  // Example 4 through AHU.solve: outside-air mass fraction 2.535 / 9.819
+  var s4 = AHU.solve({ p: p0, out: { t: 4, w: wa }, room: { t: 25, w: wb }, f: ma / (ma + mb), tSup: 30, wSup: 0.02, bf: 0.1, doas: false });
+  chk("Ex. 4 via AHU, mixed dry bulb, C", s4.mix.t, 19.5, 0.15);
+  // The lecture's mixing slide (p06): 25% of 34 C / 22.5 C wb into 24 C / 50% gives 26.5 C
+  var oaD = { t: 34, w: P.wFromTWb(34, 22.5, p0) }, rmD = { t: 24, w: P.wFromRh(24, 0.5, p0) };
+  var sD = AHU.solve({ p: p0, out: oaD, room: rmD, f: 0.25, tSup: 17, wSup: 0.008, bf: 0.1, doas: false });
+  chk("Deck p06 mixed dry bulb, C", sD.mix.t, 26.5, 0.1);
+  // Hand checks on the coil construction: lands on the moisture target exactly,
+  // the ADP is on the saturation curve, and the off-coil state is bf of the way
+  // back from the ADP along the line to the on-coil state, in both coordinates.
+  var A = sD.coil.adp, C = sD.coil.off, M = sD.mix;
+  chk("Coil leaves at the supply moisture, g/kg", C.w * 1000, 8, 1e-6);
+  chk("ADP on the saturation curve, g/kg", A.w * 1000, P.wSat(A.t, p0) * 1000, 1e-9);
+  chk("Off-coil on the coil line, dry bulb fraction", (C.t - A.t) / (M.t - A.t), 0.1, 1e-9);
+  chk("Off-coil on the coil line, moisture fraction", (C.w - A.w) / (M.w - A.w), 0.1, 1e-9);
+  // The lecture's p07 chose an off-coil 11.5 C at about 94% RH by hand. The same
+  // construction reproduces it at a bypass of 0.067; the default 0.1 gives 11.9 C.
+  var s7 = AHU.solve({ p: p0, out: oaD, room: rmD, f: 0.25, tSup: 17, wSup: 0.008, bf: 0.067, doas: false });
+  chk("Deck p07 off-coil dry bulb at bypass 0.067, C", s7.coil.off.t, 11.5, 0.05);
+  chk("Deck p07 off-coil RH at bypass 0.067, %", 100 * P.rhFromW(s7.coil.off.t, s7.coil.off.w, p0), 94, 1);
+  chk("Deck p08 reheat to 17 C, K", sD.reheat, 17 - C.t, 1e-9);
+  // a near-saturated on-coil state (24.2 C, 16.8 g/kg) never leaves above 95% RH
+  var sN = AHU.coil({ t: 24.2, w: 0.0168 }, 24, 0.008, 0.1, p0);
+  chk("Near-saturated on-coil air leaves no wetter than saturated, %", 100 * P.rhFromW(sN.off.t, sN.off.w, p0), 100, 1e-6);
   return out;
 }
 
@@ -870,7 +1018,9 @@ var EPW = (function () {
     ch = ch || CH1;
     cv = ch.cv; ctx = cv.getContext("2d"); LAY = ch.layers;
     G = ch.G || (ch.G = { wMax: 0.030, L: 14, R: 58, T: 14, B: 44, W: 0, H: 0 });
-    G.tMin = state.axis.tMin; G.tMax = state.axis.tMax;
+    // a chart may zoom to its own view (tab 3 does); the others follow the weather file
+    G.tMin = ch.view ? ch.view.tMin : state.axis.tMin; G.tMax = ch.view ? ch.view.tMax : state.axis.tMax;
+    G.wMax = ch.view ? ch.view.wMax : 0.030;
     cssCache = {};
     var sz = sizeCanvas(cv, ch.aspect, 320);
     G.W = sz.w; G.H = sz.h;
@@ -994,7 +1144,8 @@ var EPW = (function () {
     if (LAY.rh) {
       g.fillStyle = css("--ch-rh-text"); g.textAlign = "center"; g.textBaseline = "middle";
       g.font = "600 " + (fs - 1) + "px -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
-      for (var rh2 = 10; rh2 < 100; rh2 += 10) {
+      // every 20% on a narrow screen, where the labels along the top would collide
+      for (var rh2 = small ? 20 : 10; rh2 < 100; rh2 += small ? 20 : 10) {
         var tl = G.tMax - 2, wl = P.wFromRh(tl, rh2 / 100, p);
         if (wl > G.wMax - 0.0012) { wl = G.wMax - 0.0012; tl = P.tAtRh(wl, rh2 / 100, p); }
         haloText(g, rh2 + "%", X(tl), Y(wl));
@@ -1298,6 +1449,7 @@ var EPW = (function () {
   function update() {
     state.band = readBand(); state.bp = bpNow(); state.win = readWin(); recount(); renderWin();
     if (current === 1) { renderDesign(); return; }
+    if (current === 2) { renderAHU(); return; }
     draw(); readout(false);
   }
   ["tLo", "tHi", "upVal", "loVal", "bpVal"].forEach(function (id) { $(id).addEventListener("input", update); });
@@ -1514,8 +1666,164 @@ var EPW = (function () {
   ["ddCase", "ddPct", "ddSrc"].forEach(function (id) { $(id).addEventListener("change", renderDesign); });
   $("ddSet").addEventListener("input", function () { $("tHi").value = parseFloat(this.value); update(); });
 
+  // ================= Tab 3: inside the AHU =================
+  var CH3 = { cv: $("chart3"), layers: { rh: true, wb: true, h: false, band: true, regions: false, hours: false },
+    indicator: false, hours: "faint", aspect: 0.56, label: function () { return AH.label || "Air-handling unit states on the psychrometric chart"; } };
+  var AH = { r: null, label: "" };
+  /* The outside-air choices: the loaded file's design conditions, or the
+     lecture's worked example when there is no file. */
+  function ahuOutOptions() {
+    var sel = $("ahuOut"), keep = sel.value, d = state.data, opts = [];
+    if (d) {
+      if (!d.hrs || d.hrsP !== state.p) { d.hrs = designFromHours(d.rows, state.p); d.hrsP = state.p; d.hdr = designFromHeader(d.design); }
+      var src = d.hdr ? "ASHRAE" : "this file&#x27;s hours";
+      opts.push(["cool", "Cooling design condition, 0.4% (" + src + ")"]);
+      opts.push(["dehum", "Dehumidifying design condition, 0.4% (" + src + ")"]);
+    }
+    opts.push(["example", "The lecture&#x27;s example: 34 °C, 22.5 °C wet bulb"]);
+    var html = opts.map(function (o) { return '<option value="' + o[0] + '">' + o[1] + "</option>"; }).join("");
+    if (sel.innerHTML !== html) { sel.innerHTML = html; sel.value = opts.some(function (o) { return o[0] === keep; }) ? keep : opts[0][0]; }
+  }
+  function ahuOutside() {
+    var p = state.p, v = $("ahuOut").value, d = state.data;
+    if (v === "example" || !d) return { t: 34, w: P.wFromTWb(34, 22.5, p), name: "the lecture's example" };
+    var set = d.hdr || d.hrs, c = set[v === "cool" ? "cool" : "dehum"]["0.4"];
+    if (!c || c[0] === null || c[1] === null) c = d.hrs[v === "cool" ? "cool" : "dehum"]["0.4"];
+    if (v === "cool") return { t: c[0], w: P.wFromTWb(c[0], c[1], p), name: "the cooling design condition" };
+    return { t: c[1], w: P.wFromTd(c[0], p), name: "the dehumidifying design condition" };
+  }
+  function ahuState() {
+    var p = state.p, rt = parseFloat($("ahuRoomT").value), rr = parseFloat($("ahuRoomRh").value) / 100;
+    var ws = parseFloat($("ahuWs").value) / 1000;
+    if (!isFinite(rt) || !isFinite(rr) || !isFinite(ws) || rr <= 0 || rr > 1) return null;
+    var out = ahuOutside();
+    return { p: p, out: out, room: { t: rt, w: P.wFromRh(rt, rr, p) }, f: +$("ahuF").value / 100,
+      tSup: +$("ahuTs").value, wSup: ws, bf: +$("ahuBf").value, doas: $("ahuDoas").checked };
+  }
+  /* On a narrow chart the state names collide, so they become letters, with a
+     key under the chart; the states table carries the full names. */
+  var SHORT = { "outside": "O", "room (return)": "R", "room": "R", "mixed": "M", "apparatus dew point": "ADP",
+    "off coil": "C", "supply": "S", "supply (after reheat)": "S", "off coil = supply": "C = S",
+    "DOAS supply": "D", "DOAS supply, saturated": "D", "zone unit leaving": "Z" };
+  function lbl(g, text, x, y, dx, dy, align) {
+    if (G.W < 560 && SHORT[text]) { text = SHORT[text]; dx = dx ? (dx > 0 ? 7 : -7) : 0; dy = dy > 0 ? 11 : -11; }
+    g.save(); g.font = "600 12px -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
+    // keep the label inside the plot: flip it to the other side if it would run off the left
+    var wdt = g.measureText(text).width;
+    if (align === "right" && x + dx - wdt < G.L + 2) { align = "left"; dx = Math.abs(dx); }
+    g.fillStyle = css("--ink"); g.textAlign = align; g.textBaseline = "middle"; haloText(g, text, x + dx, y + dy); g.restore();
+  }
+  /* The coil's path: straight on the chart, but never drawn through the
+     saturation curve, which a straight chord from near-saturated air would cut. */
+  function coilPath(g, a, b, col) {
+    var n = 24, pts = [];
+    for (var i = 0; i <= n; i++) {
+      var f = i / n, w = a.w + f * (b.w - a.w), t = a.t + f * (b.t - a.t);
+      pts.push({ t: Math.max(t, P.dewPoint(w, state.p) + 0.15), w: w });
+    }
+    pts[n] = b;
+    g.save(); g.strokeStyle = col; g.lineWidth = 3; g.beginPath();
+    for (var j = 0; j < n - 1; j++) { if (j) g.lineTo(X(pts[j].t), Y(pts[j].w)); else g.moveTo(X(pts[j].t), Y(pts[j].w)); }
+    g.stroke(); g.restore();
+    arrow(g, X(pts[n - 2].t), Y(pts[n - 2].w), X(b.t), Y(b.w), col, 3);
+  }
+  function pt(g, s, hollow) {
+    g.save(); g.lineWidth = 2; g.strokeStyle = hollow ? css("--ink") : css("--card"); g.fillStyle = hollow ? css("--card") : css("--ink");
+    g.beginPath(); g.arc(X(s.t), Y(s.w), 5, 0, 2 * Math.PI); g.fill(); g.stroke(); g.restore();
+  }
+  function seg(g, a, b, col, lw, dash, head) {
+    if (head) { arrow(g, X(a.t), Y(a.w), X(b.t), Y(b.w), col, lw, dash); return; }
+    g.save(); g.strokeStyle = col; g.lineWidth = lw; if (dash) g.setLineDash(dash);
+    g.beginPath(); g.moveTo(X(a.t), Y(a.w)); g.lineTo(X(b.t), Y(b.w)); g.stroke(); g.restore();
+  }
+  CH3.overlay = function (g) {
+    var o = AH.o, r = AH.r;
+    if (!o || !r) return;
+    var cool = css("--cool"), heat = css("--heat"), mute = css("--muted"), k = r.coil;
+    if (!r.doas) {
+      seg(g, o.out, o.room, mute, 1.4, [5, 4]);                       // the mixing line
+      if (k.adp && !k.capped) seg(g, k.off, k.adp, cool, 1.4, [3, 3]); // coil line extended to the ADP
+      if (k.mode !== "heat" && (Math.abs(k.off.t - r.mix.t) > 0.05 || Math.abs(k.off.w - r.mix.w) > 1e-5)) coilPath(g, r.mix, k.off, cool);
+      if (r.reheat > 0.05) seg(g, k.off, r.sup, heat, 3, null, true);
+      if (k.mode === "heat" && r.sup.t - r.mix.t > 0.05) seg(g, r.mix, r.sup, heat, 3, null, true);
+      seg(g, r.sup, o.room, mute, 1.2, [2, 4]);                       // the room's load takes supply back to room
+      pt(g, o.out); pt(g, o.room); pt(g, r.mix);
+      if (k.adp && !k.capped) pt(g, k.adp, true);
+      if (k.mode === "dehum") pt(g, k.off);
+      pt(g, r.sup);
+      lbl(g, "outside", X(o.out.t), Y(o.out.w), 9, -10, "left");
+      lbl(g, "room (return)", X(o.room.t), Y(o.room.w), -9, 14, "right");
+      lbl(g, "mixed", X(r.mix.t), Y(r.mix.w), 6, -14, "left");
+      if (k.adp && !k.capped) lbl(g, "apparatus dew point", X(k.adp.t), Y(k.adp.w), -9, -14, "right");
+      if (k.mode === "dehum" && r.reheat > 0.05) lbl(g, "off coil", X(k.off.t), Y(k.off.w), -4, 16, "right");
+      lbl(g, r.reheat > 0.05 ? "supply (after reheat)" : (k.mode === "dehum" ? "off coil = supply" : "supply"), X(r.sup.t), Y(r.sup.w), 8, 16, "left");
+    } else {
+      if (k.adp && !k.capped) seg(g, k.off, k.adp, cool, 1.4, [3, 3]);
+      coilPath(g, o.out, k.off, cool);                                // the DOAS coil, outside air only
+      seg(g, k.off, o.room, mute, 1.2, [2, 4]);                       // DOAS air to the room
+      seg(g, r.zone.from, r.zone.to, cool, 2.4, null, true);          // zone units, sensible only
+      pt(g, o.out); pt(g, o.room); pt(g, k.off); if (k.adp && !k.capped) pt(g, k.adp, true); pt(g, r.zone.to);
+      lbl(g, "outside", X(o.out.t), Y(o.out.w), 9, -10, "left");
+      lbl(g, "room", X(o.room.t), Y(o.room.w), 9, -12, "left");
+      lbl(g, k.capped ? "DOAS supply, saturated" : "DOAS supply", X(k.off.t), Y(k.off.w), -9, 14, "right");
+      if (k.adp && !k.capped) lbl(g, "apparatus dew point", X(k.adp.t), Y(k.adp.w), -9, -14, "right");
+      lbl(g, "zone unit leaving", X(r.zone.to.t), Y(r.zone.to.w), 0, 16, "center");
+    }
+  };
+  function renderAHU() {
+    ahuOutOptions();
+    $("ahuFVal").textContent = $("ahuF").value; $("ahuTsVal").textContent = fmt(+$("ahuTs").value, 1); $("ahuBfVal").textContent = fmt(+$("ahuBf").value, 2);
+    var fDis = $("ahuDoas").checked; $("ahuF").disabled = fDis;
+    var o = ahuState(), p = state.p;
+    AH.o = o; AH.r = o ? AHU.solve(o) : null;
+    // zoom to the states in play: the AHU's work happens in a small part of the chart
+    if (AH.r) {
+      var ts = [o.out.t, o.room.t, AH.r.sup.t, AH.r.coil.off.t].concat(AH.r.coil.adp ? [AH.r.coil.adp.t] : []);
+      var wmax = Math.max(o.out.w, o.room.w);
+      CH3.view = { tMin: Math.min(5, Math.floor((Math.min.apply(null, ts) - 2) / 5) * 5),
+        tMax: Math.max(40, Math.ceil((Math.max.apply(null, ts) + 4) / 5) * 5),
+        wMax: Math.max(0.020, Math.ceil((wmax + 0.003) * 500) / 500) };
+    }
+    draw(CH3);
+    var narrow = CH3.G && CH3.G.W < 560;
+    $("ahuKey").hidden = !narrow;
+    if (narrow) $("ahuKey").textContent = $("ahuDoas").checked ? "O outside, R room, D DOAS supply, Z zone unit leaving, ADP apparatus dew point." : "O outside, R room (return), M mixed, ADP apparatus dew point, C off coil, S supply.";
+    if (!AH.r) { $("ahuStates").innerHTML = '<div class="row"><span class="k">Enter the room state and supply moisture.</span></div>'; $("ahuVerdict").textContent = ""; return; }
+    var r = AH.r, k = r.coil;
+    function st(s) { return fmt(s.t, 1) + " °C, " + fmt(s.w * 1000, 1) + " g/kg, " + fmt(100 * P.rhFromW(s.t, s.w, p), 0) + "% RH"; }
+    function row(kk, v) { return '<div class="row"><span class="k">' + kk + '</span><span class="v">' + v + "</span></div>"; }
+    var html = row("Outside (" + esc(o.out.name) + ")", st(o.out)) + row("Room, and the return air", st(o.room));
+    var v;
+    if (!r.doas) {
+      html += row("Mixed (on coil), " + Math.round(o.f * 100) + "% outside air", st(r.mix));
+      if (k.adp) html += row("Apparatus dew point" + (k.capped ? " (the air leaves saturated, at it)" : ""), fmt(k.adp.t, 1) + " °C");
+      if (k.mode === "dehum") html += row("Off coil" + (k.capped ? " (held at saturation)" : ""), st(k.off));
+      html += row("Supply", st(r.sup));
+      if (k.mode === "dehum" && r.reheat > 0.05)
+        v = "To bring the air down to " + fmt(o.wSup * 1000, 1) + " g/kg the coil has to cool it to <b>" + fmt(k.off.t, 1) + " °C</b>, but the room only asked for " + fmt(o.tSup, 1) + " °C. The air is overcooled by <b>" + fmt(r.reheat, 1) + " K</b> to dry it, and the reheat coil warms it back up. Every degree of overcooling is a degree paid for twice.";
+      else if (k.mode === "dehum")
+        v = "The supply temperature sets the coil here, and the air leaves at " + fmt(k.off.w * 1000, 1) + " g/kg, drier than the room needs: no reheat.";
+      else if (k.mode === "cool")
+        v = "The mixed air is already dry enough, so the coil only cools it, staying above its dew point: no water is taken out and there is no reheat.";
+      else
+        v = "The mixed air is colder than the supply the room asks for, so the coil heats it: a winter state, with no dehumidifying.";
+    } else {
+      if (k.adp) html += row("Apparatus dew point (DOAS coil)" + (k.capped ? ", the air leaves saturated, at it" : ""), fmt(k.adp.t, 1) + " °C");
+      html += row("DOAS supply, outside air only" + (k.capped ? " (held at saturation)" : ""), st(k.off)) + row("Zone unit leaving, room air recirculated", st(r.zone.to));
+      v = "The DOAS dries only the outside air, to " + fmt(k.off.w * 1000, 1) + " g/kg; the zone units cool the room air from " + fmt(o.room.t, 1) + " to " + fmt(o.tSup, 1) + " °C without taking water out. <b>No air is overcooled to dry it, so there is no reheat leg.</b>";
+      if (r.zoneWet) v += " At this supply temperature, though, the zone coil is at or below the room&#x27;s dew point (" + fmt(P.dewPoint(o.room.w, p), 1) + " °C) and would condense; raise it.";
+    }
+    $("ahuStates").innerHTML = html;
+    $("ahuVerdict").innerHTML = v;
+    AH.label = "Air-handling unit states: " + $("ahuVerdict").textContent;
+    CH3.cv.setAttribute("aria-label", AH.label);
+  }
+  ["ahuRoomT", "ahuRoomRh", "ahuWs"].forEach(function (id) { $(id).addEventListener("input", renderAHU); });
+  ["ahuF", "ahuTs", "ahuBf"].forEach(function (id) { $(id).addEventListener("input", renderAHU); });
+  ["ahuOut", "ahuDoas"].forEach(function (id) { $(id).addEventListener("change", renderAHU); });
+
   // ---------- tabs ----------
-  var panels = [$("panel-1"), $("panel-2")];
+  var panels = [$("panel-1"), $("panel-2"), $("panel-3")];
   function activate(idx, focusTab) {
     if (idx < 0 || idx >= panels.length) return;
     current = idx;
@@ -1532,6 +1840,7 @@ var EPW = (function () {
       $("ddSet").value = DD.refSet;
       renderDesign();
     }
+    if (idx === 2) renderAHU();
   }
   tabs.forEach(function (t) { t.addEventListener("click", function () { activate(+t.getAttribute("data-idx")); }); });
   document.querySelectorAll("[data-nav]").forEach(function (btn) {
@@ -1543,6 +1852,7 @@ var EPW = (function () {
 
   window.__ttRedraw = function () {
     if (current === 1) { renderDesign(); return; }
+    if (current === 2) { renderAHU(); return; }
     draw(); readout(false); if (state.counts) renderResults();
   };
   if (window.ResizeObserver) {
