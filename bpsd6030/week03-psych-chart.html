@@ -1713,6 +1713,22 @@ var EPW = (function () {
     if (align === "right" && x + dx - wdt < G.L + 2) { align = "left"; dx = Math.abs(dx); }
     g.fillStyle = css("--ink"); g.textAlign = align; g.textBaseline = "middle"; haloText(g, text, x + dx, y + dy); g.restore();
   }
+  /* The ADP label goes up and to the left, into the empty space beyond the
+     saturation curve, so it never lies across the coil line; a short leader
+     ties it to its marker when it has to sit off to one side. */
+  function lblADP(g, s) {
+    var narrow = G.W < 560, text = narrow ? "ADP" : "apparatus dew point";
+    g.save(); g.font = "600 12px -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
+    var wdt = g.measureText(text).width, x0 = X(s.t), y0 = Y(s.w), ty = y0 - (narrow ? 16 : 26);
+    var right = x0 - 4, align = "right";
+    if (right - wdt < G.L + 2) { right = G.L + 2; align = "left"; }
+    if (!narrow) {
+      g.strokeStyle = css("--muted"); g.lineWidth = 1;
+      g.beginPath(); g.moveTo(x0 - 2, y0 - 6); g.lineTo(align === "right" ? right : Math.min(x0 - 2, right + wdt), ty + 6); g.stroke();
+    }
+    g.fillStyle = css("--ink"); g.textAlign = align; g.textBaseline = "bottom"; haloText(g, text, right, ty + 6);
+    g.restore();
+  }
   /* The coil's path: straight on the chart, but never drawn through the
      saturation curve, which a straight chord from near-saturated air would cut. */
   function coilPath(g, a, b, col) {
@@ -1754,8 +1770,8 @@ var EPW = (function () {
       lbl(g, "outside", X(o.out.t), Y(o.out.w), 9, -10, "left");
       lbl(g, "room (return)", X(o.room.t), Y(o.room.w), -9, 14, "right");
       lbl(g, "mixed", X(r.mix.t), Y(r.mix.w), 6, -14, "left");
-      if (k.adp && !k.capped) lbl(g, "apparatus dew point", X(k.adp.t), Y(k.adp.w), -9, -14, "right");
-      if (k.mode === "dehum" && r.reheat > 0.05) lbl(g, "off coil", X(k.off.t), Y(k.off.w), -4, 16, "right");
+      if (k.adp && !k.capped) lblADP(g, k.adp);
+      if (k.mode === "dehum" && r.reheat > 0.05) lbl(g, "off coil", X(k.off.t), Y(k.off.w), 0, 16, "center");
       lbl(g, r.reheat > 0.05 ? "supply (after reheat)" : (k.mode === "dehum" ? "off coil = supply" : "supply"), X(r.sup.t), Y(r.sup.w), 8, 16, "left");
     } else {
       if (k.adp && !k.capped) seg(g, k.off, k.adp, cool, 1.4, [3, 3]);
@@ -1766,7 +1782,7 @@ var EPW = (function () {
       lbl(g, "outside", X(o.out.t), Y(o.out.w), 9, -10, "left");
       lbl(g, "room", X(o.room.t), Y(o.room.w), 9, -12, "left");
       lbl(g, k.capped ? "DOAS supply, saturated" : "DOAS supply", X(k.off.t), Y(k.off.w), -9, 14, "right");
-      if (k.adp && !k.capped) lbl(g, "apparatus dew point", X(k.adp.t), Y(k.adp.w), -9, -14, "right");
+      if (k.adp && !k.capped) lblADP(g, k.adp);
       lbl(g, "zone unit leaving", X(r.zone.to.t), Y(r.zone.to.w), 0, 16, "center");
     }
   };
