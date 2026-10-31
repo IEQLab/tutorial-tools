@@ -485,7 +485,7 @@
   <footer class="page">
     The system taxonomy follows the unit's key terminology and the Australian commercial market; the schematic is a stylised concept diagram, not a construction drawing. Wizard structure and the fresh-air / conditioning framing adapt the openly published <a href="https://doi.org/10.5281/zenodo.10711959">HVAC System Selector</a> (Irani, Reinhard &amp; Reinhart, 2023, MIT Sustainable Design Lab, CC&nbsp;BY) to Australian systems, metric units, NCC climate zones, and a decarbonisation focus. Not the output of a load or energy simulation.
     Built for the BPSD6030 Week 5 tutorial and the Assignment 2 system choice by the IEQ Lab, Sydney School of Architecture, Design and Planning. It deliberately stops short of sizing plant, because that is DesignBuilder's job and the choice of family is the one worth arguing about in class. Self-contained, open-source, no tracking.
-    Revised August 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.
+    Revised November 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.
   </footer>
 </div>
 
@@ -1141,7 +1141,8 @@
         run("ret", [[DS.ret, yLow + 32], [DS.ret, aTop - 12], [mixX, aTop - 12], [mixX, aTop]]);
         run("ret", [[mixX, aTop - 12], [mixX, aTop - 26]]);
         thin += head(mixX, aTop - 38, "u", COL.air, 5);
-        lab(mixX - 9, aTop - 30, "exhaust", "end");
+        // a mixing unit lets out only the return air it does not reuse: relief air, not exhaust
+        lab(mixX - 9, aTop - 30, allAir ? "relief air" : "exhaust", "end");
       }
     }
 
@@ -1395,7 +1396,7 @@
     }
     var items = [];
     if (used.supply) items.push(sw("duct", COL.cool) + "Supply air duct");
-    if (used.oa) items.push(sw("duct", COL.air) + "Outdoor, return or exhaust air");
+    if (used.oa) items.push(sw("duct", COL.air) + "Outdoor, return, relief or exhaust air");
     if (used.chw) items.push(sw("pipe", COL.cool) + "Chilled water");
     if (used.hhw) items.push(sw("pipe", COL.heat) + "Heating water");
     if (used.cw) items.push(sw("pipe", COL.water) + "Condenser water");
