@@ -1,0 +1,1117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Psychrometric Chart for HVAC Design — BPSD6030</title>
+<style>
+  /* BPSD6030 Building Systems · indigo accent · IEQ Lab · rev. 2026-11 */
+  :root {
+    color-scheme: light;
+    --bg: #f4f6f7; --card: #fcfdfd; --ink: #1c2430; --muted: #5a6675;
+    --line: #dfe4ea; --accent: #4a52b5; --accent-ink: #fbfcfe;
+    --good: #1a7f4b; --warn: #9c5a0b; --bad: #b02a37;
+    --field: #fdfefe; --result-bg: #eef0f8;
+    /* one radius scale, one shadow — do not add values outside these */
+    --r-sm: 3px; --r-md: 8px; --r-pill: 999px;
+    --shadow: 0 3px 8px rgba(26, 28, 62, .12);
+    --ease-out: cubic-bezier(.2, 0, 0, 1); --dur: 150ms;
+
+    --t-glyph: .68rem;
+    --t-meta:  .78rem;
+    --t-label: .875rem;
+    --t-body:  1rem;
+    --t-lead:  1.125rem;
+    --t-h2:    1.3rem;
+    --t-h1:    1.625rem;
+
+    --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px;
+    --s-5: 20px; --s-6: 24px; --s-8: 32px; --s-12: 48px;
+
+    /* service palette: shared with the BPSD6030 lecture figures (teachr
+       bpsd6030/lectures/common/hvac_draw.py, PALETTE) and the other BPSD6030
+       tools. Here it colours the processes: heating red, cooling blue,
+       water leaving the air teal, water added amber. */
+    --heat: #c0392b; --cool: #0b5fa5; --water: #0e7c86; --elec: #c98a12;
+
+    /* chart linework: PC's chart house style, as sampled for the Week 3 lecture
+       figures (teachr bpsd6030/lectures/week3/build_pc_figures.py), so the tool
+       and the slides read as one drawing */
+    --ch-field: #ebebf8; --ch-grid: #d6d6ec; --ch-rh: #3fc9a0; --ch-rh-text: #d9890f;
+    --ch-wb: #b9b9e0; --ch-h: #9a9ab8; --ch-axis: #6f6fb0; --ch-ok: #2b2f3a;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #10151b; --card: #171e27; --ink: #e7ecf2; --muted: #9aa7b6;
+    --line: #2a3441; --accent: #99a4ef; --accent-ink: #131635;
+    --good: #57c98a; --warn: #e0a955; --bad: #e2707a;
+    --field: #0f151c; --result-bg: #191f33;
+    --shadow: 0 3px 8px rgba(0, 0, 0, .34);
+    --heat: #e2707a; --cool: #6ba7e6; --water: #38b2bd; --elec: #e3b25a;
+    --ch-field: #1d2236; --ch-grid: #2c3350; --ch-rh: #3fae8c; --ch-rh-text: #e7a94a;
+    --ch-wb: #4a4f7a; --ch-h: #6c7098; --ch-axis: #a3a9e6; --ch-ok: #e7ecf2;
+  }
+  :root[data-theme="dark"] :is(body) { line-height: 1.6; letter-spacing: .004em; }
+  :root[data-theme="dark"] :is(.primer p, .sub, .note, label, .deriv, .mapsto li) { font-weight: 450; }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: .01ms !important; animation-duration: .01ms !important; scroll-behavior: auto !important; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  /* wider than the calculators: the chart wants the width */
+  .wrap { max-width: 1040px; margin: 0 auto; padding: var(--s-6) var(--s-4) var(--s-12); }
+  header.page { margin-bottom: var(--s-2); }
+  h1 { font-size: var(--t-h1); margin: 0 0 var(--s-1); letter-spacing: -.018em; }
+  .lede { color: var(--muted); margin: 0 0 var(--s-6); max-width: 66ch; }
+  .home { display: inline-block; color: var(--accent); text-decoration: none; font-size: var(--t-label); margin-bottom: var(--s-4); }
+  .home:hover { text-decoration: underline; }
+
+  /* ---- tabs ---- */
+  .tabs { display: flex; gap: var(--s-2); margin: 0 0 var(--s-3); flex-wrap: wrap; }
+  .tab { border: 1px solid var(--line); background: var(--field); color: var(--muted);
+    border-radius: var(--r-pill); padding: var(--s-2) var(--s-4) var(--s-2) var(--s-2); font-size: var(--t-label); cursor: pointer;
+    display: inline-flex; align-items: center; gap: var(--s-2); font-family: inherit; }
+  .tab:hover { border-color: var(--accent); color: var(--ink); }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .tab:active { transform: translateY(1px); }
+  .tab .n { display: inline-flex; align-items: center; justify-content: center;
+    width: 21px; height: 21px; border-radius: 50%; background: var(--line); color: var(--muted);
+    font-size: var(--t-meta); font-weight: 700; flex: none; }
+  .tab.active .n { background: var(--accent-ink); color: var(--accent); }
+
+  /* ---- orientation strip ---- */
+  .orient { display: flex; flex-direction: column; gap: var(--s-2); margin: 0 0 var(--s-6); }
+  details.mapsto { border: 1px solid var(--line); border-radius: var(--r-md); background: var(--field); }
+  details.mapsto > summary { cursor: pointer; color: var(--muted); font-size: var(--t-label);
+    font-weight: 600; padding: var(--s-2) var(--s-3); list-style: none; border-radius: var(--r-md); }
+  details.mapsto > summary::-webkit-details-marker { display: none; }
+  details.mapsto > summary::before { content: "\25b8  "; }
+  details.mapsto[open] > summary::before { content: "\25be  "; }
+  details.mapsto > summary:hover { color: var(--ink); }
+  details.mapsto > summary:active { color: var(--accent); }
+  details.mapsto > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .mapsto ul { margin: 0; padding: 0 var(--s-3) var(--s-2); list-style: none; }
+  .mapsto li { font-size: var(--t-label); color: var(--muted); padding: var(--s-1) 0; }
+  .mapsto li b { color: var(--ink); font-weight: 600; }
+  .mapsto .none { font-size: var(--t-label); color: var(--muted); margin: 0;
+    padding: var(--s-2) var(--s-3) var(--s-3); border-top: 1px solid var(--line); }
+  .datasource { margin: 0; font-size: var(--t-label); color: var(--muted);
+    border: 1px solid var(--line); border-radius: var(--r-md); background: var(--field);
+    padding: var(--s-2) var(--s-3); transition: border-color var(--dur) var(--ease-out); }
+  .datasource[hidden] { display: none; }
+  .datasource b { color: var(--ink); font-weight: 600; }
+  .datasource.mine { border-color: var(--accent); }
+  .datasource.mine b { color: var(--accent); }
+
+  section.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md);
+    padding: var(--s-6); margin: 0; }
+  .card[hidden] { display: none; }
+  h2 { font-size: var(--t-h2); margin: 0 0 var(--s-1); letter-spacing: -.012em; }
+  h3 { font-size: var(--t-body); margin: var(--s-6) 0 var(--s-2); }
+  .sub { color: var(--muted); font-size: var(--t-label); margin: 0 0 var(--s-4); }
+
+  .primer { margin: 0 0 var(--s-6); padding: 0 0 var(--s-5); border-bottom: 1px solid var(--line); }
+  .primer .what { font-weight: 600; font-size: var(--t-lead); letter-spacing: -.011em;
+    margin: 0 0 var(--s-2); max-width: 62ch; }
+  .primer p { margin: 0 0 var(--s-2); color: var(--muted); font-size: var(--t-label); line-height: 1.62; max-width: 72ch; }
+  .primer p:last-child { margin-bottom: 0; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--s-3); align-items: end; }
+  .grid > div { display: flex; flex-direction: column; }
+  label { display: block; font-size: var(--t-label); color: var(--muted); margin-bottom: var(--s-1); }
+  input, select {
+    width: 100%; padding: var(--s-2) var(--s-3); font-size: var(--t-body); color: var(--ink);
+    background: var(--field); border: 1px solid var(--line); border-radius: var(--r-md); font-family: inherit;
+  }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  input:disabled, select:disabled { opacity: .5; cursor: not-allowed; }
+  .pair { display: flex; gap: var(--s-1); }
+  .pair input { flex: 1 1 60%; min-width: 0; }
+  .pair select { flex: 1 1 40%; min-width: 0; padding-left: var(--s-2); padding-right: var(--s-1); }
+  .note { color: var(--muted); font-size: var(--t-label); }
+
+  .btn-row { display: flex; gap: var(--s-2); margin: var(--s-3) 0 0; flex-wrap: wrap; align-items: center; }
+  .btn { background: var(--accent); color: var(--accent-ink); border: 1px solid var(--accent); border-radius: var(--r-md);
+    padding: var(--s-2) var(--s-3); font-size: var(--t-label); cursor: pointer; font-family: inherit; }
+  .btn:hover { filter: brightness(1.06); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled, .btn[disabled] { opacity: .45; cursor: not-allowed; transform: none; filter: none; }
+  .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+  .btn.ghost:hover { border-color: var(--accent); filter: none; }
+
+  /* ---- layer toggles: checkboxes wearing the pill affordance ---- */
+  .layers { border: 0; padding: 0; margin: var(--s-4) 0 0; display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-2); align-items: center; min-width: 0; }
+  .layers legend { font-size: var(--t-label); color: var(--muted); padding: 0; margin-right: var(--s-2); float: left; }
+  .layers label { margin: 0; }
+  .layers input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .layers span { display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+    border: 1px solid var(--line); border-radius: var(--r-pill);
+    padding: var(--s-1) var(--s-3); background: var(--field); color: var(--muted); font-size: var(--t-meta); }
+  .layers span::before { content: ""; width: 10px; height: 3px; border-radius: 2px; background: var(--sw, var(--muted)); opacity: .35; }
+  .layers span:hover { border-color: var(--accent); color: var(--ink); }
+  .layers input:checked + span { border-color: var(--accent); color: var(--ink); font-weight: 600; }
+  .layers input:checked + span::before { opacity: 1; }
+  .layers input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .layers input:active + span { transform: translateY(1px); }
+
+  /* ---- chart ---- */
+  .chartbox { position: relative; margin-top: var(--s-4); }
+  canvas { width: 100%; display: block; }
+  #chart { touch-action: none; cursor: crosshair; border-radius: var(--r-sm); }
+  #chart:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .readout { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 0 var(--s-3);
+    margin-top: var(--s-2); background: var(--result-bg); border-radius: var(--r-md); padding: var(--s-2) var(--s-3); }
+  .readout div { display: flex; flex-direction: column; padding: var(--s-1) 0; }
+  .readout .k { color: var(--muted); font-size: var(--t-meta); }
+  .readout .v { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .readout .proc { grid-column: 1 / -1; border-top: 1px solid var(--line); flex-direction: row; gap: var(--s-2); align-items: baseline; font-size: var(--t-label); }
+
+  /* ---- results ---- */
+  table.counts { width: 100%; border-collapse: collapse; margin-top: var(--s-2); font-size: var(--t-label); }
+  table.counts th { text-align: left; color: var(--muted); font-weight: 500; font-size: var(--t-meta); padding: var(--s-1) var(--s-2); border-bottom: 1px solid var(--line); }
+  table.counts td { padding: var(--s-2); border-bottom: 1px solid var(--line); }
+  table.counts td.num, table.counts th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  table.counts td.num { font-weight: 600; }
+  .sw { display: inline-block; width: 11px; height: 11px; border-radius: 2px; margin-right: var(--s-2); vertical-align: -1px; }
+  .bar { display: inline-block; height: 8px; border-radius: 2px; vertical-align: middle; min-width: 1px; }
+  .verdict { margin-top: var(--s-4); padding: var(--s-3) var(--s-4); border-radius: var(--r-md); border: 1px solid var(--line); background: var(--result-bg); }
+  .verdict b { color: var(--ink); }
+  .meta { margin-top: var(--s-3); font-size: var(--t-meta); color: var(--muted); }
+  .meta b { color: var(--ink); font-weight: 600; }
+  .empty { color: var(--muted); font-size: var(--t-label); margin: var(--s-3) 0 0; }
+
+  /* ---- drop zone ---- */
+  .dropzone { position: relative; border: 1.5px dashed var(--line); border-radius: var(--r-md);
+    padding: var(--s-4); text-align: center; cursor: pointer; transition: border-color var(--dur) var(--ease-out), background var(--dur) var(--ease-out); }
+  .dropzone:hover, .dropzone.drag-over { border-color: var(--accent); background: var(--result-bg); }
+  .dropzone:focus-within { border-color: var(--accent); outline: 2px solid var(--accent); outline-offset: 2px; }
+  .dropzone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .dropzone .lbl { display: block; color: var(--muted); font-size: var(--t-label); }
+  .dropzone .lbl strong { color: var(--accent); }
+  .dropzone .hint { display: block; font-size: var(--t-meta); color: var(--muted); margin-top: var(--s-1); }
+  .msg { font-size: var(--t-label); margin: var(--s-2) 0 0; }
+  .msg.error { color: var(--bad); }
+  .msg.ok { color: var(--good); }
+
+  details.maths { margin-top: var(--s-6); border-top: 1px solid var(--line); padding: 0; }
+  details.maths[open] { padding-bottom: var(--s-4); }
+  details.maths > summary { cursor: pointer; color: var(--accent); font-size: var(--t-label);
+    font-weight: 600; padding: var(--s-3) 0; list-style: none; }
+  details.maths > summary::-webkit-details-marker { display: none; }
+  details.maths > summary::before { content: "▸ "; }
+  details.maths[open] > summary::before { content: "▾ "; }
+  details.maths > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  details.maths .deriv { color: var(--muted); font-size: var(--t-label); margin: var(--s-2) 0 0; max-width: 76ch; }
+  .formula { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: var(--t-meta);
+    background: var(--result-bg); border-radius: var(--r-md); padding: var(--s-3); margin: var(--s-2) 0; overflow-x: auto; white-space: pre; }
+
+  footer.page { color: var(--muted); font-size: var(--t-meta); margin-top: var(--s-8); border-top: 1px solid var(--line); padding-top: var(--s-4); }
+  footer.page p { margin: 0 0 var(--s-2); max-width: 90ch; }
+  footer.page a { color: var(--accent); }
+
+  .toprow { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; margin-bottom: var(--s-4); }
+  .toprow .home { margin-bottom: 0; }
+  .themepick { margin-left: auto; border: 0; padding: 0; min-width: 0; display: inline-flex; gap: var(--s-1); }
+  .themepick label { margin: 0; }
+  .themepick input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .themepick span { display: inline-block; cursor: pointer; border: 1px solid var(--line); border-radius: var(--r-pill);
+    padding: var(--s-1) var(--s-3); background: var(--field); color: var(--muted); font-size: var(--t-meta); }
+  .themepick span:hover { border-color: var(--accent); color: var(--ink); }
+  .themepick input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .themepick input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  @media (max-width: 560px) { section.card { padding: var(--s-4); } }
+</style>
+<script>
+  /* Resolve the colour theme before first paint. Storage is wrapped in
+     try/catch: a Canvas iframe with storage blocked throws here, and the tool
+     keeps working, it just forgets the choice. */
+  (function () {
+    var pref = "system";
+    try {
+      var v = localStorage.getItem("tt-theme");
+      if (v === "light" || v === "dark") pref = v;
+    } catch (e) {}
+    window.__ttPref = pref;
+    var dark = pref === "dark" ||
+      (pref === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+  })();
+</script>
+</head>
+<body>
+<div class="wrap">
+  <div class="toprow">
+    <a class="home" href="index.html">&larr; BPSD6030 tutorial tools</a>
+    <fieldset class="themepick" id="themePick">
+    <legend class="visually-hidden">Colour theme</legend>
+    <label><input type="radio" name="theme" value="system"><span>System</span></label>
+    <label><input type="radio" name="theme" value="light"><span>Light</span></label>
+    <label><input type="radio" name="theme" value="dark"><span>Dark</span></label>
+    </fieldset>
+  </div>
+  <header class="page">
+    <h1>Psychrometric Chart for HVAC Design</h1>
+    <p class="lede">A psychrometric chart set up for the questions this unit asks of it. Load the weather file your DesignBuilder model uses and every hour of the year lands on the chart, sorted by what the outside air would have to go through to become comfortable. The chart reads the climate; deciding what that means for your building is yours.</p>
+    <p class="note">Load your weather file (.epw) on tab 1. Everything happens in your browser: the file is read on your computer and is not uploaded anywhere.</p>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Chart views">
+    <button class="tab active" role="tab" id="tab-1" aria-controls="panel-1" aria-selected="true" tabindex="0" data-idx="0"><span class="n">1</span><span>Your building&#x27;s climate</span></button>
+  </div>
+
+  <div class="orient">
+    <details class="mapsto" open>
+      <summary>Where this fits in Week 3 and Assignment 1</summary>
+      <ul>
+        <li>Lecture, <i>The chart is a coordinate system</i> &rarr; tab <b>1</b> with no file loaded: switch the chart lines on one at a time and read a state with the cross-hair</li>
+        <li>Lecture, <i>A climate on the psychrometric chart</i>, and its closing question (is your bigger problem sensible or latent?) &rarr; tab <b>1</b> with a weather file loaded</li>
+        <li>Assignment 1, the building description&#x27;s climate (design conditions, seasonal pattern) &rarr; tab <b>1</b> with your own building&#x27;s weather file: the hours by process and the month-by-month pattern</li>
+      </ul>
+      <p class="none">The tutorial uses no tab: the chart work lives in the lecture. Nothing here is submitted or marked.</p>
+    </details>
+    <p class="datasource" id="dataSource" aria-live="polite" hidden></p>
+  </div>
+
+  <!-- ===== Tab 1: Your building's climate ===== -->
+  <section class="card" role="tabpanel" id="panel-1" aria-labelledby="tab-1" tabindex="0">
+    <div class="primer">
+      <p class="what">What the outside air would have to go through, hour by hour, to become comfortable.</p>
+      <p>Any two properties fix a state of air, so one point on this chart is one hour of weather. A weather file is 8,760 of them. Each hour is sorted by the move that would bring that outside air into the comfort band: <b>heating</b> (right), <b>sensible cooling</b> (left), <b>cooling and dehumidifying</b> (down and left, through a coil colder than the air&#x27;s dew point), <b>humidifying</b> (up), or nothing at all. Cooling hours that also need water taken out are the latent problem; cooling hours that only need the temperature brought down are the sensible one.</p>
+      <p>These counts describe the outside air, not your building. Air on its way in through an air-handling unit has to make exactly these moves, but people, lights and sun add heat inside, so many hours sorted as heating are hours when an office needs cooling and the cool outside air does some of it. DesignBuilder calculates your building&#x27;s actual loads.</p>
+    </div>
+
+    <h3 style="margin-top:0">1. The weather</h3>
+    <div class="dropzone" id="dropzone">
+      <input type="file" id="epwFile" accept=".epw,text/plain" aria-describedby="dropHint">
+      <span class="lbl"><strong>Choose an .epw weather file</strong> or drop it here</span>
+      <span class="hint" id="dropHint">Use the same file your DesignBuilder model uses. A download that arrives as a .zip has to be unzipped first.</span>
+    </div>
+    <p class="msg" id="fileMsg" role="status" aria-live="polite"></p>
+    <div class="meta" id="fileMeta" hidden></div>
+
+    <h3>2. The comfort band</h3>
+    <p class="sub">The band is a design decision: the heating and cooling setpoints set its edges, the gap between them is the dead band, and the humidity limit sizes the coil. Set the band your brief would set.</p>
+    <div class="grid">
+      <div>
+        <label for="tLo">Heating setpoint (left edge), &deg;C</label>
+        <input id="tLo" type="number" step="0.5" min="10" max="30" value="20">
+      </div>
+      <div>
+        <label for="tHi">Cooling setpoint (right edge), &deg;C</label>
+        <input id="tHi" type="number" step="0.5" min="12" max="32" value="24">
+      </div>
+      <div>
+        <label for="upVal">Upper humidity limit</label>
+        <div class="pair">
+          <input id="upVal" type="number" step="1" min="1" max="100" value="60" aria-label="Upper humidity limit value">
+          <select id="upUnit" aria-label="Upper humidity limit unit"><option value="rh" selected>% RH</option><option value="w">g/kg</option></select>
+        </div>
+      </div>
+      <div>
+        <label for="loVal">Lower humidity limit</label>
+        <div class="pair">
+          <input id="loVal" type="number" step="1" min="0" max="100" value="40" disabled aria-label="Lower humidity limit value">
+          <select id="loUnit" aria-label="Lower humidity limit unit"><option value="none" selected>none</option><option value="rh">% RH</option><option value="w">g/kg</option></select>
+        </div>
+      </div>
+      <div>
+        <label for="hoursSel">Hours counted</label>
+        <select id="hoursSel"><option value="all" selected>All 8,760</option><option value="occ">Weekdays 8&ndash;18 h</option></select>
+      </div>
+    </div>
+    <div class="btn-row">
+      <span class="note">Bands to start from:</span>
+      <button type="button" class="btn ghost" data-band="default">20&ndash;24&nbsp;&deg;C, up to 60%&nbsp;RH</button>
+      <button type="button" class="btn ghost" data-band="slides">The lecture&#x27;s box: 20&ndash;24&nbsp;&deg;C, 40&ndash;60%&nbsp;RH</button>
+      <button type="button" class="btn ghost" data-band="ashrae">ASHRAE 55 humidity limit: up to 12&nbsp;g/kg</button>
+    </div>
+    <p class="msg error" id="bandMsg" role="status" aria-live="polite"></p>
+
+    <h3>3. The chart</h3>
+    <fieldset class="layers" id="layers">
+      <legend>Show</legend>
+      <label><input type="checkbox" data-layer="rh" checked><span style="--sw: var(--ch-rh)">Relative humidity</span></label>
+      <label><input type="checkbox" data-layer="wb" checked><span style="--sw: var(--ch-wb)">Wet bulb</span></label>
+      <label><input type="checkbox" data-layer="h"><span style="--sw: var(--ch-h)">Enthalpy</span></label>
+      <label><input type="checkbox" data-layer="band" checked><span style="--sw: var(--accent)">The band</span></label>
+      <label><input type="checkbox" data-layer="regions" checked><span style="--sw: var(--water)">Process regions</span></label>
+      <label><input type="checkbox" data-layer="hours" checked><span style="--sw: var(--ch-ok)">The hours</span></label>
+    </fieldset>
+    <div class="chartbox" id="chartbox">
+      <canvas id="chart" tabindex="0" role="img" aria-describedby="readout chartKeys" aria-label="Psychrometric chart"></canvas>
+    </div>
+    <p class="visually-hidden" id="chartKeys">Arrow keys move the cross-hair by half a degree or half a gram per kilogram; hold Shift for steps of five.</p>
+    <div class="readout" id="readout"></div>
+    <p class="visually-hidden" id="readoutLive" aria-live="polite"></p>
+
+    <h3>4. The year, by process</h3>
+    <div id="results"><p class="empty">Load a weather file to count its hours. The band and the regions are drawn already, so the chart works without one.</p></div>
+    <canvas id="months" height="220" role="img" aria-label="Hours by process for each month" hidden></canvas>
+    <p class="note" id="monthsText"></p>
+
+    <details class="maths">
+      <summary>The maths behind the chart</summary>
+      <p class="deriv">Every property comes from the ASHRAE <i>Handbook: Fundamentals</i>, chapter 1, using the perfect-gas relations, which stay within 0.7% of the full real-gas formulation between &minus;50 and 50&nbsp;&deg;C.</p>
+      <div class="formula">saturation pressure   p_ws(t): Hyland&ndash;Wexler, over ice below 0 &deg;C and over water above
+humidity ratio        W  = 0.621945 &middot; p_w / (p &minus; p_w)          kg water per kg dry air
+relative humidity     RH = p_w / p_ws(t)
+enthalpy              h  = 1.006 t + W (2501 + 1.86 t)            kJ per kg dry air
+wet bulb t*           W  = ((2501 &minus; 2.326 t*) W_s(t*) &minus; 1.006 (t &minus; t*)) / (2501 + 1.86 t &minus; 4.186 t*)
+dew point             the temperature at which p_ws equals the air&#x27;s own p_w
+pressure at altitude  p  = 101.325 (1 &minus; 2.25577&times;10&#8315;&#8309; Z)^5.2559   kPa, Z in metres</div>
+      <p class="deriv"><b>One chart, one pressure.</b> The chart is drawn at the standard pressure for the weather station&#x27;s elevation, read from the file (101.325&nbsp;kPa before a file is loaded). Each hour is placed by its dry bulb and dew point. The dew point fixes how much water the air holds whatever the pressure, which is why it is the second coordinate carried from the file. Plotting each hour at its own barometric pressure would put some points above the saturation curve drawn here.</p>
+      <p class="deriv"><b>How an hour is sorted.</b> Moisture first, because only a coil colder than the air&#x27;s dew point can take water out. If the hour holds more water than the wettest air in the band, it needs <i>cooling and dehumidifying</i>. If it holds less than the driest air in the band, it needs <i>humidifying</i> (and usually heating). Otherwise its moisture is already acceptable and a horizontal move brings it in: <i>heating</i> if it sits left of the band at that humidity ratio, <i>sensible cooling</i> if right. With a relative-humidity limit the band&#x27;s edges lean, so the test uses the band&#x27;s width at the hour&#x27;s own humidity ratio rather than the setpoints alone.</p>
+      <p class="deriv"><b>Occupied hours.</b> Weekdays, 08:00 to 18:00, with the day of the week taken from the weather file&#x27;s own calendar. Public holidays are not removed. A weather file&#x27;s hour 9 is the hour ending at 09:00, so this counts file hours 9 to 18.</p>
+    </details>
+  </section>
+
+  <footer class="page">
+    <p>Psychrometric properties from the ASHRAE <i>Handbook: Fundamentals</i>, chapter 1 (perfect-gas relations; Hyland&ndash;Wexler saturation pressure), checked against the handbook&#x27;s moist-air tables and worked examples. The chart lines follow the lecture&#x27;s chart style, and the process colours follow the BPSD6030 drawing conventions shared with the lecture figures and the other BPSD6030 tools. A typical weather year is one representative year built from many, not a forecast.</p>
+    <p>Built for the BPSD6030 Week 3 lecture and Assignment 1 by the IEQ Lab, Sydney School of Architecture, Design and Planning. Your weather file is read in your browser and never leaves your computer. Self-contained, open-source, no tracking.</p>
+    <p>Revised November 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.</p>
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   Psychrometrics. ASHRAE Handbook: Fundamentals, chapter 1.
+   Temperatures in deg C, pressures in Pa, humidity ratio in kg/kg
+   (the chart and the read-out show g/kg). Pure functions, no DOM:
+   psyValidate() at the end runs them against the handbook's own
+   tables and worked examples, and is run under node at build time.
+   ============================================================ */
+var PSY = (function () {
+  "use strict";
+  var P_STD = 101325;
+
+  /* Eq. 5 (over ice, -100 to 0 C) and Eq. 6 (over liquid water, 0 to 200 C). */
+  function pws(t) {
+    var T = t + 273.15;
+    if (t < 0) {
+      return Math.exp(-5674.5359 / T + 6.3925247 - 9.677843e-3 * T + 6.2215701e-7 * T * T
+        + 2.0747825e-9 * T * T * T - 9.484024e-13 * T * T * T * T + 4.1635019 * Math.log(T));
+    }
+    return Math.exp(-5800.2206 / T + 1.3914993 - 4.8640239e-2 * T + 4.1764768e-5 * T * T
+      - 1.4452093e-8 * T * T * T + 6.5459673 * Math.log(T));
+  }
+  /* Eq. 3: standard pressure at altitude z (m). */
+  function pAlt(z) { return 101325 * Math.pow(1 - 2.25577e-5 * z, 5.2559); }
+  /* Eq. 22 and its inverse. */
+  function wFromPw(pw, p) { return 0.621945 * pw / (p - pw); }
+  function pwFromW(w, p) { return p * w / (0.621945 + w); }
+  function wSat(t, p) { return wFromPw(pws(t), p); }
+  function wFromRh(t, rh, p) { return wFromPw(rh * pws(t), p); }      // rh as a fraction
+  function rhFromW(t, w, p) { return pwFromW(w, p) / pws(t); }
+  /* Eq. 32 and Eq. 28. */
+  function enthalpy(t, w) { return 1.006 * t + w * (2501 + 1.86 * t); }
+  function volume(t, w, p) { return 287.042 * (t + 273.15) * (1 + 1.607858 * w) / p; }
+  /* Temperature at which the saturation pressure equals pw: the dew point. */
+  function tFromPws(pw) {
+    var lo = -100, hi = 200;
+    for (var i = 0; i < 64; i++) { var m = 0.5 * (lo + hi); if (pws(m) < pw) lo = m; else hi = m; }
+    return 0.5 * (lo + hi);
+  }
+  function dewPoint(w, p) { return w <= 0 ? -Infinity : tFromPws(pwFromW(w, p)); }
+  function wFromTd(td, p) { return wFromPw(pws(td), p); }
+  /* Eq. 35 (wet bulb at or above freezing) and Eq. 37 (below). */
+  function wFromTWb(t, twb, p) {
+    var ws = wSat(twb, p);
+    if (twb >= 0) return ((2501 - 2.326 * twb) * ws - 1.006 * (t - twb)) / (2501 + 1.86 * t - 4.186 * twb);
+    return ((2830 - 0.24 * twb) * ws - 1.006 * (t - twb)) / (2830 + 1.86 * t - 2.1 * twb);
+  }
+  /* Wet bulb by bisection on Eq. 35/37: W falls as t* falls. */
+  function wetBulb(t, w, p) {
+    var lo = -100, hi = t;
+    for (var i = 0; i < 64; i++) { var m = 0.5 * (lo + hi); if (wFromTWb(t, m, p) > w) hi = m; else lo = m; }
+    return 0.5 * (lo + hi);
+  }
+  /* Dry bulb at which air of humidity ratio w has relative humidity rh. */
+  function tAtRh(w, rh, p) {
+    if (w <= 0) return -Infinity;
+    return tFromPws(pwFromW(w, p) / rh);
+  }
+  /* Adiabatic mixing (Eq. 46): mass-weighted W and h, then t back from h. */
+  function mix(t1, w1, m1, t2, w2, m2) {
+    var m = m1 + m2, w = (m1 * w1 + m2 * w2) / m, h = (m1 * enthalpy(t1, w1) + m2 * enthalpy(t2, w2)) / m;
+    return { w: w, t: (h - 2501 * w) / (1.006 + 1.86 * w) };
+  }
+  return { P_STD: P_STD, pws: pws, pAlt: pAlt, wFromPw: wFromPw, pwFromW: pwFromW, wSat: wSat,
+    wFromRh: wFromRh, rhFromW: rhFromW, enthalpy: enthalpy, volume: volume, dewPoint: dewPoint,
+    wFromTd: wFromTd, wFromTWb: wFromTWb, wetBulb: wetBulb, tAtRh: tAtRh, mix: mix };
+})();
+
+/* Reference values from the 2009 ASHRAE Handbook: Fundamentals (SI), ch. 1:
+   Table 2 (moist air at 101.325 kPa), Table 3 (water at saturation), Table 1
+   (standard atmosphere), Examples 1, 3 and 4, and the sea-level against 1500 m
+   comparison on p. 1.10. Table values are real-gas (Hyland-Wexler with the
+   enhancement factor); the perfect-gas relations used here sit within about
+   0.5% of them in this range, so table checks carry a 1% tolerance. Chart
+   readings in the examples are read by eye, so they carry the reading
+   precision the handbook prints. */
+function psyValidate() {
+  var P = PSY, p0 = 101325, out = [];
+  function chk(name, got, want, tol, rel) {
+    var err = rel ? Math.abs(got - want) / Math.abs(want) : Math.abs(got - want);
+    out.push({ name: name, got: got, want: want, tol: tol, rel: !!rel, ok: err <= tol });
+  }
+  // Table 3: saturation pressure, kPa
+  [[-10, 0.25987], [0, 0.6112], [10, 1.2282], [20, 2.3392], [25, 3.1697], [30, 4.2467], [40, 7.3844]].forEach(function (r) {
+    chk("Table 3 p_ws(" + r[0] + " C), kPa", P.pws(r[0]) / 1000, r[1], 0.001, true);
+  });
+  // Table 2: saturated humidity ratio, enthalpy and volume
+  [[0, 0.0037900, 9.475, 0.7780], [10, 0.007663, 29.354, 0.8116], [20, 0.014761, 57.558, 0.8498],
+   [25, 0.020173, 76.503, 0.8716], [30, 0.027333, 100.009, 0.8961], [40, 0.049145, 166.685, 0.9567]].forEach(function (r) {
+    var ws = P.wSat(r[0], p0);
+    chk("Table 2 W_s(" + r[0] + " C), kg/kg", ws, r[1], 0.01, true);
+    chk("Table 2 h_s(" + r[0] + " C), kJ/kg", P.enthalpy(r[0], ws), r[2], 0.01, true);
+    chk("Table 2 v_s(" + r[0] + " C), m3/kg", P.volume(r[0], ws, p0), r[3], 0.01, true);
+  });
+  // Table 1 / Eq. 3: pressure at 1500 m
+  chk("Table 1 p at 1500 m, kPa", P.pAlt(1500) / 1000, 84.556, 0.01);
+  // Example 1: 40 C dry bulb, 20 C wet bulb
+  var w1 = P.wFromTWb(40, 20, p0);
+  chk("Ex. 1 W, g/kg", w1 * 1000, 6.5, 0.1);
+  chk("Ex. 1 h, kJ/kg", P.enthalpy(40, w1), 56.7, 0.3);
+  chk("Ex. 1 dew point, C", P.dewPoint(w1, p0), 7, 0.5);
+  chk("Ex. 1 RH, %", 100 * P.rhFromW(40, w1, p0), 14, 0.5);
+  chk("Ex. 1 v, m3/kg", P.volume(40, w1, p0), 0.896, 0.002);
+  chk("Ex. 1 wet bulb recovered, C", P.wetBulb(40, w1, p0), 20, 0.01);
+  // Example 3: 30 C 50% RH on-coil, saturated 10 C off-coil
+  var w3 = P.wFromRh(30, 0.5, p0);
+  chk("Ex. 3 W1, g/kg", w3 * 1000, 13.3, 0.1);
+  chk("Ex. 3 h1, kJ/kg", P.enthalpy(30, w3), 64.3, 0.3);
+  chk("Ex. 3 v1, m3/kg", P.volume(30, w3, p0), 0.877, 0.002);
+  chk("Ex. 3 W2, g/kg", P.wSat(10, p0) * 1000, 7.66, 0.05);
+  // 29.5 is a chart reading: the handbook's own Table 2 gives 29.354 at 10 C,
+  // which the Table 2 check above already holds to 1%.
+  chk("Ex. 3 h2, kJ/kg", P.enthalpy(10, P.wSat(10, p0)), 29.5, 0.3);
+  // Example 4: mixing 2 m3/s at 4 C / 2 C wb with 6.25 m3/s at 25 C / 50%
+  var wa = P.wFromTWb(4, 2, p0), wb = P.wFromRh(25, 0.5, p0);
+  var ma = 2 / P.volume(4, wa, p0), mb = 6.25 / P.volume(25, wb, p0);
+  var mx = P.mix(4, wa, ma, 25, wb, mb);
+  // The example places state 3 with a ruler at 0.742 of the line, which by its
+  // own ratio is 4 + 0.742 x 21 = 19.58 C, printed as 19.5. Mixing by enthalpy
+  // gives 19.63, so the tolerance is the example's reading precision.
+  chk("Ex. 4 mixed dry bulb, C", mx.t, 19.5, 0.15);
+  chk("Ex. 4 mixed wet bulb, C", P.wetBulb(mx.t, mx.w, p0), 14.6, 0.15);
+  // p. 1.10: 40 C db / 30 C wb at sea level (Chart 1) and 1500 m (Chart 6, 84.54 kPa)
+  [[p0, "sea level", 99.5, 23.0, 49, 0.920], [84540, "1500 m", 114.1, 28.6, 50, 1.111]].forEach(function (r) {
+    var w = P.wFromTWb(40, 30, r[0]);
+    chk("p. 1.10 " + r[1] + " W, g/kg", w * 1000, r[3], 0.15);
+    chk("p. 1.10 " + r[1] + " h, kJ/kg", P.enthalpy(40, w), r[2], 0.5);
+    chk("p. 1.10 " + r[1] + " RH, %", 100 * P.rhFromW(40, w, r[0]), r[4], 0.6);
+    chk("p. 1.10 " + r[1] + " v, m3/kg", P.volume(40, w, r[0]), r[5], 0.003);
+  });
+  return out;
+}
+
+/* ============================================================
+   Weather file parsing (EnergyPlus .epw). Client-side only.
+   ============================================================ */
+var EPW = (function () {
+  "use strict";
+  var DAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+  var CUM = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+  function parse(text) {
+    var lines = text.split(/\r?\n/);
+    var loc = null, startDay = 0, period = "", design = null, rows = [];
+    for (var i = 0; i < lines.length; i++) {
+      var L = lines[i];
+      if (!L) continue;
+      var f = L.split(",");
+      var key = f[0].trim().toUpperCase();
+      if (key === "LOCATION") {
+        loc = { city: (f[1] || "").trim(), region: (f[2] || "").trim(), country: (f[3] || "").trim(),
+          source: (f[4] || "").trim(), wmo: (f[5] || "").trim(), lat: +f[6], lon: +f[7], tz: +f[8], elev: +f[9] };
+        continue;
+      }
+      if (key === "DESIGN CONDITIONS") { design = f.slice(1).map(function (s) { return s.trim(); }); continue; }
+      if (key === "DATA PERIODS") {
+        var d = DAYS.indexOf((f[4] || "").trim().toLowerCase());
+        if (d >= 0) startDay = d;
+        continue;
+      }
+      if (key.indexOf("COMMENTS") === 0) {
+        var m = L.match(/Period of Record\s*=\s*([0-9]{4}\s*-\s*[0-9]{4})/i);
+        if (m) period = m[1].replace(/\s/g, "");
+        continue;
+      }
+      if (!/^-?\d/.test(key) || f.length < 10) continue;
+      var mo = +f[1], da = +f[2], hr = +f[3], db = +f[6], dp = +f[7], rh = +f[8];
+      if (!(mo >= 1 && mo <= 12 && hr >= 1 && hr <= 24)) continue;
+      if (!isFinite(db) || db >= 99.9) continue;
+      var okDp = isFinite(dp) && dp < 99.9, okRh = isFinite(rh) && rh >= 0 && rh <= 110;
+      if (!okDp && !okRh) continue;
+      rows.push({ mo: mo, da: da, hr: hr, db: db, dp: okDp ? dp : null, rh: okRh ? rh : null });
+    }
+    if (!loc) throw new Error("This does not look like an EnergyPlus weather file: it has no LOCATION line.");
+    if (rows.length < 8000) throw new Error("Only " + rows.length + " usable hours were found. A weather file should have 8,760.");
+    var leap = rows.length > 8770;
+    rows.forEach(function (r) {
+      var doy = CUM[r.mo - 1] + (leap && r.mo > 2 ? 1 : 0) + r.da - 1;
+      r.dow = (startDay + doy) % 7;
+      r.occ = r.dow >= 1 && r.dow <= 5 && r.hr >= 9 && r.hr <= 18;
+    });
+    return { loc: loc, period: period, design: design, rows: rows, startDay: startDay };
+  }
+  return { parse: parse };
+})();
+
+/* ============================================================
+   The page.
+   ============================================================ */
+(function () {
+  "use strict";
+  if (typeof document === "undefined") return;
+  var P = PSY;
+  function $(id) { return document.getElementById(id); }
+  /* Colours come from the token block, so a theme change repaints correctly.
+     Cached per draw: the region fill asks for them once per pixel row. */
+  var cssCache = null;
+  function css(name) {
+    if (cssCache && name in cssCache) return cssCache[name];
+    var v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    if (cssCache) cssCache[name] = v;
+    return v;
+  }
+  function fmt(x, d) { return isFinite(x) ? x.toLocaleString("en-AU", { minimumFractionDigits: d, maximumFractionDigits: d }) : "–"; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  var REG = [
+    { key: "humid", name: "Humidifying", tok: "--elec", hint: "too dry: water has to be added" },
+    { key: "heat", name: "Heating", tok: "--heat", hint: "too cold: move right" },
+    { key: "ok", name: "Comfortable", tok: "--ch-ok", hint: "already inside the band" },
+    { key: "cool", name: "Sensible cooling", tok: "--cool", hint: "too warm, moisture fine: move left" },
+    { key: "dehum", name: "Cooling and dehumidifying", tok: "--water", hint: "too much water: down and left through the coil" }
+  ];
+  var REG_BY = {}; REG.forEach(function (r) { REG_BY[r.key] = r; });
+
+  var state = {
+    p: P.P_STD, data: null, cls: null, layers: { rh: true, wb: true, h: false, band: true, regions: true, hours: true },
+    ind: { t: 25, w: P.wFromRh(25, 0.5, P.P_STD) }
+  };
+
+  // ---------- the band ----------
+  function readBand() {
+    var tLo = parseFloat($("tLo").value), tHi = parseFloat($("tHi").value);
+    var up = { u: $("upUnit").value, v: parseFloat($("upVal").value) };
+    var lo = { u: $("loUnit").value, v: parseFloat($("loVal").value) };
+    $("loVal").disabled = lo.u === "none";
+    var err = "";
+    if (!isFinite(tLo) || !isFinite(tHi)) err = "Enter both setpoints.";
+    else if (tHi <= tLo) err = "The cooling setpoint has to sit above the heating setpoint.";
+    else if (!isFinite(up.v) || up.v <= 0 || (up.u === "rh" && up.v > 100)) err = "Enter an upper humidity limit.";
+    else if (lo.u !== "none" && (!isFinite(lo.v) || lo.v < 0)) err = "Enter a lower humidity limit, or set it to none.";
+    var b = { tLo: tLo, tHi: tHi, upU: up.u, up: up.u === "rh" ? up.v / 100 : up.v / 1000,
+      loU: lo.u, lo: lo.u === "rh" ? lo.v / 100 : (lo.u === "w" ? lo.v / 1000 : 0) };
+    if (!err) {
+      var p = state.p;
+      b.wHi = Math.min(b.upU === "rh" ? P.wFromRh(b.tHi, b.up, p) : b.up, P.wSat(b.tHi, p));
+      b.wLo = b.loU === "rh" ? P.wFromRh(b.tLo, b.lo, p) : (b.loU === "w" ? b.lo : 0);
+      if (b.wLo >= b.wHi || (b.loU === "rh" && b.lo >= b.up && b.upU === "rh")) err = "The lower humidity limit has to sit below the upper one.";
+      else if (b.upU === "w" && b.up <= wLoEdge(b, p)) err = "That upper limit is drier than the lower one.";
+    }
+    $("bandMsg").textContent = err;
+    b.err = err;
+    return b;
+  }
+  function wLoEdge(b, p) { return b.loU === "rh" ? P.wFromRh(b.tLo, b.lo, p) : (b.loU === "w" ? b.lo : 0); }
+  /* Upper and lower humidity ratio of the band at dry bulb t. */
+  function bandTop(b, t, p) { return Math.min(b.upU === "rh" ? P.wFromRh(t, b.up, p) : b.up, P.wSat(t, p)); }
+  function bandBot(b, t, p) { return b.loU === "rh" ? P.wFromRh(t, b.lo, p) : (b.loU === "w" ? b.lo : 0); }
+  /* The band's dry-bulb extent at humidity ratio w. */
+  function slice(b, w, p) {
+    var left = b.tLo, right = b.tHi;
+    if (b.upU === "rh") left = Math.max(left, P.tAtRh(w, b.up, p));
+    left = Math.max(left, P.dewPoint(w, p));
+    if (b.loU === "rh") right = Math.min(right, P.tAtRh(w, b.lo, p));
+    return [left, right];
+  }
+  function classify(b, t, w, p) {
+    if (w > b.wHi) return "dehum";
+    if (w < b.wLo) return "humid";
+    var s = slice(b, w, p);
+    if (t < s[0]) return "heat";
+    if (t > s[1]) return "cool";
+    return "ok";
+  }
+
+  // ---------- chart geometry ----------
+  var G = { tMin: 0, tMax: 45, wMax: 0.030, L: 14, R: 58, T: 14, B: 44, W: 0, H: 0 };
+  function X(t) { return G.L + (t - G.tMin) / (G.tMax - G.tMin) * (G.W - G.L - G.R); }
+  function Y(w) { return G.T + (1 - w / G.wMax) * (G.H - G.T - G.B); }
+  function invX(x) { return G.tMin + (x - G.L) / (G.W - G.L - G.R) * (G.tMax - G.tMin); }
+  function invY(y) { return (1 - (y - G.T) / (G.H - G.T - G.B)) * G.wMax; }
+
+  var cv = $("chart"), ctx = cv.getContext("2d");
+  function sizeCanvas(c, aspect, minH) {
+    var dpr = window.devicePixelRatio || 1, w = c.clientWidth || c.parentNode.clientWidth || 800;
+    var h = Math.max(minH, Math.round(w * aspect));
+    c.style.height = h + "px";
+    c.width = Math.round(w * dpr); c.height = Math.round(h * dpr);
+    var g = c.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w: w, h: h };
+  }
+
+  function satPath(g) {
+    var p = state.p;
+    g.beginPath();
+    g.moveTo(X(G.tMin), Y(0));
+    for (var t = G.tMin; t <= G.tMax + 1e-9; t += 0.25) g.lineTo(X(t), Y(Math.min(P.wSat(t, p), G.wMax)));
+    g.lineTo(X(G.tMax), Y(0));
+    g.closePath();
+  }
+
+  function draw() {
+    cssCache = {};
+    var sz = sizeCanvas(cv, 0.56, 320);
+    G.W = sz.w; G.H = sz.h;
+    G.R = sz.w < 560 ? 44 : 58;
+    var g = ctx, p = state.p, b = state.band;
+    g.clearRect(0, 0, G.W, G.H);
+    var small = sz.w < 560, fs = small ? 10 : 11;
+    g.font = fs + "px -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
+
+    // the saturation field
+    g.save(); satPath(g); g.fillStyle = css("--ch-field"); g.fill(); g.clip();
+
+    // process regions, row by row, under the saturation curve
+    if (state.layers.regions && b && !b.err) {
+      g.globalAlpha = 0.11;
+      var rowPx = 2, y0 = Y(G.wMax), y1 = Y(0);
+      for (var y = y0; y < y1; y += rowPx) {
+        var w = invY(y + rowPx / 2), key;
+        if (w > b.wHi) { g.fillStyle = css(REG_BY.dehum.tok); g.fillRect(X(G.tMin), y, X(G.tMax) - X(G.tMin), rowPx); continue; }
+        if (w < b.wLo) { g.fillStyle = css(REG_BY.humid.tok); g.fillRect(X(G.tMin), y, X(G.tMax) - X(G.tMin), rowPx); continue; }
+        var s = slice(b, w, p);
+        g.fillStyle = css(REG_BY.heat.tok); g.fillRect(X(G.tMin), y, X(s[0]) - X(G.tMin), rowPx);
+        g.fillStyle = css(REG_BY.cool.tok); g.fillRect(X(s[1]), y, X(G.tMax) - X(s[1]), rowPx);
+      }
+      g.globalAlpha = 1;
+    }
+
+    // grid: dry bulb every 5 C, humidity ratio every 2 g/kg
+    g.strokeStyle = css("--ch-grid"); g.lineWidth = 0.7;
+    for (var t = Math.ceil(G.tMin / 5) * 5; t <= G.tMax; t += 5) { g.beginPath(); g.moveTo(X(t), Y(0)); g.lineTo(X(t), Y(G.wMax)); g.stroke(); }
+    for (var wg = 0.002; wg < G.wMax; wg += 0.002) { g.beginPath(); g.moveTo(X(G.tMin), Y(wg)); g.lineTo(X(G.tMax), Y(wg)); g.stroke(); }
+
+    // enthalpy lines every 10 kJ/kg, dashed
+    if (state.layers.h) {
+      g.strokeStyle = css("--ch-h"); g.lineWidth = 0.9; g.setLineDash([5, 4]);
+      for (var hh = -10; hh <= 140; hh += 10) {
+        g.beginPath();
+        // W = (h - 1.006 t) / (2501 + 1.86 t); straight to within a hair, so two ends do
+        var ta = G.tMin, tb = Math.min(G.tMax, hh / 1.006);
+        if (tb <= ta) continue;
+        g.moveTo(X(ta), Y((hh - 1.006 * ta) / (2501 + 1.86 * ta)));
+        g.lineTo(X(tb), Y((hh - 1.006 * tb) / (2501 + 1.86 * tb)));
+        g.stroke();
+      }
+      g.setLineDash([]);
+    }
+    // wet-bulb lines every 5 C, from saturation down to W = 0
+    if (state.layers.wb) {
+      g.strokeStyle = css("--ch-wb"); g.lineWidth = 1;
+      for (var twb = Math.ceil(G.tMin / 5) * 5; twb <= 35; twb += 5) {
+        g.beginPath(); var first = true;
+        for (var tt = twb; tt <= G.tMax + 0.01; tt += 0.5) {
+          var ww = P.wFromTWb(tt, twb, p);
+          if (ww < 0) break;
+          if (first) { g.moveTo(X(tt), Y(ww)); first = false; } else g.lineTo(X(tt), Y(ww));
+        }
+        if (!first) g.stroke();
+      }
+    }
+    // relative humidity 10..90%
+    if (state.layers.rh) {
+      g.strokeStyle = css("--ch-rh"); g.lineWidth = 1;
+      for (var rh = 10; rh < 100; rh += 10) {
+        g.beginPath();
+        for (var t2 = G.tMin; t2 <= G.tMax + 1e-9; t2 += 0.5) {
+          var w2 = P.wFromRh(t2, rh / 100, p);
+          if (t2 === G.tMin) g.moveTo(X(t2), Y(w2)); else g.lineTo(X(t2), Y(w2));
+        }
+        g.stroke();
+      }
+    }
+
+    // the band
+    if (state.layers.band && b && !b.err) {
+      var poly = [], n = 40, k, tb2;
+      for (k = 0; k <= n; k++) { tb2 = b.tLo + (b.tHi - b.tLo) * k / n; poly.push([tb2, bandBot(b, tb2, p)]); }
+      for (k = n; k >= 0; k--) { tb2 = b.tLo + (b.tHi - b.tLo) * k / n; poly.push([tb2, bandTop(b, tb2, p)]); }
+      g.beginPath();
+      poly.forEach(function (q, i) { if (i) g.lineTo(X(q[0]), Y(q[1])); else g.moveTo(X(q[0]), Y(q[1])); });
+      g.closePath();
+      g.globalAlpha = 0.16; g.fillStyle = css("--accent"); g.fill(); g.globalAlpha = 1;
+      g.lineWidth = 2; g.strokeStyle = css("--accent"); g.stroke();
+    }
+
+    // the hours
+    if (state.layers.hours && state.data) {
+      var occOnly = $("hoursSel").value === "occ";
+      var ps = small ? 2 : 2.4, hl = ps / 2;
+      g.globalAlpha = 0.5;
+      var rows = state.data.rows;
+      REG.forEach(function (r) {
+        g.fillStyle = css(r.tok);
+        for (var i = 0; i < rows.length; i++) {
+          if (state.cls[i] !== r.key || (occOnly && !rows[i].occ)) continue;
+          var x = X(rows[i].db), yy = Y(rows[i].w);
+          if (yy < G.T - 2) continue;
+          g.fillRect(x - hl, yy - hl, ps, ps);
+        }
+      });
+      g.globalAlpha = 1;
+    }
+    g.restore();
+
+    // the saturation curve itself
+    g.strokeStyle = css("--ch-rh"); g.lineWidth = 2;
+    g.beginPath();
+    for (var t3 = G.tMin, f3 = true; t3 <= G.tMax + 1e-9; t3 += 0.25) {
+      var w3 = P.wSat(t3, p); if (w3 > G.wMax) break;
+      if (f3) { g.moveTo(X(t3), Y(w3)); f3 = false; } else g.lineTo(X(t3), Y(w3));
+    }
+    g.stroke();
+
+    // labels: region names
+    if (state.layers.regions && b && !b.err) regionLabels(g, b, p, fs);
+    // RH labels
+    if (state.layers.rh) {
+      g.fillStyle = css("--ch-rh-text"); g.textAlign = "center"; g.textBaseline = "middle";
+      g.font = "600 " + (fs - 1) + "px -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
+      for (var rh2 = 10; rh2 < 100; rh2 += 10) {
+        var tl = G.tMax - 2, wl = P.wFromRh(tl, rh2 / 100, p);
+        if (wl > G.wMax - 0.0012) { wl = G.wMax - 0.0012; tl = P.tAtRh(wl, rh2 / 100, p); }
+        haloText(g, rh2 + "%", X(tl), Y(wl));
+      }
+    }
+    if (state.layers.wb) {
+      g.fillStyle = css("--ch-axis"); g.textAlign = "right"; g.textBaseline = "bottom";
+      g.font = (fs - 1) + "px -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
+      for (var twb2 = Math.ceil(G.tMin / 5) * 5; twb2 <= 30; twb2 += 5) {
+        var ws2 = P.wSat(twb2, p); if (ws2 > G.wMax) break;
+        if (X(twb2) - G.L < 44) continue;   // no room for the label left of the curve
+        g.fillText(twb2 + "° wb", X(twb2) - 3, Y(ws2) - 2);
+      }
+    }
+    if (state.layers.h) {
+      g.fillStyle = css("--ch-h"); g.textAlign = "left"; g.textBaseline = "bottom";
+      for (var hh2 = 10; hh2 <= 120; hh2 += 20) {
+        // label where the line meets the top of the chart or the saturation curve
+        var lo2 = G.tMin, hi2 = G.tMax;
+        for (var it = 0; it < 40; it++) { var mm = 0.5 * (lo2 + hi2); var wl2 = (hh2 - 1.006 * mm) / (2501 + 1.86 * mm); if (wl2 > Math.min(P.wSat(mm, p), G.wMax)) lo2 = mm; else hi2 = mm; }
+        // set 3 degrees down the line from the curve, clear of the wet-bulb labels
+        var tl3 = hi2 + 3, wl3 = (hh2 - 1.006 * tl3) / (2501 + 1.86 * tl3);
+        g.textBaseline = "top";
+        if (hi2 > G.tMin + 0.5 && tl3 < G.tMax - 6 && wl3 > 0.001 && wl3 < G.wMax - 0.003) haloText(g, hh2 + " kJ/kg", X(tl3) + 2, Y(wl3) + 2);
+      }
+    }
+
+    // axes
+    g.strokeStyle = css("--ch-axis"); g.lineWidth = 1;
+    g.beginPath(); g.moveTo(X(G.tMin), Y(0)); g.lineTo(X(G.tMax), Y(0)); g.lineTo(X(G.tMax), Y(G.wMax)); g.stroke();
+    g.fillStyle = css("--ch-axis"); g.font = fs + "px -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
+    g.textAlign = "center"; g.textBaseline = "top";
+    var step = small ? 10 : 5;
+    for (var t4 = Math.ceil(G.tMin / step) * step; t4 <= G.tMax; t4 += step) g.fillText(String(t4), X(t4), Y(0) + 5);
+    g.font = "600 " + fs + "px -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
+    g.fillText("dry-bulb temperature, °C", (X(G.tMin) + X(G.tMax)) / 2, Y(0) + 22);
+    g.font = fs + "px -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
+    g.textAlign = "left"; g.textBaseline = "middle";
+    for (var w4 = 0; w4 <= G.wMax * 1000 + 1e-6; w4 += (small ? 4 : 2)) g.fillText(String(w4), X(G.tMax) + 6, Y(w4 / 1000));
+    g.save(); g.translate(G.W - 6, (Y(0) + Y(G.wMax)) / 2); g.rotate(-Math.PI / 2);
+    g.textAlign = "center"; g.textBaseline = "bottom"; g.font = "600 " + fs + "px -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
+    g.fillText("humidity ratio, g/kg dry air", 0, 0); g.restore();
+    // the chart's pressure, top left inside the plot
+    g.fillStyle = css("--muted"); g.textAlign = "left"; g.textBaseline = "top";
+    g.font = (fs - 1) + "px -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
+    g.fillText("Chart at " + fmt(state.p / 1000, 1) + " kPa" + (state.data ? " (" + fmt(state.data.loc.elev, 0) + " m)" : ", sea level"), X(G.tMin) + 6, G.T + 4);
+
+    // the cross-hair
+    drawIndicator(g);
+    cv.setAttribute("aria-label", chartLabel());
+  }
+
+  function haloText(g, s, x, y) {
+    var fill = g.fillStyle;
+    g.lineWidth = 3; g.strokeStyle = css("--ch-field"); g.strokeText(s, x, y);
+    g.fillStyle = fill; g.fillText(s, x, y);
+  }
+
+  function regionLabels(g, b, p, fs) {
+    g.font = "600 " + fs + "px -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
+    g.textBaseline = "middle";
+    var wMid = Math.max(b.wLo, Math.min(b.wHi, 0.5 * (b.wLo + b.wHi)));
+    var s = slice(b, wMid, p);
+    function put(key, text, t, w, align) {
+      if (t < G.tMin + 0.5 || t > G.tMax - 0.5 || w > G.wMax || w <= 0) return;
+      if (w > P.wSat(t, p) - 0.0006) return;
+      g.textAlign = align; g.fillStyle = css(REG_BY[key].tok); haloText(g, text, X(t), Y(w));
+    }
+    put("heat", "heating", Math.max(G.tMin + 1, s[0] - 4), Math.min(wMid, P.wSat(s[0] - 4, p) - 0.0015), "right");
+    put("cool", "sensible cooling", s[1] + 3, Math.min(wMid, b.wHi - 0.001), "left");
+    var wD = Math.min(G.wMax - 0.002, b.wHi + 0.0045);
+    put("dehum", "cooling and dehumidifying", Math.max(b.tHi + 2, P.dewPoint(wD, p) + 6), wD, "left");
+    if (b.wLo > 0.0025) put("humid", "humidifying", b.tLo, b.wLo / 2, "center");
+  }
+
+  function drawIndicator(g) {
+    var p = state.p, t = state.ind.t, w = state.ind.w;
+    var x = X(t), y = Y(w);
+    g.save();
+    g.strokeStyle = css("--ink"); g.globalAlpha = 0.55; g.lineWidth = 1; g.setLineDash([3, 3]);
+    g.beginPath(); g.moveTo(x, Y(0)); g.lineTo(x, Y(Math.min(P.wSat(t, p), G.wMax))); g.stroke();
+    var td = P.dewPoint(w, p);
+    g.beginPath(); g.moveTo(Math.max(X(td), X(G.tMin)), y); g.lineTo(X(G.tMax), y); g.stroke();
+    g.setLineDash([]); g.globalAlpha = 1;
+    g.fillStyle = css("--ink"); g.strokeStyle = css("--card"); g.lineWidth = 2;
+    g.beginPath(); g.arc(x, y, 5, 0, 2 * Math.PI); g.fill(); g.stroke();
+    g.restore();
+  }
+
+  function chartLabel() {
+    var s = "Psychrometric chart, dry bulb " + G.tMin + " to " + G.tMax + " degrees C, humidity ratio 0 to 30 g/kg";
+    if (state.band && !state.band.err) s += ", comfort band " + state.band.tLo + " to " + state.band.tHi + " degrees C";
+    if (state.data) s += ", with " + state.counts.n + " hours of " + state.data.loc.city + " weather plotted";
+    return s + ". The read-out below the chart gives the state at the cross-hair.";
+  }
+
+  // ---------- read-out ----------
+  function readout(fromKeys) {
+    var p = state.p, t = state.ind.t, w = state.ind.w;
+    var rh = P.rhFromW(t, w, p), wb = P.wetBulb(t, w, p), td = P.dewPoint(w, p), h = P.enthalpy(t, w);
+    var b = state.band, k = b && !b.err ? classify(b, t, w, p) : null;
+    function cell(kk, v) { return '<div><span class="k">' + kk + '</span><span class="v">' + v + "</span></div>"; }
+    var html = cell("Dry bulb", fmt(t, 1) + " °C") + cell("Humidity ratio", fmt(w * 1000, 1) + " g/kg") +
+      cell("Relative humidity", fmt(100 * rh, 0) + "%") + cell("Wet bulb", fmt(wb, 1) + " °C") +
+      cell("Dew point", fmt(td, 1) + " °C") + cell("Enthalpy", fmt(h, 1) + " kJ/kg");
+    if (k) html += '<div class="proc"><span class="sw" style="background:' + css(REG_BY[k].tok) + '"></span><span><b>' + REG_BY[k].name + "</b>: " + REG_BY[k].hint + "</span></div>";
+    $("readout").innerHTML = html;
+    if (fromKeys) $("readoutLive").textContent = fmt(t, 1) + " degrees, " + fmt(w * 1000, 1) + " grams per kilogram, " + fmt(100 * rh, 0) + " percent RH" + (k ? ", " + REG_BY[k].name : "");
+  }
+  function setInd(t, w, fromKeys) {
+    var p = state.p;
+    t = Math.max(G.tMin, Math.min(G.tMax, t));
+    w = Math.max(0.0001, Math.min(G.wMax, w, P.wSat(t, p)));
+    state.ind = { t: t, w: w };
+    draw(); readout(fromKeys);
+  }
+  function ptr(e) {
+    var r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    if (x < G.L || x > G.W - G.R || y < G.T || y > G.H - G.B) return;
+    setInd(invX(x), invY(y), false);
+  }
+  cv.addEventListener("pointermove", ptr);
+  cv.addEventListener("pointerdown", function (e) { ptr(e); });
+  cv.addEventListener("keydown", function (e) {
+    var k = e.shiftKey ? 5 : 1, t = state.ind.t, w = state.ind.w;
+    if (e.key === "ArrowRight") t += 0.5 * k; else if (e.key === "ArrowLeft") t -= 0.5 * k;
+    else if (e.key === "ArrowUp") w += 0.0005 * k; else if (e.key === "ArrowDown") w -= 0.0005 * k;
+    else return;
+    e.preventDefault(); setInd(t, w, true);
+  });
+
+  // ---------- counting ----------
+  function recount() {
+    var d = state.data, b = state.band;
+    state.cls = null; state.counts = null;
+    if (!d || !b || b.err) { renderResults(); return; }
+    var p = state.p, occOnly = $("hoursSel").value === "occ";
+    var cls = new Array(d.rows.length), c = { n: 0 }, months = [];
+    REG.forEach(function (r) { c[r.key] = 0; });
+    for (var m = 0; m < 12; m++) { months.push({ n: 0 }); REG.forEach(function (r) { months[m][r.key] = 0; }); }
+    for (var i = 0; i < d.rows.length; i++) {
+      var r = d.rows[i], k = classify(b, r.db, r.w, p);
+      cls[i] = k;
+      if (occOnly && !r.occ) continue;
+      c[k]++; c.n++; months[r.mo - 1][k]++; months[r.mo - 1].n++;
+    }
+    state.cls = cls; state.counts = c; state.months = months;
+    renderResults();
+  }
+
+  var MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  function renderResults() {
+    var c = state.counts, el = $("results");
+    if (!c) {
+      $("months").hidden = true; $("monthsText").textContent = "";
+      if (state.data && state.band && state.band.err) el.innerHTML = '<p class="empty">Fix the band above to count the hours.</p>';
+      return;
+    }
+    var occ = $("hoursSel").value === "occ";
+    var max = 0; REG.forEach(function (r) { max = Math.max(max, c[r.key]); });
+    var rows = REG.slice().reverse().map(function (r) {
+      var share = c.n ? c[r.key] / c.n : 0;
+      return "<tr><td><span class=\"sw\" style=\"background:" + css(r.tok) + "\"></span>" + r.name + "</td>" +
+        "<td class=\"num\">" + c[r.key].toLocaleString("en-AU") + "</td><td class=\"num\">" + fmt(100 * share, 0) + "%</td>" +
+        "<td style=\"width:34%\"><span class=\"bar\" style=\"width:" + (max ? 100 * c[r.key] / max : 0) + "%;background:" + css(r.tok) + "\"></span></td></tr>";
+    }).join("");
+    var cool = c.cool + c.dehum, verdict;
+    if (!cool) verdict = "No hour of this " + (occ ? "set of occupied hours" : "year") + " needs its outside air cooled or dried.";
+    else {
+      var lat = c.dehum / cool;
+      verdict = "Of the " + cool.toLocaleString("en-AU") + " hours that need cooling, <b>" + fmt(100 * lat, 0) + "%</b> also need water taken out. " +
+        (lat >= 0.5 ? "The bigger problem here is <b>latent</b>: drying the air, not just cooling it." : "The bigger problem here is <b>sensible</b>: the air mostly needs cooling, not drying.");
+    }
+    el.innerHTML = '<table class="counts"><caption class="visually-hidden">Hours by process</caption><thead><tr><th>Process the outside air needs</th><th class="num">Hours</th><th class="num">Share</th><th><span class="visually-hidden">Bar</span></th></tr></thead><tbody>' +
+      rows + '</tbody><tfoot><tr><td>' + (occ ? "Occupied hours counted" : "Hours counted") + '</td><td class="num">' + c.n.toLocaleString("en-AU") + '</td><td class="num">100%</td><td></td></tr></tfoot></table>' +
+      '<p class="verdict" role="status" aria-live="polite">' + verdict + "</p>";
+    drawMonths();
+  }
+
+  function drawMonths() {
+    var c2 = $("months"), mths = state.months;
+    if (!mths) return;
+    c2.hidden = false;
+    var sz = sizeCanvas(c2, 0.26, 200), g = c2.getContext("2d");
+    var L = 34, R = 8, T = 10, B = 26, w = sz.w - L - R, h = sz.h - T - B, bw = w / 12;
+    g.clearRect(0, 0, sz.w, sz.h);
+    g.font = "11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
+    g.fillStyle = css("--muted"); g.textAlign = "right"; g.textBaseline = "middle";
+    g.strokeStyle = css("--line"); g.lineWidth = 1;
+    [0, 50, 100].forEach(function (v) { var y = T + h * (1 - v / 100); g.fillText(v + "%", L - 6, y); g.beginPath(); g.moveTo(L, y); g.lineTo(L + w, y); g.stroke(); });
+    mths.forEach(function (m, i) {
+      var y = T + h, x = L + i * bw + bw * 0.14, ww = bw * 0.72;
+      REG.forEach(function (r) {
+        if (!m.n || !m[r.key]) return;
+        var hh = h * m[r.key] / m.n;
+        g.fillStyle = css(r.tok); g.globalAlpha = r.key === "ok" ? 0.55 : 0.85;
+        g.fillRect(x, y - hh, ww, hh); y -= hh;
+      });
+      g.globalAlpha = 1; g.fillStyle = css("--muted"); g.textAlign = "center"; g.textBaseline = "top";
+      g.fillText(MON[i], L + i * bw + bw / 2, T + h + 6);
+    });
+    // a text version, which is also the seasonal pattern in one sentence
+    var by = {};
+    mths.forEach(function (m, i) {
+      if (!m.n) return;
+      var best = "ok"; REG.forEach(function (r) { if (m[r.key] > m[best]) best = r.key; });
+      (by[best] = by[best] || []).push(MON[i]);
+    });
+    var parts = REG.filter(function (r) { return by[r.key]; }).map(function (r) { return r.name.toLowerCase() + " in " + by[r.key].join(", "); });
+    var txt = "Largest share each month: " + parts.join("; ") + ".";
+    $("monthsText").textContent = txt;
+    c2.setAttribute("aria-label", "Hours by process for each month. " + txt);
+  }
+
+  // ---------- loading a file ----------
+  function setData(d, name) {
+    var p = P.pAlt(isFinite(d.loc.elev) ? d.loc.elev : 0);
+    state.p = p;
+    var tmin = Infinity, tmax = -Infinity;
+    d.rows.forEach(function (r) {
+      var pw = r.dp !== null ? P.pws(r.dp) : (r.rh / 100) * P.pws(r.db);
+      r.w = P.wFromPw(pw, p);
+      if (r.db < tmin) tmin = r.db; if (r.db > tmax) tmax = r.db;
+    });
+    G.tMin = tmin < 0 ? Math.floor(tmin / 5) * 5 : 0;
+    G.tMax = tmax > 45 ? Math.ceil(tmax / 5) * 5 : 45;
+    state.data = d;
+    var loc = d.loc, src = [loc.source, d.period].filter(Boolean).join(", ");
+    $("fileMeta").hidden = false;
+    $("fileMeta").innerHTML = "<b>" + esc(loc.city) + "</b>" + (loc.region ? ", " + esc(loc.region) : "") + (loc.country ? ", " + esc(loc.country) : "") +
+      (src ? " &middot; " + esc(src) : "") + " &middot; " + fmt(Math.abs(loc.lat), 2) + "&deg;" + (loc.lat < 0 ? "S" : "N") + ", " +
+      fmt(Math.abs(loc.lon), 2) + "&deg;" + (loc.lon < 0 ? "W" : "E") + " &middot; elevation " + fmt(loc.elev, 0) + " m, so the chart is drawn at " + fmt(p / 1000, 1) + " kPa" +
+      " &middot; " + d.rows.length.toLocaleString("en-AU") + " hours";
+    $("fileMsg").className = "msg ok";
+    $("fileMsg").textContent = "Loaded " + name + ".";
+    var ds = $("dataSource");
+    var msg = "Numbers on screen: <b>your weather file</b> (" + esc(loc.city) + (d.period ? ", " + esc(d.period) : "") + ").";
+    ds.hidden = false; ds.classList.add("mine");
+    if (ds.innerHTML !== msg) ds.innerHTML = msg;
+    update();
+  }
+  function loadFile(file) {
+    if (!file) return;
+    if (/\.zip$/i.test(file.name)) { $("fileMsg").className = "msg error"; $("fileMsg").textContent = "That is a .zip. Unzip it and choose the .epw file inside."; return; }
+    var fr = new FileReader();
+    fr.onload = function () {
+      try { setData(EPW.parse(String(fr.result)), file.name); }
+      catch (err) { $("fileMsg").className = "msg error"; $("fileMsg").textContent = err.message; }
+    };
+    fr.onerror = function () { $("fileMsg").className = "msg error"; $("fileMsg").textContent = "The file could not be read."; };
+    fr.readAsText(file);
+  }
+  $("epwFile").addEventListener("change", function () { loadFile(this.files && this.files[0]); this.value = ""; });
+  var dz = $("dropzone");
+  ["dragenter", "dragover"].forEach(function (ev) { dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.add("drag-over"); }); });
+  ["dragleave", "drop"].forEach(function (ev) { dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.remove("drag-over"); }); });
+  dz.addEventListener("drop", function (e) { loadFile(e.dataTransfer && e.dataTransfer.files[0]); });
+
+  // ---------- controls ----------
+  function update() { state.band = readBand(); recount(); draw(); readout(false); }
+  ["tLo", "tHi", "upVal", "loVal"].forEach(function (id) { $(id).addEventListener("input", update); });
+  ["upUnit", "loUnit", "hoursSel"].forEach(function (id) { $(id).addEventListener("change", function () {
+    // switching a limit's unit swaps in that unit's usual value rather than reading 60 g/kg
+    if (id === "upUnit") $("upVal").value = this.value === "rh" ? 60 : 12;
+    if (id === "loUnit" && this.value !== "none") $("loVal").value = this.value === "rh" ? 40 : 4;
+    update();
+  }); });
+  var BANDS = { "default": [20, 24, "rh", 60, "none", 40], slides: [20, 24, "rh", 60, "rh", 40], ashrae: [20, 24, "w", 12, "none", 40] };
+  document.querySelectorAll("[data-band]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var v = BANDS[btn.getAttribute("data-band")];
+      $("tLo").value = v[0]; $("tHi").value = v[1]; $("upUnit").value = v[2]; $("upVal").value = v[3]; $("loUnit").value = v[4]; $("loVal").value = v[5];
+      update();
+    });
+  });
+  document.querySelectorAll("#layers input").forEach(function (inp) {
+    inp.addEventListener("change", function () { state.layers[inp.getAttribute("data-layer")] = inp.checked; draw(); });
+  });
+
+  // tablist keyboard handling, ready for the views to come
+  var tabs = Array.prototype.slice.call(document.querySelectorAll(".tab"));
+  tabs.forEach(function (t, i) {
+    t.addEventListener("keydown", function (e) {
+      var j = i;
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") j = Math.min(i + 1, tabs.length - 1);
+      else if (e.key === "ArrowLeft" || e.key === "ArrowUp") j = Math.max(i - 1, 0);
+      else if (e.key === "Home") j = 0; else if (e.key === "End") j = tabs.length - 1; else return;
+      e.preventDefault(); tabs[j].focus(); tabs[j].click();
+    });
+  });
+
+  window.__ttRedraw = function () { draw(); readout(false); if (state.counts) renderResults(); };
+  if (window.ResizeObserver) {
+    var lastW = 0;
+    new ResizeObserver(function () { var w = $("chartbox").clientWidth; if (w !== lastW) { lastW = w; window.__ttRedraw(); } }).observe($("chartbox"));
+  }
+  // test hook for the headless checks; reads state, sends nothing anywhere
+  window.__psych = { state: state, setData: setData, update: update, EPW: EPW };
+  update();
+})();
+</script>
+<script>
+  /* Theme control. The head script has already resolved and applied the theme;
+     this only reflects it in the radios and handles changes. */
+  (function () {
+    var group = document.getElementById("themePick");
+    if (!group) return;
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    var pref = window.__ttPref || "system";
+    function apply() {
+      var dark = pref === "dark" || (pref === "system" && mq.matches);
+      document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+      if (window.__ttRedraw) window.__ttRedraw();
+    }
+    var sel = group.querySelector('input[value="' + pref + '"]');
+    if (sel) sel.checked = true;
+    group.addEventListener("change", function (e) {
+      if (e.target.name !== "theme") return;
+      pref = e.target.value;
+      try { localStorage.setItem("tt-theme", pref); } catch (err) {}
+      apply();
+    });
+    mq.addEventListener("change", function () { if (pref === "system") apply(); });
+  })();
+</script>
+</body>
+</html>
