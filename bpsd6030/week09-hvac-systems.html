@@ -167,6 +167,13 @@
   .follow .ftitle { margin: 0 0 var(--s-1); font-weight: 600; }
   .follow .ftext { margin: 0; font-size: var(--t-label); max-width: 72ch; }
 
+  /* a second game further down the same tab */
+  .stage { font-size: var(--t-lead); font-weight: 600; letter-spacing: -.011em; margin: var(--s-8) 0 var(--s-1);
+    padding-top: var(--s-6); border-top: 1px solid var(--line); }
+  .stage + .note { margin: 0 0 var(--s-4); }
+  .stage.first { margin-top: 0; padding-top: 0; border-top: none; }
+
+  .nav { display: flex; justify-content: space-between; gap: var(--s-2); margin-top: var(--s-6); flex-wrap: wrap; }
   .btn-row { display: flex; gap: var(--s-2); flex-wrap: wrap; margin-top: var(--s-3); }
   .btn { background: var(--accent); color: var(--accent-ink); border: none; border-radius: var(--r-md);
     padding: var(--s-2) var(--s-4); font-size: var(--t-label); cursor: pointer; font-family: inherit; white-space: nowrap; }
@@ -198,6 +205,7 @@
   @media print {
     .tabs, .toprow, .btn-row, .orient, .side { display: none !important; }
     .game { grid-template-columns: 1fr; }
+    section.card[hidden] { display: block !important; }
   }
 </style>
 <script>
@@ -235,7 +243,7 @@
 
   <div class="tabs" role="tablist" aria-label="Levels">
     <button class="tab active" role="tab" id="tab-1" aria-controls="panel-1" aria-selected="true" tabindex="0" data-idx="0"><span class="n">1</span><span>Follow the heat</span></button>
-    <button class="tab" role="tab" id="tab-2" aria-selected="false" tabindex="-1" data-idx="1" disabled title="Not built yet"><span class="n">2</span><span>Inside the air-handling unit</span></button>
+    <button class="tab" role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false" tabindex="-1" data-idx="1"><span class="n">2</span><span>Inside the air-handling unit</span></button>
     <button class="tab" role="tab" id="tab-3" aria-selected="false" tabindex="-1" data-idx="2" disabled title="Not built yet"><span class="n">3</span><span>What reaches the zone</span></button>
     <button class="tab" role="tab" id="tab-4" aria-selected="false" tabindex="-1" data-idx="3" disabled title="Not built yet"><span class="n">4</span><span>Trace the air</span></button>
     <button class="tab" role="tab" id="tab-5" aria-selected="false" tabindex="-1" data-idx="4" disabled title="Not built yet"><span class="n">5</span><span>Spot the fault</span></button>
@@ -285,12 +293,65 @@
         </div>
       </div>
     </div>
+
+    <div class="nav">
+      <span></span>
+      <button type="button" class="btn" data-nav="next">Next: inside the air-handling unit</button>
+    </div>
+  </section>
+
+  <!-- ===== Tab 2: Inside the air-handling unit ===== -->
+  <section class="card" role="tabpanel" id="panel-2" aria-labelledby="tab-2" hidden>
+    <div class="primer">
+      <h2 class="what">Put the sections of an air-handling unit in the order the air meets them.</h2>
+      <p>The box on the roof is a row of sections, and the air passes through them in turn. Outdoor air comes in at the left and supply air leaves at the right; along the top deck, air from the rooms runs the other way. Some sections must come before others, and a section in the wrong place goes back to the tray with the reason. Build the air-handling unit of an all-air system first, then the outdoor air unit that serves fan coils and chilled beams, and compare the two.</p>
+    </div>
+
+    <h3 class="stage first">Air-handling unit (mixed air)</h3>
+    <p class="note">Return air from the rooms is mixed with outdoor air, and the mix is supplied to the rooms.</p>
+    <div class="game">
+      <div>
+        <div class="scene" id="scene2a"></div>
+        <div class="legend" id="legend2a"></div>
+      </div>
+      <div class="side">
+        <p class="progress" id="progress2a"></p>
+        <p class="traylabel" id="trayLabel2a">Sections</p>
+        <div class="tray" id="tray2a" role="group" aria-labelledby="trayLabel2a"></div>
+        <p class="fb" id="fb2a" aria-live="polite"></p>
+        <div class="btn-row" style="margin-top:0">
+          <button type="button" class="btn ghost" id="reset2a">Start again</button>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="stage">Outdoor air unit (dedicated outdoor air system, DOAS)</h3>
+    <p class="note">Only outdoor air is supplied, for ventilation. Fan coils or chilled beams in the rooms do most of the cooling.</p>
+    <div class="game">
+      <div>
+        <div class="scene" id="scene2b"></div>
+        <div class="legend" id="legend2b"></div>
+      </div>
+      <div class="side">
+        <p class="progress" id="progress2b"></p>
+        <p class="traylabel" id="trayLabel2b">Sections</p>
+        <div class="tray" id="tray2b" role="group" aria-labelledby="trayLabel2b"></div>
+        <p class="fb" id="fb2b" aria-live="polite"></p>
+        <div class="btn-row" style="margin-top:0">
+          <button type="button" class="btn ghost" id="reset2b">Start again</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav">
+      <button type="button" class="btn ghost" data-nav="back">Back</button>
+    </div>
   </section>
 
   <footer class="page">
     <p>The drawings follow the BPSD6030 drawing conventions shared with the lecture figures and the HVAC system selector: one colour per service, ducts as bands and pipes as hollow lines, and plant where Australian commercial buildings usually put it. They are stylised concept sections, not construction drawings. The water temperatures (chilled water 6 to 12&nbsp;°C, condenser water 29.5 to 35&nbsp;°C) are typical design values.</p>
     <p>Built for the BPSD6030 Week 9 tutorial by the IEQ Lab, Sydney School of Architecture, Design and Planning. Nothing you do here is recorded or submitted; your progress is kept only in this browser. Self-contained, open-source, no tracking.</p>
-    <p>Revised October 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.</p>
+    <p>Revised November 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.</p>
   </footer>
 </div>
 
@@ -372,6 +433,107 @@
       ' C' + (cx - 5) + ' ' + (cy + 5) + ' ' + (cx - 6) + ' ' + (cy) + ' ' + cx + ' ' + (cy - 7) + 'Z" fill="' + COL.gas + '"/>';
   }
 
+  // an empty slot: a focusable button, at least 30 px either way for a fingertip
+  function slotG(pid, b, aria) {
+    var w = Math.max(b.w, 30), h = Math.max(b.h, 30);
+    var x = b.x - (w - b.w) / 2, y = b.y - (h - b.h) / 2;
+    return '<g class="slot" data-slot="' + pid + '" tabindex="0" role="button" aria-label="' + esc(aria) + '">' +
+      '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="4"/>' +
+      '<text x="' + (x + w / 2) + '" y="' + (y + h / 2 + 5) + '" text-anchor="middle" font-size="14"' + FONT + '>?</text></g>';
+  }
+  // a duct drawn as in the section (outlined band, pale fill), ending in an arrowhead
+  function duct(a, col, w, op) {
+    var p = a[a.length - 1], q = a[a.length - 2];
+    var dir = p[0] > q[0] ? "r" : p[0] < q[0] ? "l" : p[1] < q[1] ? "u" : "d";
+    var s = w * .7, off = s * 1.6;
+    var end = dir === "r" ? [p[0] - off, p[1]] : dir === "l" ? [p[0] + off, p[1]] : dir === "u" ? [p[0], p[1] + off] : [p[0], p[1] - off];
+    var body = a.slice(0, -1).concat([end]);
+    var g = pl(body, col, w, ' stroke-linecap="butt"') + pl(body, COL.card, w - 3, ' stroke-linecap="butt"') +
+      pl(body, col, w - 3, ' stroke-opacity=".3" stroke-linecap="butt"') + head(p[0], p[1], dir, col, s);
+    return op != null && op < 1 ? '<g opacity="' + op + '">' + g + '</g>' : g;
+  }
+  // a damper: three blades, each on a pivot, in a row (horiz) or a column
+  function blades(cx, cy, horiz) {
+    var s = "";
+    for (var j = -1; j <= 1; j++) {
+      var x = horiz ? cx + j * 15 : cx, y = horiz ? cy : cy + j * 12;
+      s += pl([[x - 5, y - 5], [x + 5, y + 5]], COL.plantInk, 1.8) + '<circle cx="' + x + '" cy="' + y + '" r="1.8" fill="' + COL.plantInk + '"/>';
+    }
+    return s;
+  }
+  function wheel(x, y, w, h) {
+    var s = rect(x, y, w, h, COL.plant, COL.plantInk, 1.2, 4);
+    for (var ly = y + 6; ly < y + h - 3; ly += 6) s += pl([[x + 2, ly], [x + w - 2, ly]], COL.plantInk, 1, ' stroke-opacity=".45"');
+    return s;
+  }
+
+  /* ---------- one unit, drawn large (level 2) ----------
+     A long section through the unit on the roof. The supply deck is below
+     (outdoor air in at the left, supply air out at the right) and the return or
+     exhaust deck above, running the other way. Sections p1 to p5 are in airflow
+     order. p1 spans both decks, because the mixing box and the heat-recovery
+     wheel are where the two airstreams meet. V supplies st(pid), type(pid),
+     slotLabel(pid) and done(). */
+  function drawUnit(kind, V) {
+    var doas = kind === "doas";
+    var W = 760, H = 240, n = 5, sw = 84, x0 = 170, x1 = x0 + n * sw;
+    var tT = 46, tB = 100, sT = 116, sB = 188;
+    var yTop = (tT + tB) / 2, ySup = (sT + sB) / 2, yDiv = (tB + sT) / 2;
+    var o = "", over = "", labels = "";
+    var NAME = { mix: ["mixing box"], filter: ["filter"], cc: ["cooling coil"], hc: ["heating coil"], fan: ["supply fan"], hrw: ["heat-recovery", "wheel"] };
+    function lab(x, y, s, anchor) { labels += txt(x, y, s, anchor, COL.muted, 10); }
+
+    // the airstreams outside the unit; supply is pale until the unit is complete
+    o += duct([[30, ySup], [x0, ySup]], COL.air, 14);
+    lab(32, ySup - 13, "outdoor air", "start");
+    o += duct([[x1, ySup], [W - 26, ySup]], COL.cool, 14, V.done() ? 1 : .4);
+    lab(W - 26, ySup - 13, doas ? "outdoor air to the rooms" : "supply air to the rooms", "end");
+    o += duct([[W - 26, yTop], [x1, yTop]], COL.air, 14);
+    lab(W - 26, yTop - 13, doas ? "exhaust air from the rooms" : "return air from the rooms", "end");
+    o += duct([[x0, yTop], [30, yTop]], COL.air, 14);
+    lab(32, yTop - 13, "exhaust", "start");
+
+    // casing, the deck divider, and the joints between sections
+    o += rect(x0, tT, n * sw, sB - tT, COL.card, COL.plantInk, 1.4, 4);
+    o += rect(x0 + sw, tB, (n - 1) * sw, sT - tB, COL.plant, COL.plantInk, 1, 0);
+    for (var k = 2; k <= n; k++) o += pl([[x0 + (k - 1) * sw, sT], [x0 + (k - 1) * sw, sB]], COL.plantInk, 1, ' stroke-opacity=".4"');
+    // the top deck: air from the rooms, drawn along by a fan that is always there
+    o += arrow([[x1 - 6, yTop], [x0 + sw + 8, yTop]], COL.air, 1.8, "4 3");
+    var tf = x0 + 3.5 * sw;
+    o += fan(tf, yTop, 15);
+    labels += txt(tf, tT - 8, doas ? "exhaust fan" : "return fan", "middle", COL.plantInk, 10.5, "600");
+
+    for (var p = 1; p <= n; p++) {
+      var pid = "p" + p, bx = x0 + (p - 1) * sw;
+      var b = p === 1 ? { x: bx + 3, y: tT + 3, w: sw - 6, h: sB - tT - 6 } : { x: bx + 3, y: sT + 3, w: sw - 6, h: sB - sT - 6 };
+      if (V.st(pid) === "slot") { over += slotG(pid, b, V.slotLabel(pid)); continue; }
+      var t = V.type(pid), cx = bx + sw / 2, g = "";
+      if (t === "mix") {
+        // dampers in the outdoor-air and exhaust openings, and in the gap where return air drops through
+        g += rect(x0 - 2, ySup - 21, 4, 42, COL.card, null, 0, 0) + blades(x0, ySup, false);
+        g += rect(x0 - 2, yTop - 21, 4, 42, COL.card, null, 0, 0) + blades(x0, yTop, false);
+        // the divider stops short, leaving the opening the return air drops through
+        g += rect(bx, tB, 8, sT - tB, COL.plant, COL.plantInk, 1, 0);
+        g += blades(bx + 36, yDiv, true);
+        g += arrow([[bx + 70, yTop + 4], [bx + 70, ySup - 4]], COL.air, 1.8);
+      } else if (t === "hrw") {
+        g += rect(bx, tB, sw, sT - tB, COL.plant, COL.plantInk, 1, 0) + wheel(cx - 10, tT + 6, 20, sB - tT - 12);
+      } else if (t === "filter") {
+        g += vzig(cx - 12, sT + 10, 24, sB - sT - 20, COL.plantInk);
+      } else if (t === "cc" || t === "hc") {
+        g += coil(cx - 14, sT + 8, 28, sB - sT - 18, t === "cc" ? COL.cool : COL.heat);
+        if (t === "cc") g += pl([[cx - 22, sB - 5], [cx + 22, sB - 5]], COL.cool, 2.2);   // condensate tray
+      } else if (t === "fan") {
+        g += fan(cx, ySup, 22);
+      }
+      o += '<g data-part="' + t + '">' + g + '</g>';
+      NAME[t].forEach(function (s, i) { labels += txt(cx, sB + 18 + i * 13, s, "middle", COL.plantInk, 10.5, "600"); });
+    }
+
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="group" aria-label="' + esc(V.aria) + '">' + o + over + labels + '</svg>';
+    return { svg: svg, used: { supply: true, oa: true } };
+  }
+
   /* ---------- the building section ----------
      Ported from drawSchematic() in week05-hvac-selector.html, with the same
      geometry, so a system drawn here looks exactly as it does there and in the
@@ -417,13 +579,7 @@
 
     // ---- equipment, slots and outlines ----
     var labels = "";
-    function slot(pid, b) {
-      var w = Math.max(b.w, 30), h = Math.max(b.h, 30);
-      var x = b.x - (w - b.w) / 2, y = b.y - (h - b.h) / 2;
-      return '<g class="slot" data-slot="' + pid + '" tabindex="0" role="button" aria-label="' + esc(V.slotLabel(pid)) + '">' +
-        '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="4"/>' +
-        '<text x="' + (x + w / 2) + '" y="' + (y + h / 2 + 5) + '" text-anchor="middle" font-size="14"' + FONT + '>?</text></g>';
-    }
+    function slot(pid, b) { return slotG(pid, b, V.slotLabel(pid)); }
     function outline(b) {
       return rect(b.x, b.y, b.w, b.h, "none", COL.muted, 1, 3).replace("/>", ' stroke-opacity=".3" stroke-dasharray="3 3"/>');
     }
@@ -828,6 +984,16 @@
       s = kit(6, 10, 52, 20) + fan(20, 20, 7) + coil(34, 13, 16, 14, COL.cool);
     } else if (t === "vrf") {
       s = kit(18, 2, 28, 36) + fan(32, 20, 10);
+    } else if (t === "mix") {
+      s = kit(18, 2, 28, 36) + blades(32, 20, false);
+    } else if (t === "filter") {
+      s = rect(20, 2, 24, 36, COL.card, COL.plantInk, 1.2, 2) + vzig(25, 6, 14, 28, COL.plantInk);
+    } else if (t === "cc" || t === "hc") {
+      s = coil(22, 3, 20, 34, t === "cc" ? COL.cool : COL.heat);
+    } else if (t === "fan") {
+      s = fan(32, 20, 15);
+    } else if (t === "hrw") {
+      s = wheel(24, 1, 16, 38);
     }
     return '<svg viewBox="0 0 64 40" aria-hidden="true">' + s + '</svg>';
   }
@@ -845,7 +1011,14 @@
     acc:      { name: "Air-cooled chiller" },
     boiler:   { name: "Gas boiler" },
     fcu:      { name: "Fan-coil unit" },
-    vrf:      { name: "VRF outdoor unit" }
+    vrf:      { name: "VRF outdoor unit" },
+    // the sections inside an air-handling unit; fn: what it does, shown once it is in place
+    mix:      { name: "Mixing box", fn: "It blends outdoor air with return air from the rooms. More outdoor air means better ventilation; more return air means less air to cool or heat. Return air that is not reused leaves as exhaust." },
+    filter:   { name: "Filter", fn: "It takes the dust out of the air before it reaches the fan, the coils and the rooms." },
+    cc:       { name: "Cooling coil", fn: "Chilled water in its tubes takes heat out of the air. It dries the air too: the air is chilled below its dew point, so water vapour condenses on the fins and drains away from the tray beneath." },
+    hc:       { name: "Heating coil", fn: "Heating water in its tubes warms the air, in winter or after the cooling coil has chilled it to dry it." },
+    fan:      { name: "Supply fan", fn: "It pushes the air along the ducts to the rooms, against the resistance of everything in its way." },
+    hrw:      { name: "Heat-recovery wheel", fn: "It turns slowly through both airstreams, carrying heat (and, with some wheels, moisture) from one to the other. In summer the cool exhaust pre-cools the hot outdoor air; in winter the warm exhaust pre-warms it." }
   };
 
   // ---------- level 1: follow the heat ----------
@@ -901,18 +1074,103 @@
     ]
   };
 
+  /* ---------- level 2: inside the air-handling unit ----------
+     The check accepts any order that real units are built in, not one answer:
+     the first section (mixing box or wheel), then the filter, then the coils,
+     cooling before heating, with the fan before, between or after the coils.
+     A placement is right if at least one of those orders still fits everything
+     placed so far, so the slots can be filled in any sequence. */
+  var TAILS = [["cc", "hc", "fan"], ["fan", "cc", "hc"], ["cc", "fan", "hc"]];
+  function unitLevel(key, first) {
+    var mixed = first === "mix";
+    var firstName = mixed ? "mixing box" : "heat-recovery wheel";
+    var orders = TAILS.map(function (t) { return [first, "filter"].concat(t); });
+    var slots = {};
+    for (var k = 1; k <= 5; k++) {
+      slots["p" + k] = { where: k === 1
+        ? (mixed ? "First section, where outdoor air comes in. It spans both decks: air from the rooms runs along the top deck, and supply air is made on the deck below."
+                 : "First section, where outdoor air comes in and exhaust air goes out. It spans both airstreams.")
+        : "Section " + k + " of 5 on the supply deck, counting from where the outdoor air comes in." };
+    }
+    var notHere = mixed ? {} : {
+      mix: "A DOAS supplies outdoor air only. No air comes back from the rooms to be reused, so there is nothing to mix. Stale air still leaves the building, as exhaust along the top deck, and the heat-recovery wheel uses it to pre-cool or pre-warm the outdoor air on its way in."
+    };
+    var COILS = "The cooling coil goes before the heating coil. On a humid day the cooling coil dries the air as well as cooling it, by chilling it below its dew point so water condenses on the fins. The heating coil after it can then warm the dry air back up when the rooms need it. The other way round, the cooling coil would undo the heating coil's work.";
+    function why(type, sid) {
+      var pos = +sid.slice(1);
+      if (type === first) return mixed
+        ? "The mixing box goes first, where outdoor air comes in and the air from the rooms drops down from the top deck to meet it. Everything after it then sees one blended stream."
+        : "The wheel goes first, where outdoor air comes in and exhaust goes out, because it has to turn through both airstreams at once. It is the only section that spans both decks.";
+      if (pos === 1) return mixed
+        ? "This first section spans both decks, where air from the rooms drops down to meet the outdoor air coming in. The section that goes here sets how much of each the unit uses."
+        : "This first section spans both airstreams: the outdoor air coming in and the exhaust going out. The section that goes here passes heat from one to the other.";
+      if (type === "filter") return "The filter goes straight after the " + firstName + ", ahead of the fan and both coils. Dust that gets past it coats the fan blades, clogs the coil fins and ends up in the rooms.";
+      if (pos === 2) return "Straight after the " + firstName + " comes the filter, so that dust never reaches the fan, the coils or the rooms. The " + PARTS[type].name.toLowerCase() + " goes further along.";
+      return COILS;
+    }
+    function fits(placed) {
+      return orders.some(function (o) {
+        for (var k = 1; k <= 5; k++) if (placed["p" + k] && placed["p" + k] !== o[k - 1]) return false;
+        return true;
+      });
+    }
+    return {
+      key: key,
+      draw: function (V) { return drawUnit(mixed ? "ahu" : "doas", V); },
+      aria: mixed
+        ? "Section through an air-handling unit: outdoor air in at the left, supply air out at the right, and return air from the rooms along the top deck. Five sections are missing."
+        : "Section through a DOAS unit: outdoor air in at the left and out to the rooms at the right, with exhaust air from the rooms along the top deck. Five sections are missing.",
+      slots: slots,
+      tray: mixed ? ["mix", "filter", "cc", "hc", "fan"] : ["hrw", "filter", "cc", "hc", "fan", "mix"],
+      notHere: notHere,
+      check: function (type, sid, placed) {
+        if (notHere[type]) return notHere[type];
+        var trial = {}; for (var s in placed) trial[s] = placed[s];
+        trial[sid] = type;
+        return fits(trial) ? null : why(type, sid);
+      },
+      onPlace: function (type) { return PARTS[type].fn; },
+      doneMsg: function (placed) {
+        var at = placed.p3 === "fan" ? 3 : placed.p4 === "fan" ? 4 : 5;
+        var m = at === 3 ? "Your fan sits before the coils and blows air through them: a blow-through unit."
+          : at === 5 ? "Your fan sits after the coils and draws air through them: a draw-through unit."
+          : "Your fan sits between the coils: it draws air through the cooling coil and blows it through the heating coil.";
+        m += " All three arrangements are built. What does not change is the start: " + firstName + ", then filter, then the coils.";
+        if (!mixed) m += " Compare it with the unit above: nothing comes back from the rooms to be mixed in, so it supplies outdoor air only, and far less air than an all-air unit. The fan coils or chilled beams do the rest of the cooling. (Real units also filter both airstreams ahead of the wheel; the drawing leaves those filters out.) The mixing box in the tray belongs to the other unit: select it to see why.";
+        return m;
+      }
+    };
+  }
+  var L2a = unitLevel("L2a", "mix");
+  var L2b = unitLevel("L2b", "hrw");
+
   // ---------- progress, kept in this browser only ----------
   var STORE = "tt-bpsd6030-systems";
   var progress = {};
   try { progress = JSON.parse(localStorage.getItem(STORE)) || {}; } catch (e) { progress = {}; }
   function save() { try { localStorage.setItem(STORE, JSON.stringify(progress)); } catch (e) {} }
 
-  // ---------- one level's game ----------
+  /* ---------- one level's game ----------
+     A level gives its slots, tray and drawing. Level 1 slots each accept one
+     part type (slots[s].accepts, with wrong/notHere reasons) and draw with
+     drawScene(cfg); a level can instead give its own draw(V), and check(type,
+     slot, placed) returning null or the reason, where the right part depends
+     on what is already placed. loops, follow, onPlace and doneMsg are optional. */
   function Game(lv, n) {
     var el = { scene: $("scene" + n), legend: $("legend" + n), tray: $("tray" + n), fb: $("fb" + n), progress: $("progress" + n),
       follow: $("follow" + n), fTitle: $("fTitle" + n), fText: $("fText" + n), fBack: $("fBack" + n), fNext: $("fNext" + n), reset: $("reset" + n) };
     var slotIds = Object.keys(lv.slots);
+    var loops = lv.loops || [];
     var pr, cards, selected = null, fstep = -1;
+    // the part type in a slot; progress saved before types were stored holds true
+    function typeIn(s) { var v = pr.placed[s]; return v === true ? lv.slots[s].accepts : v || null; }
+    function placedMap() { var m = {}; slotIds.forEach(function (s) { if (pr.placed[s]) m[s] = typeIn(s); }); return m; }
+    function verdict(type, sid) {
+      if (lv.check) return lv.check(type, sid, placedMap());
+      if (type === lv.slots[sid].accepts) return null;
+      return lv.wrong[type + "@" + sid] || lv.notHere[type] || (PARTS[type].what + " " + lv.slots[sid].where);
+    }
+    function doneText() { return lv.doneMsg ? lv.doneMsg(placedMap()) : "The parts left in the tray belong to other systems: select one to see why."; }
 
     function shuffle(a) {
       for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
@@ -924,24 +1182,27 @@
       cards = shuffle(lv.tray.map(function (t) { return { type: t, used: false }; }));
       // a card is used up for each placed slot that takes its type
       slotIds.forEach(function (s) {
-        if (!pr.placed[s]) return;
-        for (var i = 0; i < cards.length; i++) if (!cards[i].used && cards[i].type === lv.slots[s].accepts) { cards[i].used = true; break; }
+        var t = typeIn(s);
+        if (!t) return;
+        for (var i = 0; i < cards.length; i++) if (!cards[i].used && cards[i].type === t) { cards[i].used = true; break; }
       });
       selected = null; fstep = -1;
     }
     function nPlaced() { return slotIds.filter(function (s) { return pr.placed[s]; }).length; }
     function complete() { return nPlaced() === slotIds.length; }
     function loopDone(lp) { return lp.parts.every(function (p) { return !lv.slots[p] || pr.placed[p]; }); }
-    function loopOf(net) { for (var i = 0; i < lv.loops.length; i++) if (lv.loops[i].nets.indexOf(net) >= 0) return lv.loops[i]; return null; }
+    function loopOf(net) { for (var i = 0; i < loops.length; i++) if (loops[i].nets.indexOf(net) >= 0) return loops[i]; return null; }
 
     var V = {
       aria: lv.aria,
       st: function (pid) { return lv.slots[pid] ? (pr.placed[pid] ? "placed" : "slot") : "fixed"; },
+      type: function (pid) { return typeIn(pid); },
+      done: function () { return complete(); },
       slotLabel: function (pid) { return "Empty slot. " + lv.slots[pid].where; },
       netOpacity: function (k) { var lp = loopOf(k); return !lp || loopDone(lp) ? 1 : .5; },
       netColor: function (k, col) {
-        if (fstep < 0 || fstep >= lv.loops.length) return col;
-        return lv.loops[fstep].nets.indexOf(k) >= 0 ? col : COL.fade;
+        if (fstep < 0 || fstep >= loops.length) return col;
+        return loops[fstep].nets.indexOf(k) >= 0 ? col : COL.fade;
       }
     };
 
@@ -951,7 +1212,7 @@
       el.fb.innerHTML = html;
     }
     function render() {
-      var out = drawScene(lv.cfg, V);
+      var out = lv.draw ? lv.draw(V) : drawScene(lv.cfg, V);
       el.scene.innerHTML = out.svg;
       el.scene.classList.toggle("armed", selected !== null);
       el.legend.innerHTML = legendHtml(out.used);
@@ -973,6 +1234,7 @@
       el.tray.innerHTML = html || '<p class="trayempty">The tray is empty.</p>';
     }
     function renderFollow() {
+      if (!el.follow) return;
       el.follow.hidden = !complete();
       if (!complete()) return;
       if (fstep < 0) {
@@ -1007,21 +1269,21 @@
     }
     function place(i, sid, fromKeys) {
       if (i === null || pr.placed[sid] || !lv.slots[sid]) return;
-      var c = cards[i], s = lv.slots[sid];
+      var c = cards[i];
       selected = null;
-      if (c.type === s.accepts) {
-        var before = lv.loops.filter(loopDone);
-        pr.placed[sid] = true; c.used = true; save();
+      var why = verdict(c.type, sid);
+      if (!why) {
+        var before = loops.filter(loopDone);
+        pr.placed[sid] = c.type; c.used = true; save();
         render();
-        var msg = "<b>" + PARTS[c.type].name + "</b> is in.";
-        lv.loops.forEach(function (lp) { if (before.indexOf(lp) < 0 && loopDone(lp)) msg += " " + lp.done; });
-        if (complete()) msg += " Every part is in. The parts left in the tray belong to other systems: select one to see why.";
+        var msg = "<b>" + PARTS[c.type].name + "</b> is in." + (lv.onPlace ? " " + lv.onPlace(c.type) : "");
+        loops.forEach(function (lp) { if (before.indexOf(lp) < 0 && loopDone(lp)) msg += " " + lp.done; });
+        if (complete()) msg += " <b>Every part is in.</b> " + doneText();
         feedback(msg, "good");
-        if (fromKeys) { if (complete()) el.fNext.focus(); else focusCard(-1); }
+        if (fromKeys) { if (complete() && el.fNext) el.fNext.focus(); else focusCard(-1); }
       } else {
         pr.missed[sid] = true; save();
         render();
-        var why = lv.wrong[c.type + "@" + sid] || lv.notHere[c.type] || (PARTS[c.type].what + " " + s.where);
         feedback("<b>Not there.</b> " + why, "bad");
         flashWrong(sid);
         if (fromKeys) focusCard(i);
@@ -1100,30 +1362,52 @@
     });
 
     // ---- follow the heat ----
-    el.fNext.addEventListener("click", function () { if (fstep < lv.follow.length - 1) { fstep++; render(); } });
-    el.fBack.addEventListener("click", function () { if (fstep > -1) { fstep--; render(); } });
+    if (el.follow) {
+      el.fNext.addEventListener("click", function () { if (fstep < lv.follow.length - 1) { fstep++; render(); } });
+      el.fBack.addEventListener("click", function () { if (fstep > -1) { fstep--; render(); } });
+    }
     el.reset.addEventListener("click", function () { start(true); save(); render(); feedback(""); });
 
     start(false);
     render();
-    feedback(complete() ? "Every part is in from your last visit. Follow the heat, or start again." : "");
+    feedback(complete() ? "Every part is in from your last visit. " + (el.follow ? "Follow the heat, or start again." : doneText()) : "");
     return { render: render };
   }
 
-  var games = [Game(L1, 1)];
+  var games = [Game(L1, 1), Game(L2a, "2a"), Game(L2b, "2b")];
 
-  // ---------- tabs: arrow keys skip the levels not built yet ----------
-  var tabs = Array.prototype.slice.call(document.querySelectorAll(".tab"));
-  tabs.forEach(function (t) {
+  // ---------- tabs: only the levels built so far are live ----------
+  var live = Array.prototype.slice.call(document.querySelectorAll(".tab")).filter(function (x) { return !x.disabled; });
+  var panels = live.map(function (t) { return $(t.getAttribute("aria-controls")); });
+  var current = 0;
+  function activate(idx, focusTab) {
+    if (idx < 0 || idx >= live.length) return;
+    current = idx;
+    live.forEach(function (t, i) {
+      var on = i === idx;
+      t.classList.toggle("active", on);
+      t.setAttribute("aria-selected", on ? "true" : "false");
+      t.tabIndex = on ? 0 : -1;
+      panels[i].hidden = !on;
+    });
+    if (focusTab) live[idx].focus();
+  }
+  live.forEach(function (t, i) {
+    t.addEventListener("click", function () { activate(i); });
     t.addEventListener("keydown", function (e) {
-      var live = tabs.filter(function (x) { return !x.disabled; });
-      var i = live.indexOf(t), j = i;
+      var j;
       if (e.key === "ArrowRight" || e.key === "ArrowDown") j = Math.min(i + 1, live.length - 1);
       else if (e.key === "ArrowLeft" || e.key === "ArrowUp") j = Math.max(i - 1, 0);
       else if (e.key === "Home") j = 0;
       else if (e.key === "End") j = live.length - 1;
       else return;
-      e.preventDefault(); live[j].focus();
+      e.preventDefault(); activate(j, true);
+    });
+  });
+  document.querySelectorAll("[data-nav]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      activate(current + (b.getAttribute("data-nav") === "next" ? 1 : -1), true);
+      window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
     });
   });
 
