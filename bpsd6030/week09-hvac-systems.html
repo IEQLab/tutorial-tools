@@ -179,6 +179,24 @@
   .scene .tracept:hover rect { stroke: var(--accent); }
   .scene .tracept:focus { outline: none; }
   .scene .tracept:focus-visible rect { stroke: var(--accent); stroke-width: 3; }
+  /* level 5: every piece of equipment is a button; the found fault is outlined */
+  .scene.faults [data-part] { cursor: pointer; }
+  .scene.faults [data-part]:hover { filter: drop-shadow(0 0 3px var(--accent)); }
+  .scene.faults [data-part]:focus { outline: none; }
+  .scene.faults [data-part]:focus-visible { filter: drop-shadow(0 0 2px var(--accent)) drop-shadow(0 0 2px var(--accent)); }
+  .scene.faults [data-part].found { filter: drop-shadow(0 0 2px var(--bad)) drop-shadow(0 0 2px var(--bad)); }
+  .scene.faults [data-part].found rect[fill="transparent"] { stroke: var(--bad); stroke-width: 2; stroke-dasharray: 5 4; }
+  .choices { display: flex; flex-direction: column; gap: var(--s-2); }
+  .choices[hidden] { display: none; }
+  .choice { text-align: left; border: 1px solid var(--line); border-left: 3px solid var(--line); background: var(--field); color: var(--ink);
+    border-radius: var(--r-sm); padding: var(--s-2) var(--s-3); font: inherit; font-size: var(--t-label); line-height: 1.45; cursor: pointer;
+    transition: border-color var(--dur) var(--ease-out); }
+  .choice:hover { border-color: var(--accent); }
+  .choice:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .choice:active { transform: translateY(1px); }
+  .choice:disabled { cursor: default; transform: none; }
+  .choice.no { opacity: .55; border-left-color: var(--bad); }
+  .choice.yes { border-color: var(--good); border-left-color: var(--good); background: var(--result-bg); }
   .legend { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-4); margin: var(--s-3) 0 0; font-size: var(--t-meta); color: var(--muted); }
   .legend span { display: inline-flex; align-items: center; gap: var(--s-1); }
   .legend svg { display: block; flex: none; }
@@ -267,7 +285,7 @@
     <button class="tab" role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false" tabindex="-1" data-idx="1"><span class="n">2</span><span>Inside the air-handling unit</span></button>
     <button class="tab" role="tab" id="tab-3" aria-controls="panel-3" aria-selected="false" tabindex="-1" data-idx="2"><span class="n">3</span><span>What reaches the zone</span></button>
     <button class="tab" role="tab" id="tab-4" aria-controls="panel-4" aria-selected="false" tabindex="-1" data-idx="3"><span class="n">4</span><span>Trace the air</span></button>
-    <button class="tab" role="tab" id="tab-5" aria-selected="false" tabindex="-1" data-idx="4" disabled title="Not built yet"><span class="n">5</span><span>Spot the fault</span></button>
+    <button class="tab" role="tab" id="tab-5" aria-controls="panel-5" aria-selected="false" tabindex="-1" data-idx="4"><span class="n">5</span><span>Spot the fault</span></button>
   </div>
 
   <!-- ===== Orientation: mirrors the Week 9 steps in teachr bpsd6030/summaries/tutorial_plan.md ===== -->
@@ -397,6 +415,34 @@
     <h3 class="stage">DOAS with fan-coil units</h3>
     <p class="note">The DOAS on the roof serves every floor through the duct riser, and a fan-coil unit in each room does the cooling and heating.</p>
     <div id="air4b"></div>
+    <div class="nav">
+      <button type="button" class="btn ghost" data-nav="back">Back</button>
+      <button type="button" class="btn" data-nav="next">Next: spot the fault</button>
+    </div>
+  </section>
+
+  <!-- ===== Tab 5: Spot the fault ===== -->
+  <section class="card" role="tabpanel" id="panel-5" aria-labelledby="tab-5" hidden>
+    <div class="primer">
+      <h2 class="what">Each building has one fault. Find it, then say why it cannot work.</h2>
+      <p>These are the questions a review panel asks of a design: does each piece of plant sit where it can work, does every loop have what it needs to run, and can the air get in and out safely. Each building below has exactly one thing wrong. Select it in the drawing, then choose the reason. Five buildings make a set, and a new set draws different faults.</p>
+    </div>
+    <p class="casedesc" id="brief5"></p>
+    <div class="game">
+      <div>
+        <div class="scene faults" id="scene5"></div>
+        <div class="legend" id="legend5"></div>
+      </div>
+      <div class="side">
+        <p class="progress" id="progress5"></p>
+        <p class="fb" id="fb5" aria-live="polite"></p>
+        <div class="choices" id="choices5" role="group" aria-label="Why it cannot work" hidden></div>
+        <div class="btn-row" style="margin-top:0">
+          <button type="button" class="btn" id="next5" hidden>Next building</button>
+          <button type="button" class="btn ghost" id="new5">New set of faults</button>
+        </div>
+      </div>
+    </div>
     <div class="nav">
       <button type="button" class="btn ghost" data-nav="back">Back</button>
     </div>
@@ -609,8 +655,12 @@
     var eHeat = cfg.heat === "resistance";
     var hhw = null;                                // where heating water is made, if anywhere
     if (hyd && !eHeat) hhw = hp4 ? "hp4" : (cfg.heat === "heatpump" ? "hp" : "boiler");
+    // level 5: one deliberate fault, which bypasses the practice rules
+    var F = cfg.fault || "";
+    var unitOn = F !== "noDoas", accB = F === "accBasement";
+    if (F === "vrfBoiler") hhw = "boiler";
     var floorHhw = !!hhw && (floorWater || vav);
-    var basement = wcc || hhw === "boiler";
+    var basement = wcc || hhw === "boiler" || accB;
     var pipeShaft = floorWater || floorHhw || basement || vrf;
 
     // ---- geometry ----
@@ -643,6 +693,11 @@
       if (V.st(pid) === "slot") return primary ? slot(pid, b) : outline(b);
       if (label && primary) labels += label;
       return '<g data-part="' + pid + '">' + svg + '</g>';
+    }
+    // level 5: an invisible target where something that should be there is missing
+    var hots = "";
+    function hot(pid, b, label) {
+      hots += '<g data-part="' + pid + '" data-label="' + esc(label) + '"><rect x="' + b.x + '" y="' + b.y + '" width="' + b.w + '" height="' + b.h + '" fill="transparent"/></g>';
     }
 
     // ---- service networks: every run of one service is outlined first and
@@ -722,11 +777,11 @@
 
     // ---- pipe riser lanes: floor services nearest the floors ----
     var lanes = [];
-    if (hyd && (floorWater || wcc)) lanes.push("chw");
+    if (hyd && (floorWater || wcc || accB)) lanes.push("chw");
     if (hhw && (floorHhw || hhw === "boiler")) lanes.push("hhw");
     if (vrf) lanes.push("ref");
     if (wcc) lanes.push("cw");
-    if (hhw === "boiler") lanes.push("flue");
+    if (hhw === "boiler" && F !== "boilerNoFlue") lanes.push("flue");
     var LX = {};
     lanes.forEach(function (k, j) { LX[k] = psx + psw - 8 - j * 9; });
     var FY = { chw: 24, hhw: 31, ref: 26 };
@@ -740,8 +795,8 @@
     var secs = allAir ? ["mix", "filter", "cc", "fan"] : vrf ? ["hrw", "filter", "dxc", "fan"] : ["hrw", "filter", "cc", eHeat ? "eh" : "hc", "fan"];
     var sw = 36, unitW = secs.length * sw, unitX = unitRight - unitW;
     var unit = kit(unitX, aTop, unitW, aH);
-    kits += rect(unitX + 6, itemBot, 6, plinth, "url(#hvSlab)", null, 0, 0) + rect(unitRight - 12, itemBot, 6, plinth, "url(#hvSlab)", null, 0, 0);
-    secs.forEach(function (s, k) {
+    if (unitOn) kits += rect(unitX + 6, itemBot, 6, plinth, "url(#hvSlab)", null, 0, 0) + rect(unitRight - 12, itemBot, 6, plinth, "url(#hvSlab)", null, 0, 0);
+    if (unitOn) secs.forEach(function (s, k) {
       var sx = unitX + k * sw, cx = sx + sw / 2, cy = aTop + aH / 2;
       if (k > 0) unit += pl([[sx, aTop], [sx, aTop + aH]], COL.plantInk, 1, ' stroke-opacity=".5"');
       if (s === "mix") unit += pl([[cx - 8, cy + 8], [cx + 8, cy - 8]], COL.plantInk, 1.6) + '<circle cx="' + cx + '" cy="' + cy + '" r="1.8" fill="' + COL.plantInk + '"/>';
@@ -754,16 +809,18 @@
       if (s === "hrw") unit += '<circle cx="' + cx + '" cy="' + cy + '" r="13" fill="' + COL.card + '" stroke="' + COL.plantInk + '" stroke-width="1.2"/>' +
         pl([[cx - 9, cy - 9], [cx + 9, cy + 9]], COL.plantInk, 1) + pl([[cx - 9, cy + 9], [cx + 9, cy - 9]], COL.plantInk, 1);
     });
-    kits += part("ahu", { x: unitX, y: aTop, w: unitW, h: aH }, unit,
+    if (unitOn) kits += part("ahu", { x: unitX, y: aTop, w: unitW, h: aH }, unit,
       name(unitX + unitW / 2 + 12, aTop - 24, allAir ? "air-handling unit" : "outdoor air unit (DOAS)"));
-    thin += arrow([[unitX - 34, aTop + 12], [unitX - 1, aTop + 12]], COL.air, 2.5); mark("oa");
-    if (!cfg.quiet) lab(unitX - 4, aTop + 28, "outdoor air", "end");
-    run(allAir ? "sup" : "vent", [[DS.sup, aTop + aH], [DS.sup, yLow + (allAir ? 19 : 17)]]);
     var mixX = unitX + sw / 2;
-    run("ret", [[DS.ret, yLow + 32], [DS.ret, aTop - 12], [mixX, aTop - 12], [mixX, aTop]]);
-    run("ret", [[mixX, aTop - 12], [mixX, aTop - 26]]);
-    thin += head(mixX, aTop - 38, "u", COL.air, 5);
-    if (!cfg.quiet) lab(mixX - 9, aTop - 30, allAir ? "relief air" : "exhaust", "end");
+    if (unitOn) {
+      kits += part("intake", { x: unitX - 34, y: aTop + 6, w: 34, h: 12 }, arrow([[unitX - 34, aTop + 12], [unitX - 1, aTop + 12]], COL.air, 2.5)); mark("oa");
+      if (!cfg.quiet) lab(unitX - 4, aTop + 28, "outdoor air", "end");
+      run(allAir ? "sup" : "vent", [[DS.sup, aTop + aH], [DS.sup, yLow + (allAir ? 19 : 17)]]);
+      run("ret", [[DS.ret, yLow + 32], [DS.ret, aTop - 12], [mixX, aTop - 12], [mixX, aTop]]);
+      run("ret", [[mixX, aTop - 12], [mixX, aTop - 26]]);
+      thin += head(mixX, aTop - 38, "u", COL.air, 5);
+      if (!cfg.quiet) lab(mixX - 9, aTop - 30, allAir ? "relief air" : "exhaust", "end");
+    } else hot("noUnit", { x: unitX, y: aTop - 30, w: unitW, h: aH + 30 }, "The roof over the duct riser");
     // where the air labels go (level 4): the intake, the outlet, and the riser two and three floors down
     var A = { oa: [unitX - 48, aTop + 12], out: [mixX, aTop - 52],
       sup: [DS.sup, floorY(Math.min(1, nDraw - 1)) + fh / 2], ret: [DS.ret, floorY(Math.min(2, nDraw - 1)) + fh / 2] };
@@ -771,9 +828,11 @@
     // ---- roof plant, left to right, clear of the pipe riser so a flue can rise past ----
     var cur = bx + 10;
     function feet(x, w) { return rect(x + 5, itemBot, 6, plinth, "url(#hvSlab)", null, 0, 0) + rect(x + w - 11, itemBot, 6, plinth, "url(#hvSlab)", null, 0, 0); }
-    if (hhw === "boiler") cur = LX.flue + 12;
-    if (wcc) {
-      var tw = 60, th = 46, tx = cur; cur += tw + 16;
+    if (LX.flue != null) cur = LX.flue + 12;
+    if (wcc || F === "towerAcc") {
+      // the intake fault draws the tower right beside the outdoor-air intake
+      var tw = 60, th = 46, tx = F === "intakeTower" ? unitX - tw - 64 : cur;
+      if (F !== "intakeTower") cur += tw + 16;
       kits += feet(tx, tw);
       var tower = kit(tx, itemBot - th, tw, th);
       tower += rect(tx + 13, itemBot - th - 12, tw - 26, 12, COL.plant, COL.plantInk, 1.2, 2);
@@ -802,8 +861,9 @@
       roofConn.hhw.push(hx + 20);
       kits += part("pumpHhw", { x: hx + 15, y: itemBot + 2, w: 10, h: 10 }, pump(hx + 20, itemBot + 7));
     }
-    if (hyd && !wcc && !hp4) {
+    if (hyd && !wcc && !hp4 && !accB) {
       var cxx = cur; cur += 100;
+      if (F === "towerAcc") roofConn.cw.push(cxx + 70);
       kits += feet(cxx, 84);
       var ac = kit(cxx, itemBot - 34, 84, 34);
       for (var f2 = 0; f2 < 3; f2++) ac += rect(cxx + 6 + f2 * 25, itemBot - 40, 22, 6, COL.plant, COL.plantInk, 1.2, 2);
@@ -829,7 +889,7 @@
         var blx = bcur; bcur += 64 + 18;
         kits += part("boiler", { x: blx, y: iTop, w: 64, h: iH }, kit(blx, iTop, 64, iH) + flame(blx + 44, iTop + iH / 2 + 2),
           name(blx + 32, BB + 22, "gas boiler"));
-        baseConn.flue.push(blx + 46);
+        if (F !== "boilerNoFlue") baseConn.flue.push(blx + 46);
         thin += pl([[12, G + 46], [blx + 54, G + 46], [blx + 54, iTop]], COL.gas, 2.5); mark("gas");
         lab(16, G + 42, "gas", "start", COL.gas);
         baseConn.hhw.push(blx + 16);
@@ -853,7 +913,16 @@
         mark("refrig");
         baseConn.chw.push(chx + 24); baseConn.cw.push(chx + 80);
         kits += part("pumpChw", { x: chx + 19, y: BY.chw + 17, w: 10, h: 10 }, pump(chx + 24, BY.chw + 22));
-        kits += part("pumpCw", { x: chx + 75, y: BY.cw + 13, w: 10, h: 10 }, pump(chx + 80, BY.cw + 18));
+        if (F !== "noCwPump") kits += part("pumpCw", { x: chx + 75, y: BY.cw + 13, w: 10, h: 10 }, pump(chx + 80, BY.cw + 18));
+        else hot("noCwPump", { x: chx + 66, y: BY.cw + 6, w: 28, h: 26 }, "The condenser-water pipe above the chiller");
+      }
+      if (accB) {
+        var ab = bcur, acb = kit(ab, iTop, 84, iH);
+        for (var f4 = 0; f4 < 3; f4++) acb += rect(ab + 6 + f4 * 25, iTop - 6, 22, 6, COL.plant, COL.plantInk, 1.2, 2);
+        acb += zigzag(ab + 8, iTop + 10, 68, iH - 20, COL.plantInk);
+        kits += part("chiller", { x: ab, y: iTop - 6, w: 84, h: iH + 6 }, acb, name(ab + 42, BB + 22, "air-cooled chiller"));
+        baseConn.chw.push(ab + 30);
+        kits += part("pumpChw", { x: ab + 25, y: BY.chw + 17, w: 10, h: 10 }, pump(ab + 30, BY.chw + 22));
       }
     }
 
@@ -891,22 +960,24 @@
           run("hhw", [[LX.hhw, y + FY.hhw], [rhx, y + FY.hhw], [rhx, y + 27]]);
         }
         var rx = Math.round((xs[1] + xs[2]) / 2);
-        kits += part("grille", { x: rx - 9, y: y + 36, w: 18, h: 17 }, rect(rx - 8, y + 37, 16, 3, COL.muted, null, 0, 0) + arrow([[rx, y + 52], [rx, y + 41]], COL.air, 1.8),
+        if (F === "noReturn" && top) hot("noReturn", { x: zx0, y: y + 30, w: dsx - zx0, h: 44 }, "The ceiling of the top floor");
+        else kits += part("grille", { x: rx - 9, y: y + 36, w: 18, h: 17 }, rect(rx - 8, y + 37, 16, 3, COL.muted, null, 0, 0) + arrow([[rx, y + 52], [rx, y + 41]], COL.air, 1.8),
           txt(rx, y + 66, "return grille", "middle", COL.muted, 10), top);
         var ry = floorHhw ? y + 36 : y + 32;
-        thin += arrow([[rx + 12, ry], [dsx - 2, ry]], COL.air, 1.8, "4 3");
+        if (!(F === "noReturn" && top)) thin += arrow([[rx + 12, ry], [dsx - 2, ry]], COL.air, 1.8, "4 3");
       } else {
         // DOAS ventilation duct and an exhaust path on every floor
         var ex = zx1 - 20;
-        kits += part("exhaust", { x: ex - 9, y: y + 36, w: 18, h: 17 }, rect(ex - 8, y + 37, 16, 3, COL.muted, null, 0, 0) + arrow([[ex, y + 52], [ex, y + 41]], COL.air, 1.8),
+        if (unitOn) kits += part("exhaust", { x: ex - 9, y: y + 36, w: 18, h: 17 }, rect(ex - 8, y + 37, 16, 3, COL.muted, null, 0, 0) + arrow([[ex, y + 52], [ex, y + 41]], COL.air, 1.8),
           txt(ex, y + 66, "exhaust", "middle", COL.muted, 10), top);
-        thin += arrow([[ex + 10, y + 32], [dsx - 2, y + 32]], COL.air, 1.8, "4 3");
-        if (top && !cfg.quiet) lab(zx1 + 2, y + 80, "ventilation air (DOAS)", "end");
+        if (unitOn) thin += arrow([[ex + 10, y + 32], [dsx - 2, y + 32]], COL.air, 1.8, "4 3");
+        if (top && unitOn && !cfg.quiet) lab(zx1 + 2, y + 80, "ventilation air (DOAS)", "end");
         var tEnd = zx1 - 46;
         if (id === "beam") {
           xs = spread(3, zx0, tEnd);
-          run("vent", [[DS.sup, y + 17], [xs[0], y + 17]]);
+          if (unitOn) run("vent", [[DS.sup, y + 17], [xs[0], y + 17]]);
           run("chw", [[LX.chw, y + FY.chw], [xs[2] - 14, y + FY.chw]]);
+          if (F === "beamHeat") run("hhw", [[LX.hhw, y + FY.hhw], [xs[2] + 14, y + FY.hhw]]);
           if (hhw) {
             var phx = bx + 17;
             run("hhw", [[LX.hhw, y + FY.hhw], [phx, y + FY.hhw], [phx, y + fh - 12]]);
@@ -915,8 +986,9 @@
               txt(psx + psw + 6, y + fh - 4, "◂ perimeter heater under the glazing", "start", COL.muted, 10), top);
           }
           xs.forEach(function (x, k) {
-            run("vent", [[x, y + 17], [x, y + 35]]);
+            if (unitOn) run("vent", [[x, y + 17], [x, y + 35]]);
             run("chw", [[x - 14, y + FY.chw], [x - 14, y + 35]]);
+            if (F === "beamHeat") run("hhw", [[x + 14, y + FY.hhw], [x + 14, y + 35]]);
             var bm = rect(x - 26, y + 35, 52, 8, COL.plant, COL.cool, 1.4, 1);
             for (var sl = x - 20; sl <= x + 20; sl += 5) bm += pl([[sl, y + 37], [sl, y + 41]], COL.cool, 1);
             bm += arrow([[x - 22, y + 45], [x - 30, y + 58]], COL.cool, 1.6) + arrow([[x + 22, y + 45], [x + 30, y + 58]], COL.cool, 1.6);
@@ -938,6 +1010,7 @@
         } else if (vrf) {
           var bcx = zx0 + 2;
           run("ref", [[LX.ref, y + FY.ref], [bcx, y + FY.ref]]);
+          if (F === "vrfBoiler") run("hhw", [[LX.hhw, y + FY.hhw], [bcx + 6, y + FY.hhw]]);
           xs = spread(3, zx0 + 48, tEnd);
           run("ref", [[bcx + 30, y + FY.ref], [xs[2], y + FY.ref]]);
           kits += rect(bcx, y + 16, 30, 18, COL.plant, COL.refrig, 1.4, 2);
@@ -975,14 +1048,14 @@
     ["chw", "hhw", "cw", "flue"].forEach(function (k) {
       baseConn[k].forEach(function (x) { run(k, [[LX[k], BY[k]], [x, BY[k]], [x, G + 58]]); });
     });
-    if (hhw === "boiler") {
+    if (LX.flue != null) {
       kits += rect(LX.flue - 6, RT - 76, 12, 4, COL.muted, null, 0, 1);
       lab(LX.flue - 8, RT - 64, "flue", "end");
     }
 
     var nets = drawNets(["sup", "vent", "ret"]) + drawNets(["cw", "flue", "hhw", "chw", "ref"]);
     var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="group" aria-label="' + esc(V.aria) + '">' +
-      shell + thin + nets + kits + labels + '</svg>';
+      shell + thin + nets + kits + labels + hots + '</svg>';
     return { svg: svg, used: used, anchors: A };
   }
 
@@ -1006,7 +1079,7 @@
     if (used.elec) items.push(sw("line", COL.elec) + "Electricity");
     if (used.gas) items.push(sw("line", COL.gas) + "Gas");
     items.push(sw("box") + "Plant / equipment");
-    items.push(sw("slot") + "Empty slot");
+    if (!used.noSlots) items.push(sw("slot") + "Empty slot");
     return items.map(function (it) { return '<span>' + it + '</span>'; }).join("");
   }
 
@@ -1816,6 +1889,208 @@
     $("air4" + c).innerHTML = gameHtml("4" + c, "Labels", true);
     games.push(Game(L4[c], "4" + c));
   });
+
+  /* ---------- level 5: spot the fault ----------
+     Each building is drawn complete with one fault (cfg.fault in drawScene).
+     Every piece of equipment is a button; a fault that is something missing
+     also has an invisible target where it should be. hits: the parts that
+     count as finding it. Then three reasons, one right, each wrong one with
+     why not. Five faults a set, always including the intake. */
+  var VAV_WCC = { system: "vav", cool: "water-chiller", heat: "resistance", floors: 10 };
+  var VAV_ACC = { system: "vav", cool: "air-chiller", heat: "resistance", floors: 10 };
+  var BEAMS = { system: "beam", cool: "hp4", heat: "heatpump", floors: 10 };
+  function withFault(cfg, f) { var c = {}; for (var k in cfg) c[k] = cfg[k]; c.fault = f; return c; }
+  var FAULTS = {
+    intake: {
+      answer: "The intake is right beside the cooling tower and can draw in its drift.",
+      cfg: withFault(VAV_WCC, "intakeTower"), hits: ["intake", "tower"],
+      brief: "An office cooled by a central VAV system, with a water-cooled chiller in the basement and a cooling tower on the roof.",
+      right: "The outdoor-air intake is right beside the cooling tower, so it draws in the tower's drift: warm, wet air that can carry Legionella into every room. Intakes are kept well away from cooling towers and exhaust outlets, and the distances are set in AS 1668.2. Where the plant sits on the roof decides it, so it is an architectural decision as much as a mechanical one.",
+      wrong: [
+        ["The cooling tower should be in the basement, next to the chiller.", "A cooling tower has to sit outdoors, where it can evaporate water into the air. Being on the roof is right; the problem is what is right beside it."],
+        ["The air-handling unit should take its outdoor air from the duct riser.", "Outdoor air has to come from outdoors, and the roof is a good place for the intake. It is in the wrong spot on the roof, not the wrong kind of place."]
+      ]
+    },
+    beamHeat: {
+      answer: "Heating water is piped to the beams, which here should only cool.",
+      cfg: withFault(BEAMS, "beamHeat"), hits: ["beam"],
+      brief: "An office with active chilled beams, a DOAS, heaters under the glazing and a four-pipe heat pump on the roof.",
+      right: "Heating water is piped to the chilled beams. Heating from the ceiling works poorly, because warm air let out up there stays there, and this building already heats under the glazing and at the DOAS coil. These beams should take chilled water only.",
+      wrong: [
+        ["The chilled beams have no fans, so they cannot cool the room.", "Active chilled beams need no fan: the ventilation air blown through each beam draws room air across its coil."],
+        ["The beams should be fed with return air from the duct riser.", "The beams are fed with outdoor air from the DOAS, and nothing goes back to the roof to be reused in this building."]
+      ]
+    },
+    noDoas: {
+      answer: "Nothing brings outdoor air in or dries it, and the beams need both.",
+      cfg: withFault(BEAMS, "noDoas"), hits: ["beam", "noUnit"],
+      brief: "An office with active chilled beams, heaters under the glazing and a four-pipe heat pump on the roof.",
+      right: "There is no outdoor air unit. Active chilled beams need ventilation air blown through them to work, and nothing here brings outdoor air in at all. Nothing dries it either, so on a humid day the beams would chill the room air below its dew point and drip.",
+      wrong: [
+        ["The chilled beams need their own fans to move the room air.", "With fans they would be fan-coil units, and that still would not bring any outdoor air into the building or dry it."],
+        ["The heat pump should be in the basement, out of the weather.", "An air-source heat pump takes heat from, or gives it to, the outdoor air, so it has to be outdoors. The roof is right."]
+      ]
+    },
+    towerAcc: {
+      answer: "The tower is piped to a chiller that rejects its own heat with fans.",
+      cfg: withFault(VAV_ACC, "towerAcc"), hits: ["tower", "chiller"],
+      brief: "An office cooled by a central VAV system, with its cooling plant on the roof.",
+      right: "A cooling tower is piped to an air-cooled chiller. An air-cooled chiller rejects its heat with its own fans, so the tower has nothing to do; only a water-cooled chiller needs one.",
+      wrong: [
+        ["The cooling tower should be in the basement, beside the chiller.", "A cooling tower has to be outdoors to evaporate water into the air. The problem is what it is connected to."],
+        ["The chiller and the tower both need a gas supply to run.", "Neither burns gas: the chiller runs on electricity, and the tower works by fans and evaporation."]
+      ]
+    },
+    accBasement: {
+      answer: "An air-cooled chiller has no outdoor air to reject heat into down here.",
+      cfg: withFault(VAV_ACC, "accBasement"), hits: ["chiller"],
+      brief: "An office cooled by a central VAV system with an air-cooled chiller.",
+      right: "The air-cooled chiller is in the basement. It rejects heat with its own fans into the air around it, so in a basement plant room it would only heat the room up until it stopped. It has to sit outdoors, usually on the roof.",
+      wrong: [
+        ["The chiller needs a cooling tower to reject its heat.", "Only a water-cooled chiller does. This is the air-cooled kind: its problem is where it is, not what it is connected to."],
+        ["Chilled water cannot be pumped up ten storeys to the roof.", "It can. In a closed loop the water coming down balances the water going up, so the pump only has to overcome friction, not lift the water."]
+      ]
+    },
+    vrfBoiler: {
+      answer: "A VRF system has no heating water for a boiler to make.",
+      cfg: withFault({ system: "vrf", cool: "vrf", heat: "heatpump", floors: 10 }, "vrfBoiler"), hits: ["boiler"],
+      brief: "An office with VRF ceiling cassettes, VRF outdoor units on the roof and a DOAS.",
+      right: "A gas boiler is piped into a VRF system. VRF moves heat with refrigerant, and its outdoor units heat as well as cool by running as heat pumps, so there is no heating water to make and nothing for a boiler to connect to.",
+      wrong: [
+        ["The boiler has no flue to take its combustion gases away.", "It has one: follow the grey pipe from the boiler up the riser to the roof."],
+        ["The VRF outdoor units should be in the basement.", "They reject or collect heat with their fans, so they have to be outdoors."]
+      ]
+    },
+    boilerNoFlue: {
+      answer: "Nothing takes the boiler's combustion gases out of the building.",
+      cfg: withFault({ system: "vav", cool: "air-chiller", heat: "boiler", floors: 10 }, "boilerNoFlue"), hits: ["boiler"],
+      brief: "An office cooled by a central VAV system, with an air-cooled chiller on the roof and a gas boiler for the reheat coils.",
+      right: "The gas boiler has no flue. Burning gas makes combustion products, carbon monoxide among them, that have to be taken out of the building, usually up a flue to above the roof.",
+      wrong: [
+        ["A boiler cannot make heating water for VAV reheat coils.", "It can. Hot-water reheat coils are one of the commonest ways to heat a VAV zone, and a boiler is one way to make the water."],
+        ["The boiler should be on the roof, not in the basement.", "Boilers sit in basement or roof plant rooms. Either works, as long as the combustion gases can get out."]
+      ]
+    },
+    noCwPump: {
+      answer: "Nothing moves the condenser water between the chiller and the tower.",
+      cfg: withFault(VAV_WCC, "noCwPump"), hits: ["chiller", "noCwPump"],
+      brief: "An office cooled by a central VAV system, with a water-cooled chiller in the basement and a cooling tower on the roof.",
+      right: "The condenser-water loop has no pump. Nothing moves the water between the chiller and the cooling tower, so the chiller cannot get rid of its heat and shuts down.",
+      wrong: [
+        ["The chilled-water loop has no pump to move its water.", "It has one, on the chilled-water pipe just above the chiller."],
+        ["The cooling tower should be next to the chiller in the basement.", "The tower has to be outdoors to evaporate water into the air. The loop between them is the problem."]
+      ]
+    },
+    noReturn: {
+      answer: "Air supplied to the top floor has no way back to the riser.",
+      cfg: withFault(VAV_ACC, "noReturn"), hits: ["noReturn"],
+      brief: "An office cooled by a central VAV system with an air-cooled chiller on the roof.",
+      right: "The top floor has no way for air to get back: no return grille, and no path to the riser. Air keeps being supplied but cannot leave, so the floor pressurises, less supply air gets in, and what does leaks out through doors and gaps.",
+      wrong: [
+        ["The top floor has no VAV box to control its supply air.", "It has one, on the supply duct where it enters the floor."],
+        ["The diffusers should be in the floor, not the ceiling.", "Ceiling diffusers are the usual way to supply cool air. Underfloor supply exists, but this floor's problem is elsewhere."]
+      ]
+    }
+  };
+  var PNAME = { ahu: "air-handling unit", intake: "outdoor-air intake", tower: "cooling tower", chiller: "chiller", pumpChw: "chilled-water pump",
+    pumpCw: "condenser-water pump", pumpHhw: "heating-water pump", hp: "heat pump", hp4: "four-pipe heat pump", boiler: "gas boiler",
+    vrfOut: "VRF outdoor units", vav: "VAV box", reheat: "reheat", diffuser: "supply diffuser", grille: "return grille", exhaust: "exhaust grille",
+    fcu: "fan-coil unit", beam: "chilled beam", perimeter: "perimeter heater", cassette: "ceiling cassette" };
+
+  (function () {
+    var el = { brief: $("brief5"), scene: $("scene5"), legend: $("legend5"), progress: $("progress5"), fb: $("fb5"),
+      choices: $("choices5"), next: $("next5"), fresh: $("new5") };
+    var set = [], i = 0, phase = "find", missFind = false, missWhy = false, score = { find: 0, why: 0 }, opts = [];
+    function shuffle(a) { for (var k = a.length - 1; k > 0; k--) { var j = Math.floor(Math.random() * (k + 1)); var t = a[k]; a[k] = a[j]; a[j] = t; } return a; }
+    function feedback(html, kind) { el.fb.className = "fb" + (kind ? " " + kind : ""); el.fb.innerHTML = html; }
+    function fault() { return FAULTS[set[i]]; }
+    function partName(pid, fl) { return pid === "ahu" && fl.cfg.system !== "vav" ? "outdoor air unit (DOAS)" : PNAME[pid] || "part"; }
+
+    function render() {
+      var fl = fault();
+      var V = { aria: "Section through " + fl.brief.charAt(0).toLowerCase() + fl.brief.slice(1) + " One thing in it is wrong.",
+        st: function () { return "fixed"; }, netColor: function (k, c) { return c; }, netOpacity: function () { return 1; } };
+      var out = drawScene(fl.cfg, V), seen = {};
+      // the first drawing of each part is a keyboard stop; the found fault is outlined
+      el.scene.innerHTML = out.svg.replace(/<g data-part="(\w+)"( data-label="([^"]*)")?/g, function (m, pid, dl, lab) {
+        var cls = phase !== "find" && fl.hits.indexOf(pid) >= 0 ? ' class="found"' : "";
+        if (seen[pid]) return m + cls;
+        seen[pid] = true;
+        return m + cls + ' tabindex="0" role="button" aria-label="' + esc(lab || partName(pid, fl)) + '"';
+      });
+      out.used.noSlots = true;
+      el.legend.innerHTML = legendHtml(out.used);
+      el.brief.textContent = fl.brief;
+      el.progress.innerHTML = "Building <b>" + (i + 1) + " of " + set.length + "</b>";
+      el.choices.hidden = phase === "find";
+      el.next.hidden = phase !== "done" || i === set.length - 1;
+    }
+    function begin() {
+      var others = shuffle(Object.keys(FAULTS).filter(function (k) { return k !== "intake"; })).slice(0, 4);
+      set = shuffle(others.concat(["intake"]));
+      score = { find: 0, why: 0 };
+      i = 0; load();
+    }
+    function load() {
+      phase = "find"; missFind = false; missWhy = false;
+      render();
+      feedback("One thing in this building cannot work, or should not be there. Select it in the drawing.");
+    }
+    function showChoices() {
+      var fl = fault();
+      opts = shuffle([{ t: fl.answer, ok: true }].concat(fl.wrong.map(function (w) { return { t: w[0], why: w[1] }; })));
+      el.choices.innerHTML = opts.map(function (o, k) { return '<button type="button" class="choice" data-k="' + k + '">' + esc(o.t) + '</button>'; }).join("");
+    }
+    function pick(pid, fromKeys) {
+      if (phase !== "find") return;
+      var fl = fault();
+      if (fl.hits.indexOf(pid) < 0) {
+        missFind = true;
+        feedback("<b>The " + partName(pid, fl) + " looks right here.</b> Keep looking: check where each piece of plant sits, what it is connected to, and whether anything a loop needs is missing.", "bad");
+        return;
+      }
+      phase = "why";
+      if (!missFind) score.find++;
+      render(); showChoices();
+      feedback("<b>Found it.</b> Now choose why it cannot work.", "good");
+      var b = el.choices.querySelector(".choice"); if (b && fromKeys) b.focus();
+    }
+    function choose(k) {
+      if (phase !== "why") return;
+      var o = opts[k], btn = el.choices.querySelector('[data-k="' + k + '"]');
+      if (!o.ok) {
+        missWhy = true; btn.classList.add("no"); btn.disabled = true;
+        feedback("<b>Not that.</b> " + o.why, "bad");
+        return;
+      }
+      phase = "done";
+      if (!missWhy) score.why++;
+      btn.classList.add("yes");
+      [].forEach.call(el.choices.querySelectorAll(".choice"), function (b) { b.disabled = true; });
+      render();
+      var msg = "<b>Right.</b> " + fault().right;
+      if (i === set.length - 1) msg += " <b>That is the whole set.</b> Found at the first try: " + score.find + " of " + set.length +
+        "; right reason at the first try: " + score.why + " of " + set.length + ". A new set draws different faults.";
+      feedback(msg, "good");
+      (i === set.length - 1 ? el.fresh : el.next).focus();
+    }
+    el.scene.addEventListener("click", function (e) {
+      var g = e.target.closest ? e.target.closest("[data-part]") : null;
+      if (g) pick(g.getAttribute("data-part"), false);
+    });
+    el.scene.addEventListener("keydown", function (e) {
+      var g = e.target.closest ? e.target.closest("[data-part]") : null;
+      if (!g || (e.key !== "Enter" && e.key !== " ")) return;
+      e.preventDefault(); pick(g.getAttribute("data-part"), true);
+    });
+    el.choices.addEventListener("click", function (e) {
+      var b = e.target.closest(".choice"); if (b && !b.disabled) choose(+b.getAttribute("data-k"));
+    });
+    el.next.addEventListener("click", function () { if (i < set.length - 1) { i++; load(); } });
+    el.fresh.addEventListener("click", begin);
+    begin();
+    games.push({ render: render });
+  })();
 
   // ---------- tabs: only the levels built so far are live ----------
   var live = Array.prototype.slice.call(document.querySelectorAll(".tab")).filter(function (x) { return !x.disabled; });
