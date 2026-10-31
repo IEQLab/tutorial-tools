@@ -94,6 +94,7 @@
   label { display: block; font-size: var(--t-label); color: var(--muted); margin-bottom: var(--s-1); }
   .fieldrow { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-4) var(--s-5); margin-bottom: var(--s-2); }
   .fieldrow.three { grid-template-columns: 1fr 1fr 1fr; }
+  .fieldrow[hidden] { display: none; }
   @media (max-width: 620px) { .fieldrow, .fieldrow.three { grid-template-columns: 1fr; } }
   select, input[type="number"] {
     width: 100%; padding: var(--s-2) var(--s-3); font-size: var(--t-body); color: var(--ink);
@@ -307,7 +308,7 @@
   <section class="card" role="tabpanel" id="panel-1" aria-labelledby="tab-1" tabindex="0">
     <div class="primer">
       <h2 class="what">Describe the cooling plant you are proposing.</h2>
-      <p>Everything on the later tabs is worked out from these few numbers. The plant size comes from your scaled Assignment 1 loads and the way you have split that capacity across machines. The annual cooling electricity comes from your DesignBuilder annual run. Where you are building sets the grid emission factor that turns that electricity into carbon.</p>
+      <p>Everything on the later tabs is worked out from these few numbers. The plant size comes from your scaled Assignment 1 loads and the way you have split that capacity across machines. Where you are building sets the grid emission factor that turns electricity into carbon. The tool estimates the plant's annual cooling electricity from its size, its location and the efficiency of registered chillers; if you have a better figure of your own, use that instead.</p>
     </div>
 
     <h3 style="margin-top:0">What makes the cooling?</h3>
@@ -331,16 +332,29 @@
     </div>
     <div class="fieldrow">
       <div>
-        <label for="elec">Annual cooling electricity (kWh/yr)<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="Where this number comes from">i</button><span class="popover" role="tooltip" hidden>In DesignBuilder, the annual simulation reports Cooling (Electricity) under fuel breakdown. Scale it to your extended building the same way you scaled the loads. If you only have a heating-and-cooling total, use it and say so.</span></span></label>
-        <input type="number" id="elec" min="0" step="1000" value="150000">
-        <p class="hint">From your DesignBuilder annual run, scaled to the Assignment 2 building.</p>
-      </div>
-      <div>
         <label for="grid">Where is the building?</label>
         <select id="grid"></select>
         <p class="hint" id="gridHint"></p>
       </div>
     </div>
+
+    <h3>Annual cooling electricity</h3>
+    <div class="choices" role="radiogroup" aria-label="Where the annual cooling electricity comes from">
+      <div class="choice"><input type="radio" name="elecMode" id="em_est" value="est" checked><label for="em_est">Estimate it<small>From the plant's size, where it is, and how efficient registered chillers are</small></label></div>
+      <div class="choice"><input type="radio" name="elecMode" id="em_own" value="own"><label for="em_own">Use my own figure<small>For example from an annual energy simulation or the manufacturer's data</small></label></div>
+    </div>
+    <div class="fieldrow" id="elecOwnWrap" hidden>
+      <div>
+        <label for="elec">Your annual cooling electricity (kWh/yr)<span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="Where this number comes from">i</button><span class="popover" role="tooltip" hidden>In DesignBuilder, an annual simulation reports Cooling (Electricity) under fuel breakdown. Scale it to your extended building the same way you scaled the loads. If you only have a heating-and-cooling total, use it and say so.</span></span></label>
+        <input type="number" id="elec" min="0" step="1000">
+        <p class="hint">Scaled to the Assignment 2 building.</p>
+      </div>
+    </div>
+    <p class="hint" id="elecHint"></p>
+    <details class="maths">
+      <summary>How the estimate works</summary>
+      <div id="elecMaths"></div>
+    </details>
 
     <div class="results">
       <div class="rows" id="plantSummary" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -503,12 +517,13 @@
       <li>Safety classes: AS/NZS ISO 817:2016 Tables 5 to 7, as reproduced in the Australian Refrigeration Council&rsquo;s <a href="https://www.arcltd.org.au/media/ttedvja1/refrigerant-types-and-propertiesv1.pdf">Refrigerant types and properties</a> (August 2023).</li>
       <li>Typical charges, leak rates, end-of-life losses and plant lifespans: Expert Group for DCCEEW, <a href="https://www.dcceew.gov.au/sites/default/files/documents/cold-hard-facts-2022-appendix-a.pdf">Cold Hard Facts 2022, Appendix A</a>, Table 1 (February 2023). The 9% leak rate is the upper value in the NGER Technical Guidelines.</li>
       <li>Grid emission factors: DCCEEW, <a href="https://www.dcceew.gov.au/climate-change/publications/national-greenhouse-accounts-factors-2025">National Greenhouse Accounts Factors 2025</a>, Table 1 (location-based scope 2).</li>
+      <li>Cooling hours for the electricity estimate: Equipment Energy Efficiency (E3) Program, <a href="https://www.energyrating.gov.au/sites/default/files/2023-02/221215_Consultation_RIS_-_air_conditioners_and_chillers.pdf">Consultation Regulation Impact Statement: Air conditioners and chillers</a> (February 2016), Tables 23 and 24 and the chiller load-point split that follows them (pp. 65&ndash;66). CC BY 3.0 AU.</li>
       <li>Chiller efficiencies: <a href="https://reg.energyrating.gov.au/comparator/product_types/59/search/?expired_products=on">GEMS registration database, chillers</a>, exported 30 September 2026. Search a registration number there for the full record.</li>
       <li>Service lives: <a href="https://costdatabase.ashrae.org/">ASHRAE Service Life and Maintenance Cost Database</a>, contents as of 29 September 2026. Its maintenance costs are in US dollars per square foot, so they are not used here.</li>
       <li>Standards are summarised in a line each and do not replace the documents. The University Library provides access to Australian Standards.</li>
     </ul>
     <p>Built by the IEQ Lab, Sydney School of Architecture, Design and Planning, for the BPSD6030 Week 9 material on electrification and refrigerants and the Assignment 2 plant argument. It exists because the leakage arithmetic in the lecture is easy to follow on a slide and hard to redo for your own plant. Nothing here sizes plant. Self-contained, open-source, no tracking.</p>
-    <p>Revised September 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.</p>
+    <p>Revised November 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.</p>
   </footer>
 </div>
 
@@ -525,7 +540,8 @@
   // ---------- data ----------
   // NGA Factors 2025, Table 1: location-based scope 2 (kg CO2-e/kWh).
   var GRIDS = [
-    { id: "nsw", name: "NSW or ACT", ef: 0.64 },
+    { id: "nsw", name: "New South Wales", ef: 0.64 },
+    { id: "act", name: "ACT", ef: 0.64 },
     { id: "vic", name: "Victoria", ef: 0.78 },
     { id: "qld", name: "Queensland", ef: 0.67 },
     { id: "sa", name: "South Australia", ef: 0.22 },
@@ -562,6 +578,23 @@
     A3: { tone: "bad", say: "Lower toxicity, higher flammability.", imp: "Keep the charge small and the machine outdoors. Indoor plant rooms become hazardous areas, which is why propane chillers are packaged units on roofs." },
     B1: { tone: "warn", say: "Higher toxicity, non-flammable.", imp: "Needs a machinery room with refrigerant detection and ventilation to AS/NZS 5149." },
     B2L: { tone: "bad", say: "Higher toxicity, lower flammability.", imp: "A dedicated machinery room with detection, emergency ventilation and separation from occupied space. It shapes the plant-room layout." }
+  };
+
+  /* E3 Program, Consultation RIS: Air conditioners and chillers (February 2016),
+     pp. 65-66. h = Table 23, chiller average annual operating hours by state;
+     split = share of those hours at 100, 75, 50 and 25% load (the table after
+     Table 24, regions NSW/SA/WA, VIC/ACT, QLD, NT, NZ/TAS). The RIS gives one
+     figure for WA, so both WA grids use it. */
+  var HOURS = {
+    nsw: { h: 3506, split: [20, 35, 35, 10], st: "NSW" },
+    act: { h: 3068, split: [10, 35, 35, 20], st: "the ACT" },
+    vic: { h: 3243, split: [10, 35, 35, 20], st: "Victoria" },
+    qld: { h: 3945, split: [25, 35, 35, 5], st: "Queensland" },
+    sa:  { h: 3506, split: [20, 35, 35, 10], st: "South Australia" },
+    wa:  { h: 3506, split: [20, 35, 35, 10], st: "WA" },
+    wan: { h: 3506, split: [20, 35, 35, 10], st: "WA" },
+    tas: { h: 1753, split: [5, 40, 45, 10], st: "Tasmania" },
+    nt:  { h: 3945, split: [30, 40, 25, 5], st: "the NT" }
   };
 
   // Cold Hard Facts 2022, Appendix A, Table 1 (2021 values).
@@ -629,7 +662,7 @@
   };
 
   // ---------- state ----------
-  var EXAMPLE = { plant: "air", n: 2, cap: 450, elec: 150000, grid: "nsw", ref: "R-134a", charge: null, leak: null, rec: null, bld: 60 };
+  var EXAMPLE = { plant: "air", n: 2, cap: 450, elecMode: "est", elec: null, grid: "nsw", ref: "R-134a", charge: null, leak: null, rec: null, bld: 60 };
   var S = JSON.parse(JSON.stringify(EXAMPLE));
   var metric = "iplv";
 
@@ -644,6 +677,30 @@
       rec: S.rec != null ? S.rec : t.rec
     };
   }
+  /* Seasonal efficiency for the electricity estimate: the median IPLV of
+     registered chillers of the same kind and size range (the tab 3 band), with
+     stated stand-ins where the register cannot supply one. */
+  function seasonalEff() {
+    var w = S.plant === "water" ? 1 : 0, kind = w ? "water-cooled" : "air-cooled";
+    if (S.plant !== "vrf" && S.cap >= 350) {
+      var b = CHILLERS.filter(function (d) { return d[0] === w && d[1] >= S.cap * 0.7 && d[1] <= S.cap * 1.4; }).map(function (d) { return d[3]; });
+      if (b.length) return { v: median(b), src: "the median IPLV of the " + b.length + " registered " + kind + " chillers in your size range" };
+      var all = CHILLERS.filter(function (d) { return d[0] === w; }).map(function (d) { return d[3]; });
+      return { v: median(all), src: "the median IPLV of all " + all.length + " registered " + kind + " chillers, since none is registered in your size range" };
+    }
+    var small = CHILLERS.filter(function (d) { return !d[0] && d[1] < 500; }).map(function (d) { return d[3]; });
+    return { v: median(small), src: (S.plant === "vrf" ? "VRF is not on the chiller register, so this uses" : "the register has no chillers under 350 kWr, so this uses") +
+      " the median IPLV of the " + small.length + " smallest registered air-cooled chillers (under 500 kWr) as a stand-in" };
+  }
+  function elecEst() {
+    var hh = HOURS[S.grid] || HOURS.nsw, sp = hh.split;
+    var lf = (sp[0] * 1 + sp[1] * 0.75 + sp[2] * 0.5 + sp[3] * 0.25) / 100;
+    var red = S.plant === "vrf" ? 1 : S.cap >= 700 ? 0.8 : 0.9;
+    var se = seasonalEff(), cap = S.n * S.cap, eflh = hh.h * lf * red;
+    return { kwh: cap * eflh / se.v, hh: hh, lf: lf, red: red, se: se, cap: cap, eflh: eflh };
+  }
+  function elecNow() { return S.elecMode === "own" && S.elec != null ? S.elec : elecEst().kwh; }
+
   function calc(ref) {
     var e = eff(), r = ref || refOf(S.ref), g = gridOf();
     var total = S.n * e.charge;
@@ -652,12 +709,12 @@
     var eolKg = total * e.t.eol * (1 - e.rec / 100);
     var eolT = eolKg * r.gwp / 1000;
     var lifeT = leakT * e.t.life + eolT;
-    var elecT = S.elec * g.ef / 1000;
+    var elecT = elecNow() * g.ef / 1000;
     return { e: e, r: r, g: g, total: total, leakKg: leakKg, leakT: leakT, eolKg: eolKg, eolT: eolT, lifeT: lifeT, elecT: elecT, elecLifeT: elecT * e.t.life };
   }
 
   function isExample() {
-    return S.plant === EXAMPLE.plant && S.n === EXAMPLE.n && S.cap === EXAMPLE.cap && S.elec === EXAMPLE.elec &&
+    return S.plant === EXAMPLE.plant && S.n === EXAMPLE.n && S.cap === EXAMPLE.cap && S.elecMode === EXAMPLE.elecMode &&
       S.grid === EXAMPLE.grid && S.ref === EXAMPLE.ref && S.charge === null && S.leak === null && S.rec === null && S.bld === EXAMPLE.bld;
   }
   function unitWord(pl) { return S.plant === "vrf" ? (pl ? "VRF systems" : "VRF system") : (pl ? "chillers" : "chiller"); }
@@ -682,10 +739,31 @@
     var total = S.n * S.cap;
     $("capHint").textContent = "Total installed: " + fmt(total) + " kW" + (S.plant === "vrf" ? "" : "r") + ".";
     var g = gridOf();
-    $("gridHint").textContent = "Grid emission factor " + g.ef.toFixed(2) + " kg CO₂-e/kWh (location-based scope 2).";
+    $("gridHint").textContent = "Grid emission factor " + g.ef.toFixed(2) + " kg CO₂-e/kWh (location-based scope 2)." +
+      (S.elecMode === "est" ? " It also sets the cooling hours in the estimate below." : "");
+    var own = S.elecMode === "own", x = elecEst();
+    $("elecOwnWrap").hidden = !own;
+    $("elecHint").textContent = own
+      ? "Using your figure. The estimate for this plant would be about " + fmt(Math.round(x.kwh / 1000) * 1000) + " kWh/yr."
+      : "About " + fmt(Math.round(x.kwh / 1000) * 1000) + " kWh/yr, from average cooling hours for commercial buildings in " + x.hh.st +
+        ". That average includes hospitals and other buildings that run long hours, so for a building used only in office hours it is probably high.";
+    $("elecMaths").innerHTML =
+      '<p class="deriv">Annual cooling electricity (kWh/yr) = installed capacity &times; equivalent full-load hours &divide; seasonal efficiency = ' +
+        fmt(x.cap) + " kW &times; " + fmt(x.eflh) + " h &divide; " + fmt(x.se.v, 2) + " = " + fmt(x.kwh) + " kWh/yr.</p>" +
+      '<p class="deriv">Equivalent full-load hours are the hours the plant would need at full output to deliver a year\'s cooling. Here they are ' +
+        fmt(x.hh.h) + " operating hours a year (chillers in " + x.hh.st + ") &times; " + fmt(x.lf, 3) + " for part load &times; " + x.red +
+        " = " + fmt(x.eflh) + " h. The part-load factor comes from the share of those hours spent at 100, 75, 50 and 25% load (" +
+        x.hh.split.join(", ") + "%). " + (S.plant === "vrf"
+          ? "The figures are for chillers; they are used for VRF too, because the building's cooling need does not change with the plant that meets it. No factor for standby machines is applied to VRF."
+          : "The factor of " + x.red + " allows for standby chillers that rarely run (0.9 below 700 kWr per chiller, 0.8 from 700 kWr).") + " All three are the E3 Program's figures; see the sources below.</p>" +
+      '<p class="deriv">Seasonal efficiency: ' + x.se.src + ".</p>" +
+      '<p class="deriv">What it leaves out. The hours are an average over every kind of commercial building with a chiller, so for an office the estimate probably runs high, which makes refrigerant\'s share on the next tab look smaller than it is, not larger. Weighting by IPLV is a simplification of working through each load point. ' +
+        (S.plant === "water" ? "A water-cooled rating stops at the chiller, so the cooling tower fans and condenser water pumps are not included. " : "") +
+        "A figure from an annual simulation of your own building is better than this estimate, so use one if you have it.</p>";
     var c = calc();
     $("plantSummary").innerHTML =
       row("Installed cooling capacity", fmt(total) + " kW") +
+      row("Annual cooling electricity" + (own ? " (your figure)" : " (estimate)"), fmt(Math.round(elecNow() / 1000) * 1000) + " kWh/yr") +
       row("Refrigerant held on site (typical charge, " + c.e.t.band + ")", fmt(c.total) + " kg") +
       row("Cooling electricity emissions, this year's grid", fmtT(c.elecT) + " t CO₂-e/yr") +
       row("Typical plant life", c.e.t.life + " years");
@@ -901,6 +979,13 @@
   $("nUnits").addEventListener("input", function () { var v = num("nUnits", 1, 200); if (v != null) { S.n = Math.round(v); renderAll(); } });
   $("capUnit").addEventListener("input", function () { var v = num("capUnit", 10, 10000); if (v != null) { S.cap = v; S.charge = null; renderAll(); } });
   $("elec").addEventListener("input", function () { var v = num("elec", 0, 1e9); if (v != null) { S.elec = v; renderAll(); } });
+  document.querySelectorAll('input[name="elecMode"]').forEach(function (r) {
+    r.addEventListener("change", function () {
+      S.elecMode = r.value;
+      if (S.elecMode === "own" && S.elec == null) { S.elec = Math.round(elecEst().kwh / 1000) * 1000; $("elec").value = S.elec; }
+      renderAll();
+    });
+  });
   $("grid").addEventListener("change", function () { S.grid = $("grid").value; renderAll(); });
   $("ref").addEventListener("change", function () { S.ref = $("ref").value; renderAll(); });
   // typed overrides: don't re-render the field being typed into
@@ -929,7 +1014,8 @@
 
   function syncInputs() {
     $("pl_" + S.plant).checked = true;
-    $("nUnits").value = S.n; $("capUnit").value = S.cap; $("elec").value = S.elec; $("grid").value = S.grid; $("bldLife").value = S.bld;
+    $("nUnits").value = S.n; $("capUnit").value = S.cap; $("elec").value = S.elec == null ? "" : S.elec; $("grid").value = S.grid;
+    $("em_" + S.elecMode).checked = true; $("bldLife").value = S.bld;
   }
   $("resetBtn").addEventListener("click", function () {
     S = JSON.parse(JSON.stringify(EXAMPLE));
@@ -942,7 +1028,9 @@
     var lines = [
       "PLANT OVER ITS LIFE (BPSD6030, indicative figures)",
       "Plant: " + S.n + " x " + fmt(S.cap) + " kW " + (S.plant === "vrf" ? "VRF systems" : S.plant === "air" ? "air-cooled chillers" : "water-cooled chillers + cooling tower") + ", " + c.g.name,
-      "Cooling electricity: " + fmt(S.elec) + " kWh/yr x " + c.g.ef.toFixed(2) + " kg/kWh (NGA 2025) = " + fmtT(c.elecT) + " t CO2-e/yr",
+      "Cooling electricity: " + fmt(Math.round(elecNow() / 1000) * 1000) + " kWh/yr " +
+        (S.elecMode === "own" ? "(my figure)" : "(estimate: E3 chiller hours for " + elecEst().hh.st + ", median registered IPLV " + fmt(elecEst().se.v, 2) + ")") +
+        " x " + c.g.ef.toFixed(2) + " kg/kWh (NGA 2025) = " + fmtT(c.elecT) + " t CO2-e/yr",
       "Refrigerant: " + c.r.id + ", GWP " + (c.r.gwpShow || fmt(c.r.gwp)) + " (AR4), safety class " + c.r.cls,
       "Charge " + fmt(e.charge) + " kg per unit" + (S.charge == null ? " (typical, Cold Hard Facts 2022)" : " (my figure)") + "; leak " + e.leak + "%/yr" + (S.leak == null ? " (typical)" : " (my figure)") + "; recovery " + e.rec + "%",
       "Leakage: " + fmtT(c.leakT) + " t CO2-e/yr; " + fmtT(c.lifeT) + " t CO2-e over a " + life + "-year plant life",
