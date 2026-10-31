@@ -137,6 +137,12 @@
   .pair input { flex: 1 1 60%; min-width: 0; }
   .pair select { flex: 1 1 40%; min-width: 0; padding-left: var(--s-2); padding-right: var(--s-1); }
   .note { color: var(--muted); font-size: var(--t-label); }
+  label.check { display: flex; align-items: center; gap: var(--s-2); min-height: 38px; color: var(--ink); cursor: pointer; }
+  label.check input { width: 18px; height: 18px; accent-color: var(--accent); margin: 0; }
+  label.check input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .winline { margin: var(--s-3) 0 0; padding: var(--s-2) var(--s-3); border-radius: var(--r-md); background: var(--result-bg);
+    font-size: var(--t-label); font-variant-numeric: tabular-nums; }
+  .winline b { font-weight: 600; }
 
   .btn-row { display: flex; gap: var(--s-2); margin: var(--s-3) 0 0; flex-wrap: wrap; align-items: center; }
   .btn { background: var(--accent); color: var(--accent-ink); border: 1px solid var(--accent); border-radius: var(--r-md);
@@ -349,10 +355,6 @@
         <label for="bpVal">The building&#x27;s balance point (a line to move), &deg;C</label>
         <input id="bpVal" type="number" step="0.5" min="0" max="25" value="12" aria-describedby="bpHint">
       </div>
-      <div>
-        <label for="hoursSel">Hours counted</label>
-        <select id="hoursSel"><option value="all" selected>All 8,760</option><option value="occ">Weekdays 8&ndash;18 h</option></select>
-      </div>
     </div>
     <div class="btn-row">
       <span class="note">Bands to start from:</span>
@@ -362,6 +364,29 @@
     </div>
     <p class="note" id="bpHint">Below the balance point the building needs heat; above it, the heat from people, lights and sun is more than the building loses. Leave it empty to hide it.</p>
     <p class="msg error" id="bandMsg" role="status" aria-live="polite"></p>
+
+    <h3>Hours the HVAC runs</h3>
+    <p class="sub">Count only the hours the system is on. An office that starts early meets cooler mornings; a building that runs all night meets the coldest hours of all.</p>
+    <div class="grid">
+      <div>
+        <label for="winStart">Starts at <span class="v" id="winStartVal">00:00</span></label>
+        <input id="winStart" type="range" min="0" max="23" step="1" value="0">
+      </div>
+      <div>
+        <label for="winEnd">Stops at <span class="v" id="winEndVal">24:00</span></label>
+        <input id="winEnd" type="range" min="1" max="24" step="1" value="24">
+      </div>
+      <div>
+        <label class="check"><input type="checkbox" id="winWk"> Weekdays only</label>
+      </div>
+    </div>
+    <div class="btn-row">
+      <span class="note">Windows to start from:</span>
+      <button type="button" class="btn ghost" data-win="0,24,0">All hours</button>
+      <button type="button" class="btn ghost" data-win="7,19,1">Office, 07:00&ndash;19:00 weekdays</button>
+      <button type="button" class="btn ghost" data-win="9,17,1">09:00&ndash;17:00 weekdays</button>
+    </div>
+    <p class="winline" id="winText" role="status" aria-live="polite"></p>
 
     <h3>3. The chart</h3>
     <fieldset class="layers" id="layers">
@@ -398,7 +423,7 @@ pressure at altitude  p  = 101.325 (1 &minus; 2.25577&times;10&#8315;&#8309; Z)^
       <p class="deriv"><b>One chart, one pressure.</b> The chart is drawn at the standard pressure for the weather station&#x27;s elevation, read from the file (101.325&nbsp;kPa before a file is loaded). Each hour is placed by its dry bulb and dew point. The dew point fixes how much water the air holds whatever the pressure, which is why it is the second coordinate carried from the file. Plotting each hour at its own barometric pressure would put some points above the saturation curve drawn here.</p>
       <p class="deriv"><b>How an hour is sorted.</b> Moisture first, because only a coil colder than the air&#x27;s dew point can take water out. If the hour holds more water than the wettest air in the band, it needs <i>cooling and dehumidifying</i>. If it holds less than the driest air in the band, it needs <i>humidifying</i> (and usually heating). Otherwise its moisture is already acceptable and a horizontal move brings it in: <i>heating</i> if it sits left of the band at that humidity ratio, <i>sensible cooling</i> if right. With a relative-humidity limit the band&#x27;s edges lean, so the test uses the band&#x27;s width at the hour&#x27;s own humidity ratio rather than the setpoints alone.</p>
       <p class="deriv"><b>The balance point.</b> The outdoor temperature at which the heat a building gains from people, lights, equipment and sun equals what it loses through its envelope and its outside air. Below it the building needs heating; above it, cooling. Here it is an illustrative vertical line: hours that the outside air needs heated, but that lie above the line, are counted as free cooling for the building. No load is calculated.</p>
-      <p class="deriv"><b>Occupied hours.</b> Weekdays, 08:00 to 18:00, with the day of the week taken from the weather file&#x27;s own calendar. Public holidays are not removed. A weather file&#x27;s hour 9 is the hour ending at 09:00, so this counts file hours 9 to 18.</p>
+      <p class="deriv"><b>Operating hours.</b> A weather file labels each hour by its end: file hour 1 is 00:00 to 01:00, file hour 9 is 08:00 to 09:00, and file hour 24 is 23:00 to midnight. A window from 07:00 to 19:00 therefore counts file hours 8 to 19, twelve hours a day. A window that starts later than it stops runs overnight: 22:00 to 06:00 counts file hours 23, 24 and 1 to 6. Weekdays only uses each hour&#x27;s own date from the file&#x27;s calendar, so a shift that starts on Friday night keeps its Friday hours and drops the Saturday ones. Public holidays are not removed.</p>
     </details>
     <div class="tabnav">
       <span></span>
@@ -725,6 +750,25 @@ var EPW = (function () {
   ];
   var REG_BY = {}; REG.forEach(function (r) { REG_BY[r.key] = r; });
   /* The balance point splits the outside air's heating hours in two. */
+  /* The operating window. EPW hour h is the hour ending at h:00, i.e. the
+     interval (h-1):00 to h:00, so a window from S to E counts file hours S+1
+     to E; S > E runs overnight; S = E is empty. */
+  function readWin() {
+    var a = +$("winStart").value, b = +$("winEnd").value;
+    return { s: a, e: b, wk: $("winWk").checked };
+  }
+  function inWin(r, W) {
+    if (W.wk && !(r.dow >= 1 && r.dow <= 5)) return false;
+    var h0 = r.hr - 1;
+    if (W.s < W.e) return h0 >= W.s && r.hr <= W.e;
+    if (W.s > W.e) return h0 >= W.s || r.hr <= W.e;
+    return false;
+  }
+  function hh(h) { return (h < 10 ? "0" : "") + h + ":00"; }
+  function winLabel(W) {
+    if (W.s === 0 && W.e === 24) return (W.wk ? "all day, weekdays" : "all hours");
+    return hh(W.s) + " to " + hh(W.e) + (W.s > W.e ? " (overnight)" : "") + (W.wk ? ", weekdays" : ", every day");
+  }
   function bpNow() { var v = parseFloat($("bpVal").value); return isFinite(v) ? v : null; }
   function forBuilding(k, t) {
     var bp = state.bp;
@@ -732,7 +776,7 @@ var EPW = (function () {
   }
 
   var state = {
-    p: P.P_STD, data: null, cls: null, axis: { tMin: 0, tMax: 45 }, bp: 12, layers: { rh: true, wb: true, h: false, band: true, regions: true, hours: true },
+    p: P.P_STD, data: null, cls: null, axis: { tMin: 0, tMax: 45 }, bp: 12, win: { s: 0, e: 24, wk: false }, layers: { rh: true, wb: true, h: false, band: true, regions: true, hours: true },
     ind: { t: 25, w: P.wFromRh(25, 0.5, P.P_STD) }
   };
 
@@ -915,7 +959,7 @@ var EPW = (function () {
 
     // the hours
     if (LAY.hours && state.data && (ch.hours === "faint" || state.cls)) {
-      var occOnly = $("hoursSel").value === "occ";
+      var Wn = state.win;
       var ps = small ? 2 : 2.4, hl = ps / 2;
       g.globalAlpha = 0.5;
       var rows = state.data.rows;
@@ -925,7 +969,7 @@ var EPW = (function () {
       } else REG.forEach(function (r) {
         g.fillStyle = css(r.tok);
         for (var i = 0; i < rows.length; i++) {
-          if (state.cls[i] !== r.key || (occOnly && !rows[i].occ)) continue;
+          if (state.cls[i] !== r.key || !inWin(rows[i], Wn)) continue;
           var x = X(rows[i].db), yy = Y(rows[i].w);
           if (yy < G.T - 2) continue;
           g.fillRect(x - hl, yy - hl, ps, ps);
@@ -1092,20 +1136,33 @@ var EPW = (function () {
     var d = state.data, b = state.band;
     state.cls = null; state.counts = null;
     if (!d || !b || b.err) { renderResults(); return; }
-    var p = state.p, occOnly = $("hoursSel").value === "occ";
+    var p = state.p, Wn = state.win;
     var cls = new Array(d.rows.length), c = { n: 0 }, months = [];
     REG.forEach(function (r) { c[r.key] = 0; });
     for (var m = 0; m < 12; m++) { months.push({ n: 0 }); REG.forEach(function (r) { months[m][r.key] = 0; }); }
     for (var i = 0; i < d.rows.length; i++) {
       var r = d.rows[i], k = forBuilding(classify(b, r.db, r.w, p), r.db);
       cls[i] = k;
-      if (occOnly && !r.occ) continue;
+      if (!inWin(r, Wn)) continue;
       c[k]++; c.n++; months[r.mo - 1][k]++; months[r.mo - 1].n++;
     }
     state.cls = cls; state.counts = c; state.months = months;
+    renderWin();
     renderResults();
   }
 
+  /* The visible statement of which window is on screen, e.g.
+     "07:00 to 19:00, weekdays: 3,120 hours (file hours 8 to 19)". */
+  function renderWin() {
+    var W = state.win;
+    $("winStartVal").textContent = hh(W.s); $("winEndVal").textContent = hh(W.e);
+    $("winStart").setAttribute("aria-valuetext", hh(W.s)); $("winEnd").setAttribute("aria-valuetext", hh(W.e));
+    var fh = W.s === W.e ? "none" : (W.s < W.e ? (W.s + 1) + " to " + W.e : (W.s + 1) + " to 24 and 1 to " + W.e);
+    var n = state.counts ? state.counts.n : null;
+    var msg = "<b>" + winLabel(W) + "</b>" + (n !== null ? ": " + n.toLocaleString("en-AU") + " hours" : "") +
+      (W.s === W.e ? ". The start and stop are the same, so no hours are counted." : " (file hours " + fh + ")");
+    if ($("winText").innerHTML !== msg) $("winText").innerHTML = msg;
+  }
   var MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   function renderResults() {
     var c = state.counts, el = $("results");
@@ -1114,7 +1171,7 @@ var EPW = (function () {
       if (state.data && state.band && state.band.err) el.innerHTML = '<p class="empty">Fix the band above to count the hours.</p>';
       return;
     }
-    var occ = $("hoursSel").value === "occ";
+    var wl = winLabel(state.win);
     var max = 0; REG.forEach(function (r) { max = Math.max(max, c[r.key]); });
     var rows = REG.slice().reverse().map(function (r) {
       var share = c.n ? c[r.key] / c.n : 0;
@@ -1123,7 +1180,7 @@ var EPW = (function () {
         "<td style=\"width:34%\"><span class=\"bar\" style=\"width:" + (max ? 100 * c[r.key] / max : 0) + "%;background:" + css(r.tok) + "\"></span></td></tr>";
     }).join("");
     var cool = c.cool + c.dehum, cold = c.heat + c.free, verdict, N = function (x) { return x.toLocaleString("en-AU"); };
-    var span = occ ? "occupied hours" : "hours";
+    var span = "hours (" + wl + ")";
     // first the reframe: the cold hours, read once for the air and once for the building
     if (!cold) verdict = "The outside air never needs heating in these " + span + ".";
     else if (state.bp === null) verdict = "The outside air needs heating in <b>" + N(cold) + "</b> of these " + span + " (" + fmt(100 * cold / c.n, 0) + "%). Set a balance point to see how many of them an office would spend cooling instead.";
@@ -1135,7 +1192,7 @@ var EPW = (function () {
         (lat >= 0.5 ? "<b>latent</b>: drying the air, not just cooling it." : "<b>sensible</b>: mostly cooling, not drying.");
     }
     el.innerHTML = '<table class="counts"><caption class="visually-hidden">Hours by process</caption><thead><tr><th>What the outside air needs, and what that means for the building</th><th class="num">Hours</th><th class="num">Share</th><th><span class="visually-hidden">Bar</span></th></tr></thead><tbody>' +
-      rows + '</tbody><tfoot><tr><td>' + (occ ? "Occupied hours counted" : "Hours counted") + '</td><td class="num">' + c.n.toLocaleString("en-AU") + '</td><td class="num">100%</td><td></td></tr></tfoot></table>' +
+      rows + '</tbody><tfoot><tr><td>' + "Hours counted, " + esc(wl) + '</td><td class="num">' + c.n.toLocaleString("en-AU") + '</td><td class="num">100%</td><td></td></tr></tfoot></table>' +
       '<p class="verdict" role="status" aria-live="polite">' + verdict + "</p>";
     drawMonths();
   }
@@ -1170,7 +1227,7 @@ var EPW = (function () {
       (by[best] = by[best] || []).push(MON[i]);
     });
     var parts = REG.filter(function (r) { return by[r.key]; }).map(function (r) { return r.name.toLowerCase() + " in " + by[r.key].join(", "); });
-    var txt = "Largest share each month: " + parts.join("; ") + "." +
+    var txt = "Largest share each month, " + winLabel(state.win) + ": " + parts.join("; ") + "." +
       (state.bp !== null && by.free ? " Those free-cooling months are when the outside air is cold and an office is not." : "");
     $("monthsText").textContent = txt;
     c2.setAttribute("aria-label", "Hours by process for each month. " + txt);
@@ -1239,12 +1296,21 @@ var EPW = (function () {
 
   // ---------- controls ----------
   function update() {
-    state.band = readBand(); state.bp = bpNow(); recount();
+    state.band = readBand(); state.bp = bpNow(); state.win = readWin(); recount(); renderWin();
     if (current === 1) { renderDesign(); return; }
     draw(); readout(false);
   }
   ["tLo", "tHi", "upVal", "loVal", "bpVal"].forEach(function (id) { $(id).addEventListener("input", update); });
-  ["upUnit", "loUnit", "hoursSel"].forEach(function (id) { $(id).addEventListener("change", function () {
+  ["winStart", "winEnd"].forEach(function (id) { $(id).addEventListener("input", update); });
+  $("winWk").addEventListener("change", update);
+  document.querySelectorAll("[data-win]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var v = btn.getAttribute("data-win").split(",");
+      $("winStart").value = v[0]; $("winEnd").value = v[1]; $("winWk").checked = v[2] === "1";
+      update();
+    });
+  });
+  ["upUnit", "loUnit"].forEach(function (id) { $(id).addEventListener("change", function () {
     // switching a limit's unit swaps in that unit's usual value rather than reading 60 g/kg
     if (id === "upUnit") $("upVal").value = this.value === "rh" ? 60 : 12;
     if (id === "loUnit" && this.value !== "none") $("loVal").value = this.value === "rh" ? 40 : 4;
