@@ -360,7 +360,7 @@
       <summary>The published figures, by use</summary>
       <p class="deriv">Preliminary cooling figures from two textbooks, converted to W/m² of floor area and rounded to the nearest 5. They are first-pass plant-capacity figures from US practice and they run high: Howell notes that crude rules of thumb &ldquo;significantly oversized equipment and wasted energy&rdquo;, and Grondzik and Kwok present theirs as preliminary estimates only. They do not separate floor positions: a top floor carries the roof and a ground floor the slab, so expect your own floors to spread around a single value.</p>
       <div class="tablewrap"><table class="data" id="pubTable"></table></div>
-      <p class="deriv">The office band (50&ndash;120&nbsp;W/m²) is the working band this unit uses for an Australian office. It is the teaching team&rsquo;s figure rather than a value from a published table: its high end sits below Howell&rsquo;s perimeter figure, and its low end matches an intermediate office floor in the unit&rsquo;s own loads-method worked sketch (50&nbsp;W/m²). For every other use the high end is the higher of the two published figures, and the low end is 40&nbsp;W/m², the lowest figure in either table (Grondzik and Kwok&rsquo;s shaded-side apartment).</p>
+      <p class="deriv">The office band (50&ndash;120&nbsp;W/m²) is indicative, not a value from a published table: its high end sits below Howell&rsquo;s perimeter figure, and its low end matches an intermediate office floor in the unit&rsquo;s own loads-method worked sketch (50&nbsp;W/m²). For every other use the high end is the higher of the two published figures, and the low end is 40&nbsp;W/m², the lowest figure in either table (Grondzik and Kwok&rsquo;s shaded-side apartment).</p>
     </details>
   </section>
 
@@ -369,7 +369,7 @@
     <ul class="sources">
       <li>Grondzik, W. T. &amp; Kwok, A. G. (2015). <i>Mechanical and Electrical Equipment for Buildings</i> (12th ed.). Wiley. Table 12.1, &ldquo;Preliminary Estimates for Cooling Capacity&rdquo;, p. 438, given as floor area per ton of refrigeration (1 ton = 3.514 kW).</li>
       <li>Howell, R. H. (2017). <i>Principles of Heating, Ventilating and Air Conditioning</i> (8th ed.). ASHRAE. Table 1-1, &ldquo;Typical Building Design Heat Losses or Gains&rdquo;, p. 6, given as ft² per ton and m² per kW. The quotation on crude rules of thumb is from p. 5.</li>
-      <li>The office band of 50&ndash;120&nbsp;W/m² is the BPSD6030 teaching team&rsquo;s working band for an Australian office, not a published figure.</li>
+      <li>The office band of 50&ndash;120&nbsp;W/m² is an indicative range for an Australian office, not a published figure.</li>
       <li>Sizing factors (1.15 cooling, 1.25 heating) are DesignBuilder&rsquo;s defaults in its cooling and heating design calculation options; check your own model&rsquo;s settings.</li>
       <li>The worked example is the three-floor retail and office building from the BPSD6030 loads-method page (&ldquo;Scaling your Assignment 1 loads&rdquo;): ground-floor retail at 70&nbsp;W/m², an intermediate office floor at 50 and a top office floor at 65, each 900&nbsp;m². Its coincident peak (150&nbsp;kW) and heating load (95&nbsp;kW) are illustrative values added for this tool.</li>
     </ul>
@@ -392,7 +392,7 @@
   // ---------- data ----------
   // Published cooling figures in W/m² (assignment_2_loads_method.md, rounded to 5).
   // gk / hw: [low, high] where a source gives a range for the use, else [v, v]; null = not given.
-  // lo / hi: the check band. Office uses the unit's working band (50-120); other uses take the
+  // lo / hi: the check band. Office uses an indicative band (50-120); other uses take the
   // higher published figure as the high end and 40 (the lowest figure in either table) as the low end.
   var USES = [
     { id: "office", name: "Office", short: "office", gk: [75, 75], hw: [110, 140], gkTxt: "75", hwTxt: "110 interior, 140 perimeter", lo: 50, hi: 120 },
