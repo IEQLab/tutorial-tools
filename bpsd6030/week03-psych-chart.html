@@ -946,15 +946,18 @@ var EPW = (function () {
   /* Tab 1 reads the same sorted hours three ways. Every hour gets one of the
      six keys above, once; a reading only groups and names them. Each row lists
      the keys it gathers ("from"), so the climate reading and the AHU reading
-     count identical hours by construction, and the colour stays with the part
-     of the chart, so switching the reading changes the words, not the cloud. */
+     count identical hours by construction. The building and AHU readings colour
+     by what the hour needs (heating red, cooling blue); the climate reading
+     colours by temperature instead (cold blue, warm red), so a cold hour is
+     never drawn in a hot colour. */
   function row(id, from, name, tok, hint, lower) { return { key: id, from: from, name: name, tok: tok, hint: hint, lower: !!lower }; }
   var R_DRY = row("dry", ["humid"], "Dry", "--elec", "less water in the air than the band allows", true);
   var R_OK = row("ok", ["ok"], "Comfortable", "--ch-ok", "already inside the band");
   var R_WARM = row("warm", ["cool"], "Warm", "--cool", "warmer than the band, with its moisture inside the band&#x27;s range");
+  var R_WARM_C = row("warm", ["cool"], "Warm", "--heat", "warmer than the band, with its moisture inside the band&#x27;s range");
   var R_WET = row("wet", ["dehum"], "Humid", "--water", "more water in the air than the band allows, whatever its temperature");
   var READ = {
-    climate: [R_DRY, row("cold", ["heat", "free"], "Cold", "--heat", "colder than the band, with its moisture inside the band&#x27;s range"), R_OK, R_WARM, R_WET],
+    climate: [R_DRY, row("cold", ["heat", "free"], "Cold", "--cool", "colder than the band, with its moisture inside the band&#x27;s range"), R_OK, R_WARM_C, R_WET],
     building: [R_DRY,
       row("bheat", ["heat"], "Cold, and the building needs heating", "--heat", "colder than the band and below the building&#x27;s balance point, so the building needs heat too"),
       row("bcool", ["free"], "Cold, but the building needs cooling", "--free", "colder than the band, but above the balance point: the heat of people, lights and sun is more than the building loses"),
@@ -1320,7 +1323,8 @@ var EPW = (function () {
       if (t < G.tMin + 0.5 || t > G.tMax - 0.5 || w > G.wMax || w <= 0) return;
       if (w > P.wSat(t, p) - 0.0006) return;
       if (maxPx && g.measureText(text).width > maxPx) return;
-      g.textAlign = align; g.fillStyle = css(REG_BY[key].tok); haloText(g, text, X(t), Y(w));
+      var tk = mode === 1 ? ({ heat: "--cool", cool: "--heat" }[key] || REG_BY[key].tok) : REG_BY[key].tok;
+      g.textAlign = align; g.fillStyle = css(tk); haloText(g, text, X(t), Y(w));
     }
     var bp = mode >= 2 ? state.bp : null, split = bp !== null && bp < s[0] - 1;
     var th = split ? Math.min(bp - 1, s[0] - 4) : s[0] - 4;
@@ -1453,16 +1457,18 @@ var EPW = (function () {
     var cool = c.cool + c.dehum, cold = c.heat + c.free, verdict;
     var span = "hours (" + wl + ")";
     if (step === 1) {
-      // the climate in plain words: where the hours sit against the band, then which
-      // matters more when it is too warm or too wet, the temperature or the water
+      // the climate in plain words: where the hours sit against the band, then how
+      // many of the hours outside its warm or wet edge are too humid. A count of
+      // hours, not a share of the load, so it says nothing about sensible vs latent
       var parts = [["cold", cold], ["comfortable", c.ok], ["warm", c.cool], ["humid", c.dehum]];
       if (state.band.loU !== "none") parts.push(["dry", c.humid]);
       parts = parts.map(function (q) { return "<b>" + q[0] + "</b> in " + N(q[1]) + " (" + pc(q[1]) + ")"; });
       verdict = "Across every hour of the year, the air outside is " + parts.slice(0, -1).join(", ") + " and " + parts[parts.length - 1] + ".";
       if (cool) {
         var wet = c.dehum / cool;
-        verdict += "<br>When it is warmer or wetter than the band (" + N(cool) + " hours), it is humid " + fmt(100 * wet, 0) + "% of the time, so in the warm months this climate&#x27;s bigger problem is " +
-          (wet >= 0.5 ? "<b>the water in the air</b>, not its temperature." : "<b>its temperature</b>, not the water in it.");
+        verdict += "<br>Of the " + N(cool) + " hours warmer or wetter than the band, " +
+          (wet >= 0.5 ? "most (" + fmt(100 * wet, 0) + "%) are <b>too humid</b>, not just too warm."
+                      : "most (" + fmt(100 * (1 - wet), 0) + "%) are <b>warm with their moisture inside the band&#x27;s range</b>; " + fmt(100 * wet, 0) + "% are too humid.");
       }
     } else if (step === 2) {
       // the same cold hours, read for a building with internal gains
