@@ -1,0 +1,1546 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zoning and Heat Balance — BPSD6030</title>
+<style>
+  /* BPSD6030 Building Systems · indigo accent · IEQ Lab · rev. 2026-11 */
+  :root {
+    color-scheme: light;
+    --bg: #f4f6f7; --card: #fcfdfd; --ink: #1c2430; --muted: #5a6675;
+    --line: #dfe4ea; --accent: #4a52b5; --accent-ink: #fbfcfe;
+    --good: #1a7f4b; --warn: #9c5a0b; --bad: #b02a37;
+    --field: #fdfefe; --result-bg: #eef0f8; --chip: #eef2f5;
+    --r-sm: 3px; --r-md: 8px; --r-pill: 999px;
+    --shadow: 0 3px 8px rgba(26, 28, 62, .12);
+    --ease-out: cubic-bezier(.2, 0, 0, 1); --dur: 150ms;
+
+    --t-glyph: .68rem; --t-meta: .78rem; --t-label: .875rem; --t-body: 1rem;
+    --t-lead: 1.125rem; --t-h2: 1.3rem; --t-h1: 1.625rem; --t-display: 2.4rem;
+    --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px;
+    --s-5: 20px; --s-6: 24px; --s-8: 32px; --s-12: 48px;
+
+    --bar: #c5cbe6; --grid: #e6e9ee;
+    /* zone families: three validated categorical slots, plus neutrals for the core and the services */
+    --z-a: #2a78d6; --z-b: #eb6834; --z-c: #1baf7a; --z-core: #6f7682; --z-svc: #a9aeb6;
+    --s-cool: #2a78d6; --s-heat: #eb6834;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #10151b; --card: #171e27; --ink: #e7ecf2; --muted: #9aa7b6;
+    --line: #2a3441; --accent: #99a4ef; --accent-ink: #131635;
+    --good: #57c98a; --warn: #e0a955; --bad: #e2707a;
+    --field: #0f151c; --result-bg: #191f33; --chip: #1c2733;
+    --shadow: 0 3px 8px rgba(0, 0, 0, .34);
+    --bar: #3a4270; --grid: #242d39;
+    --z-a: #3987e5; --z-b: #d95926; --z-c: #199e70; --z-core: #9aa3af; --z-svc: #5d6672;
+    --s-cool: #3987e5; --s-heat: #d95926;
+  }
+  :root[data-theme="dark"] :is(body) { line-height: 1.6; letter-spacing: .004em; }
+  :root[data-theme="dark"] :is(.primer p, .sub, .hint, .note, label, .deriv, .mapsto li, .notice li) { font-weight: 450; }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: .01ms !important; animation-duration: .01ms !important; scroll-behavior: auto !important; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: var(--s-6) var(--s-4) var(--s-12); }
+  a.home { display: inline-block; color: var(--accent); text-decoration: none; font-size: var(--t-label); margin-bottom: var(--s-4); }
+  a.home:hover { text-decoration: underline; }
+  header.page { margin-bottom: var(--s-2); }
+  h1 { font-size: var(--t-h1); margin: 0 0 var(--s-1); letter-spacing: -.018em; }
+  .lede { color: var(--muted); margin: 0 0 var(--s-6); max-width: 72ch; }
+
+  /* ---- tabs ---- */
+  .tabs { display: flex; gap: var(--s-2); margin: 0 0 var(--s-3); flex-wrap: wrap; }
+  .tab { border: 1px solid var(--line); background: var(--field); color: var(--muted);
+    border-radius: var(--r-pill); padding: var(--s-2) var(--s-4) var(--s-2) var(--s-2); font-size: var(--t-label); cursor: pointer;
+    display: inline-flex; align-items: center; gap: var(--s-2); font-family: inherit; }
+  .tab:hover { border-color: var(--accent); color: var(--ink); }
+  .tab:active { transform: translateY(1px); }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .tab .n { display: inline-flex; align-items: center; justify-content: center;
+    width: 21px; height: 21px; border-radius: 50%; background: var(--line); color: var(--muted);
+    font-size: var(--t-meta); font-weight: 700; flex: none; }
+  .tab.active .n { background: var(--accent-ink); color: var(--accent); }
+
+  /* ---- orientation strip ---- */
+  .orient { margin: 0 0 var(--s-6); display: grid; gap: var(--s-2); }
+  details.mapsto { border: 1px solid var(--line); border-radius: var(--r-md); background: var(--field); }
+  details.mapsto > summary { cursor: pointer; color: var(--muted); font-size: var(--t-label);
+    font-weight: 600; padding: var(--s-2) var(--s-3); list-style: none; border-radius: var(--r-md); }
+  details.mapsto > summary::-webkit-details-marker { display: none; }
+  details.mapsto > summary::before { content: "\25b8  "; }
+  details.mapsto[open] > summary::before { content: "\25be  "; }
+  details.mapsto > summary:hover { color: var(--ink); }
+  details.mapsto > summary:active { color: var(--accent); }
+  details.mapsto > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .mapsto ul { margin: 0; padding: 0 var(--s-3) var(--s-2); list-style: none; }
+  .mapsto li { font-size: var(--t-label); color: var(--muted); padding: var(--s-1) 0; }
+  .mapsto li b { color: var(--ink); font-weight: 600; }
+  .mapsto .none { font-size: var(--t-label); color: var(--muted); margin: 0;
+    padding: var(--s-2) var(--s-3) var(--s-3); border-top: 1px solid var(--line); }
+  .datasource { margin: 0; font-size: var(--t-label); color: var(--muted);
+    border: 1px solid var(--line); border-radius: var(--r-md); background: var(--field);
+    padding: var(--s-2) var(--s-3); transition: border-color var(--dur) var(--ease-out); }
+  .datasource[hidden] { display: none; }
+  .datasource b { color: var(--ink); font-weight: 600; }
+  .datasource.mine { border-color: var(--accent); }
+  .datasource.mine b { color: var(--accent); }
+
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md);
+    padding: var(--s-6); margin: 0;
+  }
+  section.card[hidden] { display: none; }
+  @media (max-width: 480px) { section.card { padding: var(--s-4); } }
+  h2 { font-size: var(--t-h2); margin: 0 0 var(--s-1); letter-spacing: -.012em; }
+  h3 { font-size: var(--t-body); margin: var(--s-6) 0 var(--s-2); }
+  .sub { color: var(--muted); font-size: var(--t-label); margin: 0 0 var(--s-3); max-width: 72ch; }
+
+  label, .lbl { display: block; font-size: var(--t-label); color: var(--muted); margin-bottom: var(--s-1); }
+  select {
+    width: 100%; padding: var(--s-2) var(--s-3); font-size: var(--t-body); color: var(--ink);
+    background: var(--field); border: 1px solid var(--line); border-radius: var(--r-md); font-family: inherit; min-width: 0;
+  }
+  select:focus, input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .hint { color: var(--muted); font-size: var(--t-meta); margin: var(--s-1) 0 0; }
+  .hint b { color: var(--ink); font-weight: 600; }
+
+  .btn { background: var(--accent); color: var(--accent-ink); border: none; border-radius: var(--r-md);
+    padding: var(--s-2) var(--s-4); font-size: var(--t-label); cursor: pointer; font-family: inherit; white-space: nowrap; }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:focus-visible, .btn.ghost:focus-visible, .chipbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled, .btn[disabled] { opacity: .45; cursor: not-allowed; transform: none; filter: none; }
+  .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+  .btn.ghost:hover { border-color: var(--accent); filter: none; }
+  .btn-row { display: flex; gap: var(--s-2); flex-wrap: wrap; margin-top: var(--s-3); }
+  .nav { display: flex; justify-content: space-between; gap: var(--s-2); margin-top: var(--s-6); flex-wrap: wrap; }
+
+  .seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; }
+  .seg button { border: none; background: var(--field); color: var(--muted); font: inherit; font-size: var(--t-label);
+    padding: var(--s-2) var(--s-3); cursor: pointer; border-right: 1px solid var(--line); }
+  .seg button:last-child { border-right: none; }
+  .seg button:hover { color: var(--ink); }
+  .seg button:active { color: var(--accent); }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .modebar { display: flex; align-items: center; gap: var(--s-3) var(--s-4); flex-wrap: wrap; margin: 0 0 var(--s-4); }
+  .modebar .lbl { margin: 0; }
+  @media (max-width: 480px) { .seg { display: flex; } .seg button { flex: 1 1 auto; } }
+
+  /* ---- tab 1 layout ---- */
+  .split { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: var(--s-6); align-items: start; }
+  @media (max-width: 760px) { .split { grid-template-columns: 1fr; } }
+  .plan svg { width: 100%; height: auto; display: block; max-width: 420px; margin: 0 auto; }
+  .plan .zone { cursor: pointer; }
+  .plan .zone:focus-visible { outline: none; }
+  .plan .zone:focus-visible polygon, .plan .zone:hover polygon { stroke: var(--ink); stroke-width: .35; }
+  .plan text { font-family: inherit; }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-3); }
+  .tile { background: var(--result-bg); border-radius: var(--r-md); padding: var(--s-3) var(--s-4); min-width: 0; }
+  .tile .k { font-size: var(--t-meta); color: var(--muted); margin: 0; }
+  .tile .v { font-size: 1.6rem; font-weight: 650; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.2; margin: var(--s-1) 0 0; }
+  .tile .v small { font-size: var(--t-label); font-weight: 500; color: var(--muted); letter-spacing: 0; margin-left: 2px; }
+  .tile .d { font-size: var(--t-meta); color: var(--muted); margin: var(--s-1) 0 0; }
+  .tile.wide { grid-column: 1 / -1; }
+  .notice { margin: var(--s-4) 0 0; padding-left: var(--s-5); font-size: var(--t-label); max-width: 80ch; }
+  .notice li { margin: 0 0 var(--s-2); }
+  .notice li b { font-weight: 600; }
+
+  /* ---- charts ---- */
+  .chart { position: relative; margin-top: var(--s-2); }
+  .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .chart text { font-family: inherit; fill: var(--muted); }
+  .chart .axis line, .chart .gridl { stroke: var(--grid); stroke-width: 1; }
+  .chart .base { stroke: var(--line); stroke-width: 1; }
+  .chart .lbl-ink { fill: var(--ink); font-weight: 600; paint-order: stroke; stroke: var(--card); stroke-width: 3.5px; stroke-linejoin: round; }
+  @media (max-width: 520px) { table.data .hide-n { display: none; } table.data { font-size: var(--t-meta); } }
+  .chart .hit { fill: transparent; cursor: crosshair; touch-action: pan-y; }
+  .chart .cross { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; }
+  .tip { position: absolute; z-index: 20; pointer-events: none; background: var(--card); color: var(--ink);
+    border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-2) var(--s-3); font-size: var(--t-meta);
+    box-shadow: var(--shadow); line-height: 1.45; min-width: 150px; }
+  .tip[hidden] { display: none; }
+  .tip b { font-weight: 600; }
+  .tip .row { display: flex; justify-content: space-between; gap: var(--s-3); font-variant-numeric: tabular-nums; }
+  .tip i { display: inline-block; width: 10px; height: 3px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+  .legend { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-3); margin: var(--s-2) 0 0; font-size: var(--t-meta); color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: var(--s-1); }
+  .legend i { display: inline-block; width: 18px; height: 0; border-top: 3px solid; border-radius: 2px; }
+  .legend i.dash { border-top-style: dashed; }
+  .legend i.blk { height: 10px; border: none; }
+  .chipbtn { border: 1px solid var(--line); background: var(--field); color: var(--muted); font: inherit; font-size: var(--t-meta);
+    border-radius: var(--r-pill); padding: 2px var(--s-2); cursor: pointer; display: inline-flex; align-items: center; gap: var(--s-1); }
+  .chipbtn:hover { border-color: var(--accent); color: var(--ink); }
+  .chipbtn:active { transform: translateY(1px); }
+  .chipbtn[aria-pressed="true"] { border-color: var(--ink); color: var(--ink); font-weight: 600; }
+
+  /* horizontal bars (components, heating by zone) */
+  .bars { margin-top: var(--s-2); font-size: var(--t-label); }
+  .bar-row { display: grid; grid-template-columns: 11rem minmax(0, 1fr) 7.5rem; gap: var(--s-2); align-items: center; padding: 3px 0; }
+  @media (max-width: 520px) { .bar-row { grid-template-columns: 7.2rem minmax(0, 1fr) 5.6rem; } }
+  .bar-row .nm { color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar-row .val { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
+  .bar-row .val b { color: var(--ink); font-weight: 600; }
+  .bar-track { position: relative; height: 18px; }
+  .bar-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--bar); border-radius: 0 4px 4px 0; min-width: 1px; }
+  .bar-row.top .bar-fill { background: var(--accent); }
+  .bar-row.top .nm { font-weight: 600; }
+  .twocol { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-6); }
+  @media (max-width: 820px) { .twocol { grid-template-columns: 1fr; } }
+  .twocol .bar-row { grid-template-columns: 9.5rem minmax(0, 1fr) 6.8rem; }
+  @media (max-width: 520px) { .twocol .bar-row { grid-template-columns: 7.2rem minmax(0, 1fr) 5.6rem; } }
+
+  table.data { border-collapse: collapse; width: 100%; font-size: var(--t-label); margin-top: var(--s-2); }
+  table.data th, table.data td { text-align: left; padding: var(--s-1) var(--s-2); border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.data th { color: var(--muted); font-weight: 600; font-size: var(--t-meta); }
+  table.data td.num, table.data th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  table.data tr.sum td { font-weight: 600; border-top: 2px solid var(--line); }
+  table.data tr.cur td { background: var(--result-bg); }
+  table.data td.nw { white-space: nowrap; }
+  #zoneCompTable td:first-child, #zoneTable td:first-child { white-space: nowrap; }
+  table.data .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+  .tablewrap { overflow-x: auto; }
+  .zbtn { background: none; border: none; padding: 0; font: inherit; color: var(--ink); cursor: pointer; text-align: left; }
+  .zbtn:hover { text-decoration: underline; }
+  .zbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .zbtn[aria-pressed="true"] { font-weight: 700; }
+
+  /* ---- tab 3 controls ---- */
+  .basecase { background: var(--result-bg); border-radius: var(--r-md); padding: var(--s-3) var(--s-4); font-size: var(--t-label); margin: 0 0 var(--s-4); }
+  .basecase p { margin: 0 0 var(--s-1); }
+  .basecase ul { margin: 0; padding-left: var(--s-5); color: var(--muted); }
+  .ctrls { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-3) var(--s-6); }
+  @media (max-width: 680px) { .ctrls { grid-template-columns: 1fr; } }
+  .ctrl { min-width: 0; }
+  .ctrl .top { display: flex; justify-content: space-between; gap: var(--s-2); align-items: baseline; }
+  .ctrl .top label { margin: 0; }
+  .ctrl output { font-variant-numeric: tabular-nums; font-size: var(--t-label); color: var(--ink); font-weight: 600; white-space: nowrap; }
+  .ctrl output.changed { color: var(--accent); }
+  .ctrl input[type="range"] { width: 100%; accent-color: var(--accent); margin: var(--s-1) 0 0; }
+  .ctrl input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .ctrl input[type="range"]:hover { cursor: pointer; }
+  .ctrl .hint { margin: 0; }
+  .ctrl select { margin-top: var(--s-1); }
+  .ctrlgroup { grid-column: 1 / -1; font-size: var(--t-label); font-weight: 600; margin: var(--s-2) 0 0; border-bottom: 1px solid var(--line); padding-bottom: var(--s-1); }
+  .now { margin-top: var(--s-4); }
+  .largest { font-size: var(--t-label); color: var(--muted); margin: var(--s-3) 0 0; }
+  .largest b { color: var(--ink); font-weight: 600; }
+  .caveat { margin: var(--s-2) 0 0; padding: var(--s-2) var(--s-3); border-left: 3px solid var(--warn); background: var(--field);
+    border-radius: 0 var(--r-sm) var(--r-sm) 0; font-size: var(--t-meta); color: var(--muted); }
+  .empty { color: var(--muted); font-size: var(--t-label); margin: var(--s-2) 0 0; }
+  .carry { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: var(--t-meta);
+    white-space: pre-wrap; overflow-wrap: anywhere; background: var(--result-bg); border-radius: var(--r-md); padding: var(--s-3); margin-top: var(--s-2); }
+  .carry[hidden] { display: none; }
+  .pos { color: var(--good); } .neg { color: var(--bad); }
+
+  .note { color: var(--muted); font-size: var(--t-label); max-width: 72ch; }
+  footer.page { color: var(--muted); font-size: var(--t-meta); margin-top: var(--s-8); border-top: 1px solid var(--line); padding-top: var(--s-4); }
+  footer.page p { margin: 0 0 var(--s-2); }
+  footer.page .sources { margin: 0 0 var(--s-4); padding-left: var(--s-4); }
+  footer.page .sources li { margin: 0 0 var(--s-1); max-width: 90ch; }
+  footer.page a { color: var(--accent); }
+
+  .primer { margin: 0 0 var(--s-6); padding: 0 0 var(--s-5); border-bottom: 1px solid var(--line); }
+  .primer .what { font-weight: 600; font-size: var(--t-lead); letter-spacing: -.011em; margin: 0 0 var(--s-2); max-width: 62ch; }
+  .primer p { margin: 0 0 var(--s-2); color: var(--muted); font-size: var(--t-label); line-height: 1.62; max-width: 68ch; }
+  .primer p:last-child { margin-bottom: 0; }
+  .primer b { color: var(--ink); font-weight: 600; }
+
+  details.maths { margin-top: var(--s-6); border-top: 1px solid var(--line); padding: 0; }
+  details.maths + details.maths { margin-top: 0; }
+  details.maths[open] { padding-bottom: var(--s-4); }
+  details.maths > summary { cursor: pointer; color: var(--accent); font-size: var(--t-label);
+    font-weight: 600; padding: var(--s-3) 0; list-style: none; }
+  details.maths > summary::-webkit-details-marker { display: none; }
+  details.maths > summary::before { content: "▸ "; }
+  details.maths[open] > summary::before { content: "▾ "; }
+  details.maths > summary:hover { color: var(--ink); }
+  details.maths > summary:active { color: var(--accent); }
+  details.maths > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  details.maths .deriv { color: var(--muted); font-size: var(--t-label); margin: var(--s-2) 0 0; max-width: 72ch; }
+  details.maths .deriv b { color: var(--ink); font-weight: 600; }
+
+  .info-wrap { position: relative; display: inline-block; vertical-align: middle; }
+  .info-tip { display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px; margin-left: var(--s-1); border-radius: 50%; border: none; padding: 0;
+    background: var(--line); color: var(--muted); font-size: var(--t-glyph); font-weight: 700;
+    font-family: inherit; font-style: normal; line-height: 1; cursor: pointer; user-select: none; }
+  .info-tip:hover, .info-tip[aria-expanded="true"] { background: var(--accent); color: var(--accent-ink); }
+  .info-tip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .info-tip:active { transform: translateY(1px); }
+  .popover { position: absolute; z-index: 30; left: -60px; bottom: calc(100% + 8px);
+    width: max-content; max-width: min(270px, 80vw); background: var(--card); color: var(--ink);
+    border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-2) var(--s-3);
+    font-size: var(--t-meta); font-weight: 400; line-height: 1.45; text-align: left;
+    box-shadow: var(--shadow); }
+  .popover[hidden] { display: none; }
+
+  .toprow { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; margin-bottom: var(--s-4); }
+  .toprow .home { margin-bottom: 0; }
+  .themepick { margin-left: auto; border: 0; padding: 0; min-width: 0; display: inline-flex; gap: var(--s-1); }
+  .themepick label { margin: 0; }
+  .themepick input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .themepick span { display: inline-block; cursor: pointer; border: 1px solid var(--line); border-radius: var(--r-pill);
+    padding: var(--s-1) var(--s-3); background: var(--field); color: var(--muted); font-size: var(--t-meta); }
+  .themepick span:hover { border-color: var(--accent); color: var(--ink); }
+  .themepick input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .themepick input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px;
+    padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  @media print {
+    .tabs, .toprow, .nav, .btn-row, .orient { display: none !important; }
+    section.card[hidden] { display: block !important; }
+    section.card { break-inside: avoid; margin-bottom: var(--s-4); }
+  }
+</style>
+<script>
+  /* Resolve the colour theme before first paint. Storage is wrapped in
+     try/catch: a Canvas iframe with storage blocked throws, and the tool keeps
+     working without remembering the choice. */
+  (function () {
+    var pref = "system";
+    try {
+      var v = localStorage.getItem("tt-theme");
+      if (v === "light" || v === "dark") pref = v;
+    } catch (e) {}
+    window.__ttPref = pref;
+    var dark = pref === "dark" ||
+      (pref === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+  })();
+</script>
+</head>
+<body>
+<div class="wrap">
+  <div class="toprow">
+    <a class="home" href="index.html">&larr; BPSD6030 tutorial tools</a>
+    <fieldset class="themepick" id="themePick">
+    <legend class="visually-hidden">Colour theme</legend>
+    <label><input type="radio" name="theme" value="system"><span>System</span></label>
+    <label><input type="radio" name="theme" value="light"><span>Light</span></label>
+    <label><input type="radio" name="theme" value="dark"><span>Dark</span></label>
+    </fieldset>
+  </div>
+  <header class="page">
+    <h1>Zoning and Heat Balance</h1>
+    <p class="lede">One office floor plate, loaded on a hot Sydney summer day and a cold winter one. Tab 1 zones it three ways so you can see which numbers zoning moves. Tabs 2 and 3 split the building&rsquo;s peak into its parts and let you test design changes against one base case. The numbers come from a simplified hourly load model inside this page, so they show patterns, not your building&rsquo;s loads: DesignBuilder, running the EnergyPlus heat balance, is the authority on those. Nothing here asks for your own results.</p>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Zoning and heat balance steps">
+    <button class="tab active" role="tab" id="tab-1" aria-controls="panel-1" aria-selected="true" tabindex="0" data-idx="0"><span class="n">1</span><span>Zoning the plate</span></button>
+    <button class="tab" role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false" tabindex="-1" data-idx="1"><span class="n">2</span><span>What drives the peak</span></button>
+    <button class="tab" role="tab" id="tab-3" aria-controls="panel-3" aria-selected="false" tabindex="-1" data-idx="2"><span class="n">3</span><span>Cut the peak</span></button>
+  </div>
+
+  <!-- ===== Orientation: mirrors teachr bpsd6030/summaries/tutorial_plan.md, Week 3 Steps 2-3 and Week 7 Steps 1-3 ===== -->
+  <div class="orient">
+    <details class="mapsto" open>
+      <summary>Where this fits in the Week 3 and Week 7 tutorials</summary>
+      <ul>
+        <li>Week 3, Step 2, <i>Zoning, taught</i> &rarr; tab <b>1 Zoning the plate</b>: the one plan on screen, switched between the three zonings while the perimeter, orientation and unconditioned-zone rules are talked through</li>
+        <li>Week 3, Step 3, <i>Geometry and zoning of your own building</i> &rarr; tab <b>1</b> as the reference, when you decide whether your own plate needs perimeter zones and which spaces go in the unconditioned zone</li>
+        <li>Week 7, Step 1, <i>Intervention testing</i> &rarr; tab <b>2 What drives the peak</b> to see how a heat balance is read, then tab <b>3 Cut the peak</b> to try the targeting on the model plate before you do it on your own model</li>
+        <li>Week 7, Steps 2 and 3, <i>Results review</i> and <i>Peer comparison</i> &rarr; tab <b>3</b>&rsquo;s log as the format for your own results: one stated base case, each increment, the cumulative total against the 15% line, the measure that moved the loads most and the one that did nothing</li>
+      </ul>
+      <p class="none">The rest of both sessions uses no tab: in Week 3, Steps 1, 4 and 5 (<i>Building-selection clinic</i>, <i>Conditions preview</i>, <i>Set the EFT</i>), the quiz and the buffer; in Week 7, most of Step 1 (on your own model), Step 4 (<i>A1 questions</i>) and the quiz. Your own loads come from DesignBuilder, never from this page.</p>
+    </details>
+    <p class="datasource" id="dataSource" aria-live="polite"></p>
+  </div>
+
+  <!-- ===== Tab 1: Zoning the plate ===== -->
+  <section class="card" role="tabpanel" id="panel-1" aria-labelledby="tab-1" tabindex="0">
+    <div class="primer">
+      <h2 class="what">Zone the same floor three ways and watch which numbers move.</h2>
+      <p>A <b>thermal zone</b> is a part of the floor that one thermostat controls. On a deep floor plate, a <b>perimeter zone</b><span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="What a perimeter zone is">i</button><span class="popover" role="tooltip" hidden>A strip of floor about 4 m deep behind a facade, drawn with a virtual partition (no wall, just a zone boundary). Facades facing different ways get separate zones because the sun reaches them at different times of day.</span></span> is a strip about 4&nbsp;m deep behind each facade, split by the way the facade faces, and the <b>core</b> is the interior behind it. Toilets, stairs, lifts, plant and storage go in one <b>unconditioned zone</b>: modelled, but not heated or cooled. The plate here is a five-storey office: L-shaped floors of 720&nbsp;m², 16&nbsp;m deep, zoned with 3.6&nbsp;m perimeter zones, and a strip of toilets, lift and plant room along a party wall to the south.</p>
+      <p>Two totals matter. The <b>sum of zone peaks</b><span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="What the sum of zone peaks is">i</button><span class="popover" role="tooltip" hidden>Each zone&rsquo;s highest load of the day, added up, whatever hour each one happens. It is what the &ldquo;Totals&rdquo; row of DesignBuilder&rsquo;s zone table reports. It sizes nothing on its own.</span></span> adds each zone&rsquo;s own worst hour, and each zone&rsquo;s air supply is sized on its own peak. The <b>coincident peak</b><span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="What the coincident peak is">i</button><span class="popover" role="tooltip" hidden>The whole building&rsquo;s load at the single hour when that total is highest. Zones that peak at other hours are counted at what they need in that hour, not at their own peak. The central plant is sized on this.</span></span> is the whole building&rsquo;s load in its own worst hour, and the central plant is sized on that. Change the zoning and watch which of the two moves.</p>
+    </div>
+
+    <div class="modebar">
+      <span class="lbl" id="optLbl">Zoning</span>
+      <div class="seg" role="group" aria-labelledby="optLbl" id="optSeg">
+        <button type="button" data-opt="one" aria-pressed="false">One zone per floor</button>
+        <button type="button" data-opt="perim" aria-pressed="true">Perimeter + core</button>
+        <button type="button" data-opt="misassigned" aria-pressed="false">Perimeter + core, services as office</button>
+      </div>
+    </div>
+    <div class="modebar">
+      <span class="lbl" id="v1Lbl">Design calculation</span>
+      <div class="seg" role="group" aria-labelledby="v1Lbl" id="v1Seg">
+        <button type="button" data-v="cool" aria-pressed="true">Cooling design day</button>
+        <button type="button" data-v="heat" aria-pressed="false">Heating design</button>
+      </div>
+    </div>
+
+    <div class="split">
+      <div class="plan" id="plan" aria-label="Typical floor plan, zoned"></div>
+      <div>
+        <div class="tiles" id="tiles1"></div>
+        <ul class="notice" id="notice1"></ul>
+      </div>
+    </div>
+
+    <div id="coolCharts1">
+      <h3>Each zone through the day</h3>
+      <p class="sub">The zone loads on all five floors, hour by hour while the system runs (07:00 to 18:00). A dot marks each zone&rsquo;s own peak. Select a zone on the plan, in the legend or in the table to pick out its line.</p>
+      <div class="legend" id="legend1"></div>
+      <div class="chart" id="chartZones"></div>
+      <h3>The building, the same day</h3>
+      <p class="sub">The same zones stacked. The top edge is the building&rsquo;s load; its highest point is the coincident peak. The dashed line is the sum of zone peaks.</p>
+      <div class="chart" id="chartBldg"></div>
+    </div>
+    <div id="heatCharts1" hidden>
+      <h3>Heating, zone by zone</h3>
+      <p class="sub">Heating design holds the outdoor air at the winter design temperature all day, with no sun and no people, lights or equipment counted. Every zone meets its worst conditions at the same moment.</p>
+      <div class="bars" id="heatBars1"></div>
+    </div>
+
+    <h3>Zone by zone</h3>
+    <div class="tablewrap"><table class="data" id="zoneTable"></table></div>
+
+    <h3>The three zonings side by side</h3>
+    <p class="sub">The same building and the same day each time, so the differences are the zoning&rsquo;s alone.</p>
+    <div class="tablewrap"><table class="data" id="optTable"></table></div>
+
+    <details class="maths">
+      <summary>How the loads are worked out</summary>
+      <p class="deriv"><b>The day.</b> A clear-sky cooling design day for Sydney Airport in January. The hottest hour is the 0.4% design dry bulb, 33.6&nbsp;°C, with a mean coincident wet bulb of 19.7&nbsp;°C. The rest of the day follows ASHRAE&rsquo;s daily range method: each hour sits a fixed fraction of a 10.8&nbsp;K daily range below the peak, lowest near 05:00 and highest in the early afternoon. Sunshine comes from the ASHRAE clear-sky model at 34°&nbsp;S on 21 January, with the clear-sky optical depths tabulated for Sydney in that month. These are the inputs of the ASHRAE 0.4% cooling design day for Sydney Airport, the design day EnergyPlus and DesignBuilder read from the weather data. The 10.8&nbsp;K is the mean daily range on days that reach the 0.4% condition; the weather file header also lists 6.9&nbsp;K, which is the hottest month&rsquo;s average daily range and a different quantity. Times are standard time; under daylight saving the clock reads an hour later.</p>
+      <p class="deriv"><b>Each zone, each hour.</b> Sun through glass = glass area &times; SHGC &times; sunshine on the facade, with the direct part reduced at steep angles of incidence. Glass conduction = U-value &times; area &times; (outdoor &minus; indoor temperature). Walls and roof use the <b>sol-air temperature</b><span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="What sol-air temperature is">i</button><span class="popover" role="tooltip" hidden>The outdoor temperature that would push the same heat into a wall as the real air temperature plus the sunshine it absorbs. A dark roof in summer sun can sit 30 K or more above the air temperature.</span></span> in place of the air temperature, and their heat arrives inside over several hours. People add 75&nbsp;W sensible and 55&nbsp;W latent (moisture) each at 10&nbsp;m² a person; lights 4.5&nbsp;W/m²; equipment 11&nbsp;W/m², all at full value from 08:00 to 18:00. Outside air is 10&nbsp;L/s a person while the system runs (07:00 to 18:00); infiltration is 0.75 air changes an hour of the office volume, shared between the perimeter zones by facade length.</p>
+      <p class="deriv"><b>Thermal mass.</b> Heat that arrives as radiation (sun on the floor, much of the heat from people and lights) warms the room&rsquo;s surfaces first and reaches the air over the next few hours. The tool spreads it with ASHRAE&rsquo;s <b>radiant time series</b> for a medium-weight, carpeted office (about half of it in the first hour, most of the rest over the next five), and delays wall and roof conduction with ASHRAE&rsquo;s conduction time series for a brick-veneer wall and an insulated concrete roof. That is why the peaks sit later than the sun.</p>
+      <p class="deriv"><b>Heating.</b> Steady state at the 99.6% winter design temperature, 6.9&nbsp;°C, against 21&nbsp;°C inside: conduction through glass, walls and roof, plus outside air and infiltration. No sun and no internal gains, as in DesignBuilder&rsquo;s heating design calculation.</p>
+      <p class="deriv"><b>Loads, not capacities.</b> Everything here is a calculated load. DesignBuilder&rsquo;s design capacity multiplies the load by a sizing factor; none is applied.</p>
+    </details>
+    <details class="maths">
+      <summary>Why the coincident peak does not move here</summary>
+      <p class="deriv">In this model a zone boundary is a line on the plan: the same sun, people, lights and outside air are in the building however it is divided, so the building&rsquo;s hour-by-hour load is identical under the first two zonings and the coincident peak cannot change. In DesignBuilder it moves a little, typically a few per cent, because zones there exchange heat across their boundaries and each zone&rsquo;s air temperature is controlled separately.</p>
+      <p class="deriv">The sum of zone peaks does change, and by a lot, because splitting lets each facade reach its own worst hour. That is why it is not the block load: report the coincident figure as the building&rsquo;s load and keep the zone peaks for sizing each zone&rsquo;s supply.</p>
+      <p class="deriv" id="floorNote"></p>
+    </details>
+    <details class="maths">
+      <summary>What this model leaves out</summary>
+      <p class="deriv">It is a simplified hourly model with a stated method, not a simulation. It holds every room at its setpoint all day, treats the floors, ceilings and the party wall as adiabatic (no heat across them), ignores the ground slab and any shade from neighbouring buildings, and takes the outdoor air as drier than the room on this design day, so outside air adds no latent load (a humid day would). Your building&rsquo;s loads come from DesignBuilder.</p>
+    </details>
+
+    <div class="nav">
+      <span></span>
+      <button type="button" class="btn" data-nav="next">Next: what drives the peak</button>
+    </div>
+  </section>
+
+  <!-- ===== Tab 2: What drives the peak ===== -->
+  <section class="card" role="tabpanel" id="panel-2" aria-labelledby="tab-2" tabindex="0" hidden>
+    <div class="primer">
+      <h2 class="what">Find the biggest part of the peak before you try to shrink it.</h2>
+      <p>A <b>heat balance</b> splits a load into the paths the heat takes: sun through the glass, heat conducted through glass, walls and roof, the people, lights and equipment inside, the <b>outside air</b> the system brings in for ventilation, and the <b>infiltration</b> that leaks in through the facade. A design change only moves the peak much if it acts on a large component.</p>
+      <p>Cooling is read at the building&rsquo;s coincident peak hour. Heating is a different calculation, steady winter conditions with no sun and nobody inside, so only conduction, outside air and infiltration count. The largest component is often not the same for both. This tab uses the perimeter and core zoning, with the services unconditioned.</p>
+    </div>
+
+    <div class="twocol">
+      <div>
+        <h3 style="margin-top:0" id="coolHead2">Cooling</h3>
+        <div class="bars" id="compCool"></div>
+      </div>
+      <div>
+        <h3 style="margin-top:0">Heating</h3>
+        <div class="bars" id="compHeat"></div>
+      </div>
+    </div>
+    <ul class="notice" id="notice2"></ul>
+
+    <h3>Where it lands, zone by zone</h3>
+    <div class="modebar">
+      <span class="lbl" id="v2Lbl">Show</span>
+      <div class="seg" role="group" aria-labelledby="v2Lbl" id="v2Seg">
+        <button type="button" data-v="cool" aria-pressed="true">Cooling</button>
+        <button type="button" data-v="heat" aria-pressed="false">Heating</button>
+      </div>
+    </div>
+    <p class="sub" id="zoneCompSub"></p>
+    <div class="tablewrap"><table class="data" id="zoneCompTable"></table></div>
+
+    <details class="maths">
+      <summary>What each component is</summary>
+      <p class="deriv"><b>Sun through glass</b>: sunshine transmitted by the glazing, set by its area and its <b>SHGC</b><span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="What SHGC is">i</button><span class="popover" role="tooltip" hidden>Solar heat gain coefficient: the share of the sunshine falling on the glass that ends up as heat inside, from 0 to 1. Clear double glazing is about 0.7; a solar-control low-e glass can be 0.3 or less.</span></span>, and by the way the facade faces. <b>Glass conduction</b>, <b>walls</b> and <b>roof</b>: heat driven by the temperature difference, set by each element&rsquo;s <b>U-value</b><span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="What a U-value is">i</button><span class="popover" role="tooltip" hidden>Heat flow through one square metre of an element for each degree of temperature difference, in W/m²K. Lower is better insulated.</span></span>; only the top floor has a roof. <b>People</b> include their moisture (latent heat). <b>Outside air</b> is the ventilation air brought to room conditions. <b>Infiltration</b> is unplanned leakage through the facade.</p>
+      <p class="deriv"><b>Why cooling is read at one hour.</b> The parts of the cooling load peak at different times: the west glass late in the afternoon, the roof later still, the people from mid-morning. The plant meets the building at its coincident peak hour, so that is the hour whose parts a design change has to reduce. The zone table on this tab is also read at that hour, not at each zone&rsquo;s own peak.</p>
+      <p class="deriv"><b>DesignBuilder&rsquo;s version.</b> Its cooling and heating design results list similar components for each zone and for the building. The names differ a little (glazing, walls, roofs, ventilation, infiltration and so on), and the reading is the same: find the biggest, then act on it.</p>
+    </details>
+
+    <div class="nav">
+      <button type="button" class="btn ghost" data-nav="back">Back</button>
+      <button type="button" class="btn" data-nav="next">Next: cut the peak</button>
+    </div>
+  </section>
+
+  <!-- ===== Tab 3: Cut the peak ===== -->
+  <section class="card" role="tabpanel" id="panel-3" aria-labelledby="tab-3" tabindex="0" hidden>
+    <div class="primer">
+      <h2 class="what">Change one thing at a time against one base case, and log each step.</h2>
+      <p>Each logged step is measured two ways: from the step before it (the <b>increment</b>) and from the base case (the <b>cumulative</b> reduction). Read down the log and it is a route, not a set of separate tests. The dashed line is a 15% cut in the coincident design loads, the Assignment 1 target.</p>
+      <p>Before each change, check which component is largest now. It shifts as you go: shrink one and another takes its place.</p>
+    </div>
+
+    <div class="basecase" id="baseBox"></div>
+
+    <div class="ctrls" id="ctrls"></div>
+
+    <div class="now">
+      <div class="tiles" id="tiles3"></div>
+      <p class="largest" id="largest3"></p>
+      <div class="btn-row">
+        <button type="button" class="btn" id="logBtn">Log this change</button>
+        <button type="button" class="btn ghost" id="undoBtn">Undo the last step</button>
+        <button type="button" class="btn ghost" id="resetBtn">Back to the base case</button>
+      </div>
+    </div>
+
+    <h3>The log</h3>
+    <div class="tablewrap"><table class="data" id="logTable"></table></div>
+    <h3>Cumulative reduction against the target</h3>
+    <div class="legend" aria-hidden="true">
+      <span><i class="blk" style="width:12px;background:var(--s-cool)"></i>coincident cooling</span>
+      <span><i class="blk" style="width:12px;background:var(--s-heat)"></i>heating</span>
+      <span><i class="dash" style="border-color:var(--muted)"></i>15% target</span>
+    </div>
+    <div class="chart" id="chartLog"></div>
+    <div class="btn-row">
+      <button type="button" class="btn ghost" id="copyBtn">Copy the log as text</button>
+    </div>
+    <div class="carry" id="carry" hidden></div>
+
+    <details class="maths">
+      <summary>How the log adds up</summary>
+      <p class="deriv"><b>Increment</b> = load after the previous step &minus; load after this step. <b>Cumulative</b> = (base-case load &minus; load after this step) &divide; base-case load. Increments do not simply add: two measures that act on the same component (a lower SHGC and an overhang both cut sun through glass) each have less left to cut when the other is already in, which is why the log has to record the order.</p>
+      <p class="deriv"><b>The loads tracked</b> are the coincident cooling peak and the heating load of the whole building, perimeter and core zoning, services unconditioned. If a change moves the peak hour, the cooling figure is read at the new hour.</p>
+    </details>
+    <details class="maths">
+      <summary>What each control stands for in DesignBuilder</summary>
+      <p class="deriv"><b>Window-to-wall ratio, SHGC and glass U-value</b>: the glazing template&rsquo;s percentage and the simple glazing definition (U-value, SHGC). <b>Overhang</b>: local shading, a horizontal overhang at the window head. <b>Orientation</b>: the site orientation, turning the whole building. <b>Wall and roof U-values</b>: the construction build-ups. <b>Lighting power density</b>: lighting, normalised power density. <b>Infiltration</b>: the constant infiltration rate in air changes an hour. <b>Heat recovery</b>: on the HVAC tab, sensible heat recovery on the outside air.</p>
+      <p class="deriv"><b>Things this page holds fixed</b>: occupancy, equipment and the outside-air rate (10&nbsp;L/s a person, a ventilation minimum, so cutting it is not a design option), the setpoints (24&nbsp;°C cooling, 21&nbsp;°C heating), the weather and the constructions&rsquo; thermal mass.</p>
+    </details>
+
+    <div class="nav">
+      <button type="button" class="btn ghost" data-nav="back">Back</button>
+      <span></span>
+    </div>
+  </section>
+
+  <footer class="page">
+    <p>Where the numbers come from, so you can check them and go further:</p>
+    <ul class="sources">
+      <li>Plate: a five-storey office, L-shaped floors of 720&nbsp;m² with 3.6&nbsp;m perimeter zones, a services strip of toilets, lift and plant room, and a party wall to the south, treated as adiabatic.</li>
+      <li>Design conditions: ASHRAE (2025), <i>Handbook&mdash;Fundamentals</i>, ch. 14, Climatic Design Information, Sydney Intl Airport (WMO 947670): the 0.4% cooling design day (21 January; 33.6&nbsp;°C dry bulb, 19.7&nbsp;°C mean coincident wet bulb, 10.8&nbsp;K mean coincident daily range; ASHRAE 2017 clear-sky model with &tau;<sub>b</sub>&nbsp;0.417 and &tau;<sub>d</sub>&nbsp;2.373) and the 99.6% heating dry bulb (6.9&nbsp;°C), as written to the design-day file that accompanies the OneBuilding TMYx 2011&ndash;2025 weather file for the station.</li>
+      <li>Daily range fractions, clear-sky solar model and 21 January solar constants: ASHRAE <i>Fundamentals</i>, ch. 14.</li>
+      <li>Load method: ASHRAE <i>Fundamentals</i>, ch. 18, Nonresidential Cooling and Heating Load Calculations (radiant time series), as reproduced in Howell, R. H. (2017), <i>Principles of Heating, Ventilating and Air Conditioning</i> (8th ed.), ASHRAE, ch. 7: daily range percentages (Table 7-2), radiant and convective splits (Table 7-29), wall conduction time series, wall 12 (Table 7-30), roof conduction time series, roof 14 (Table 7-31), non-solar and solar radiant time series, medium construction with carpet, 50% glass (Tables 7-33, 7-34), people at 75&nbsp;W sensible and 55&nbsp;W latent, &ldquo;moderately active office work&rdquo; (Table 7-14). Glass angular response: 6&nbsp;mm clear double glazing, SHGC 0.70, 0.67, 0.64, 0.58, 0.45 and 0.23 at 0, 40, 50, 60, 70 and 80° incidence and 0.60 for diffuse light (Table 7-4 SI, row 5b, p. 281, reproducing ASHRAE <i>Fundamentals</i> ch. 15, Table 10).</li>
+      <li>Office defaults, as taught in this unit for DesignBuilder activity inputs: occupancy 10&nbsp;m² a person (NCC 2019, Table D1.13); lighting 4.5&nbsp;W/m² (NCC 2019, Table J6.2a, office); equipment 11&nbsp;W/m² internal sensible heat gain (NCC 2022 Volume One, Specification 35, Table S35C2l, Class 5), the same specification&rsquo;s Table S35C2n giving 75&nbsp;W sensible and 55&nbsp;W latent a person; outside air 10&nbsp;L/s a person (AS 1668.2:2012, office). Infiltration 0.75 air changes an hour: 15 air changes an hour at 50&nbsp;Pa (CSIRO, typical Australian construction) divided by 20, a common rule of thumb for natural conditions.</li>
+      <li>Base-case fabric (clear double glazing U&nbsp;2.9, SHGC&nbsp;0.70, 50% vision glass; walls U&nbsp;0.60; roof U&nbsp;0.45) and setpoints (24&nbsp;°C cooling, 21&nbsp;°C heating, a 3&nbsp;K dead band against the NCC J6D3 minimum of 2&nbsp;K) are illustrative values for an older office, chosen for this tool, not taken from a standard.</li>
+    </ul>
+    <p>Built by the IEQ Lab, Sydney School of Architecture, Design and Planning, for the BPSD6030 zoning and Assignment 1 intervention work. The model shows patterns on one model plate; DesignBuilder stays the load authority for your building. Nothing you do here is recorded or sent anywhere. Self-contained, open-source, no tracking.</p>
+    <p>Revised November 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.</p>
+  </footer>
+</div>
+
+<script>
+// ---------- the load model (pure functions; pasted into the page verbatim) ----------
+var ZL = (function () {
+  "use strict";
+  var D2R = Math.PI / 180;
+
+  // Climate: Sydney Intl Airport (WMO 947670), ASHRAE 0.4% cooling design day (ASHRAE Fundamentals 2025 ch. 14),
+  // as written to the OneBuilding TMYx 2011-2025 .ddy: 33.6 DB / 19.7 MCWB, 10.8 K mean coincident daily range,
+  // ASHRAETau2017 sky with taub 0.417, taud 2.373. Heating 99.6% from the same tables.
+  var CLIM = {
+    lat: -33.9464, lon: 151.1731, lsm: 150,
+    tdbCool: 33.6, mcwb: 19.7, range: 10.8, tdbHeat: 6.9, p: 101.248,
+    // Jan 21 solar constants (ASHRAE Fundamentals ch. 14, Table 2)
+    E0: 1410, ET: -10.6, decl: -20.1,
+    // clear-sky optical depths for this design day
+    taub: 0.417, taud: 2.373, rhoG: 0.2
+  };
+  // Percentage of daily range, hours ending 1..24 (ASHRAE; Howell 2017 Table 7-2)
+  var DR = [87, 92, 96, 99, 100, 98, 93, 84, 71, 56, 39, 23, 11, 3, 0, 3, 10, 21, 34, 47, 58, 68, 76, 82];
+  // RTS, medium construction, carpet, 50% glass (Howell 2017 Tables 7-33, 7-34)
+  var RTS_NS = [49, 17, 9, 5, 3, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0];
+  var RTS_SO = [54, 16, 8, 4, 3, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0];
+  // CTS: wall 12 (brick, sheathing, batt, gyp); roof 14 (membrane, board, 100 mm LW concrete) (Howell Tables 7-30, 7-31)
+  var CTS_W = [0, 4, 13, 17, 15, 12, 9, 7, 5, 4, 3, 2, 2, 2, 2, 1, 1, 1, 0, 0, 0, 0, 0, 0];
+  var CTS_R = [1, 2, 8, 11, 11, 10, 9, 7, 6, 5, 5, 4, 3, 3, 3, 2, 2, 2, 1, 1, 1, 1, 1, 1];
+  // Radiant fractions (Howell Table 7-29)
+  var RAD = { wall: 0.63, roof: 0.84, winCond: 0.63, people: 0.70, lights: 0.67, equip: 0.30 };
+  // Normalised SHGC by incidence angle, 6 mm clear double glazing (ASHRAE Fundamentals ch. 15 Table 10, row 5b;
+  // Howell 2017 Table 7-4 SI): 0.70, 0.67, 0.64, 0.58, 0.45, 0.23 at 0-80 deg, hemispherical 0.60
+  var IAM_A = [0, 40, 50, 60, 70, 80, 90], IAM_V = [1, 0.957, 0.914, 0.829, 0.643, 0.329, 0];
+  var IAM_DIFF = 0.857;
+
+  var H_FLOOR = 3.2, N_FLOORS = 5;
+  var TI_COOL = 24, TI_HEAT = 21;
+  var OCC_ON = 9, OCC_OFF = 18;   // hours ending 9..18 = 08:00-18:00 occupied
+  var HVAC_ON = 8, HVAC_OFF = 18; // hours ending 8..18 = 07:00-18:00 system on
+
+  // The plate (compass metres: e east, s south): five floors of 720 m2, 3.6 m perimeter zones, services strip on the south party wall.
+  // Facades: id, length, base outward azimuth (deg from north, clockwise), zone.
+  var FACADES = [
+    { id: "A",  len: 30, az: 90,  zone: "A" },
+    { id: "B1", len: 16, az: 0,   zone: "B1" },
+    { id: "C1", len: 15, az: 270, zone: "C1" },
+    { id: "B2", len: 16, az: 0,   zone: "B2" },
+    { id: "C2", len: 15, az: 270, zone: "C2" }
+  ];
+  var ZONES = [
+    { id: "A",  area: 101.52, fam: "A" },
+    { id: "B1", area: 44.64,  fam: "B" },
+    { id: "C1", area: 54.00,  fam: "C" },
+    { id: "B2", area: 57.60,  fam: "B" },
+    { id: "C2", area: 47.52,  fam: "C" },
+    { id: "core", area: 340.32, fam: "core" },
+    { id: "svc", area: 74.40, fam: "svc" }
+  ];
+  var BASE = {
+    wwr: 0.50, shgc: 0.70, uWin: 2.9, overhang: 0, rot: 0,
+    uWall: 0.60, uRoof: 0.45, aWall: 0.65, aRoof: 0.88,
+    lpd: 4.5, epd: 11, m2pp: 10, wSens: 75, wLat: 55, oaLps: 10,
+    ach: 0.75, hr: 0
+  };
+  var ho = 17; // W/m2K, outdoor surface coefficient (alpha/ho with alpha 0.45 -> 0.026, as ASHRAE "light")
+
+  function cyc(series, k) { // cyclic convolution, 24 values, kernel in percent
+    var out = new Array(24);
+    for (var h = 0; h < 24; h++) {
+      var s = 0;
+      for (var j = 0; j < 24; j++) s += k[j] / 100 * series[(h - j + 24) % 24];
+      out[h] = s;
+    }
+    return out;
+  }
+  function interpIAM(th) {
+    for (var i = 1; i < IAM_A.length; i++) if (th <= IAM_A[i]) {
+      var f = (th - IAM_A[i - 1]) / (IAM_A[i] - IAM_A[i - 1]);
+      return IAM_V[i - 1] + f * (IAM_V[i] - IAM_V[i - 1]);
+    }
+    return 0;
+  }
+  function pws(t) { // kPa, Hyland-Wexler over water (simplified ASHRAE ch.1 eq.6)
+    var T = t + 273.15;
+    var ln = -5.8002206e3 / T + 1.3914993 - 4.8640239e-2 * T + 4.1764768e-5 * T * T - 1.4452093e-8 * T * T * T + 6.5459673 * Math.log(T);
+    return Math.exp(ln) / 1000;
+  }
+  function wFromWb(tdb, twb, p) {
+    var ws = 0.621945 * pws(twb) / (p - pws(twb));
+    return ((2501 - 2.326 * twb) * ws - 1.006 * (tdb - twb)) / (2501 + 1.86 * tdb - 4.186 * twb);
+  }
+  function wFromRh(t, rh, p) { var pw = rh * pws(t); return 0.621945 * pw / (p - pw); }
+
+  // Outdoor temperature by hour ending 1..24 (index 0..23)
+  var TO = DR.map(function (pc) { return CLIM.tdbCool - pc / 100 * CLIM.range; });
+  var W_OUT = wFromWb(CLIM.tdbCool, CLIM.mcwb, CLIM.p);
+  var W_IN = wFromRh(TI_COOL, 0.5, CLIM.p);
+
+  // Sun position at mid-hour (index h = hour ending h+1, so mid = h + 0.5 LST)
+  var SUN = [];
+  (function () {
+    var phi = CLIM.lat * D2R, dec = CLIM.decl * D2R;
+    for (var h = 0; h < 24; h++) {
+      var lst = h + 0.5;
+      var ast = lst + CLIM.ET / 60 + (CLIM.lon - CLIM.lsm) / 15;
+      var H = 15 * (ast - 12) * D2R;
+      var up = Math.cos(phi) * Math.cos(dec) * Math.cos(H) + Math.sin(phi) * Math.sin(dec);
+      var east = -Math.cos(dec) * Math.sin(H);
+      var north = Math.sin(dec) * Math.cos(phi) - Math.cos(dec) * Math.sin(phi) * Math.cos(H);
+      var beta = Math.asin(up);
+      var Eb = 0, Ed = 0;
+      if (up > 0.0) {
+        var bdeg = beta / D2R;
+        var m = 1 / (Math.sin(beta) + 0.50572 * Math.pow(6.07995 + bdeg, -1.6364));
+        var ab = 1.454 - 0.406 * CLIM.taub - 0.268 * CLIM.taud + 0.021 * CLIM.taub * CLIM.taud;
+        var ad = 0.507 + 0.205 * CLIM.taub - 0.080 * CLIM.taud - 0.190 * CLIM.taub * CLIM.taud;
+        Eb = CLIM.E0 * Math.exp(-CLIM.taub * Math.pow(m, ab));
+        Ed = CLIM.E0 * Math.exp(-CLIM.taud * Math.pow(m, ad));
+      }
+      SUN.push({ e: east, n: north, u: up, beta: beta, Eb: Eb, Ed: Ed });
+    }
+  })();
+
+  // Irradiance on a vertical surface of outward azimuth az (deg): returns per hour {beam, diff, cos}
+  function vertSolar(az, overhang, winH) {
+    var a = az * D2R, ne = Math.sin(a), nn = Math.cos(a);
+    return SUN.map(function (s) {
+      if (s.u <= 0) return { beam: 0, beamWin: 0, diff: 0, cos: 0 };
+      var c = s.e * ne + s.n * nn; // cos incidence
+      var Y = Math.max(0.45, 0.55 + 0.437 * c + 0.313 * c * c);
+      var diff = s.Ed * Y + (s.Eb * s.u + s.Ed) * CLIM.rhoG * 0.5;
+      var beam = c > 0 ? s.Eb * c : 0;
+      var sunlit = 1;
+      if (c > 0 && overhang > 0) {
+        // profile angle: tan(Omega) = tan(beta) / cos(gamma), cos(gamma) = c / cos(beta)
+        var tanOm = Math.tan(s.beta) * Math.cos(s.beta) / c; // = sin(beta)/c
+        sunlit = Math.max(0, 1 - overhang * tanOm / winH);
+      }
+      return { beam: beam, beamWin: beam * sunlit, diff: diff, cos: c };
+    });
+  }
+  var ROOF = SUN.map(function (s) { return s.u > 0 ? s.Eb * s.u + s.Ed : 0; });
+
+  // ---------- one floor, one zone: hourly heat gain components ----------
+  // Returns cooling load (W) by component, 24 values each, after RTS/CTS.
+  var COMPS = ["solar", "winCond", "walls", "roof", "people", "lights", "equip", "oa", "inf"];
+
+  function zero() { var a = new Array(24); for (var i = 0; i < 24; i++) a[i] = 0; return a; }
+  function add(a, b, k) { for (var i = 0; i < 24; i++) a[i] += (k == null ? 1 : k) * b[i]; return a; }
+
+  // zone: {area, conditioned, facades:[{len, az}], roof:boolean}
+  // infShare: this zone's share of the floor's infiltration
+  function zoneCooling(P, zone, top, infShare, infTotal) {
+    var out = {}; COMPS.forEach(function (c) { out[c] = zero(); });
+    var lat = zero();
+    if (!zone.cond) return { comp: out, total: zero() };
+    var winH = P.wwr * H_FLOOR;
+    zone.facades.forEach(function (f) {
+      var az = (f.az + P.rot) % 360;
+      var Aw = P.wwr * f.len * H_FLOOR, Aop = (1 - P.wwr) * f.len * H_FLOOR;
+      var sol = vertSolar(az, P.overhang, winH);
+      // window solar: beam via solar RTS, diffuse via non-solar RTS, both 100% radiant
+      var qb = sol.map(function (x) { return P.shgc * Aw * x.beamWin * interpIAM(Math.acos(Math.min(1, Math.max(0, x.cos))) / D2R); });
+      var qd = sol.map(function (x) { return P.shgc * Aw * x.diff * IAM_DIFF; });
+      add(out.solar, cyc(qb, RTS_SO)); add(out.solar, cyc(qd, RTS_NS));
+      // window conduction
+      var qwc = TO.map(function (t) { return P.uWin * Aw * (t - TI_COOL); });
+      add(out.winCond, qwc, 1 - RAD.winCond); add(out.winCond, cyc(qwc, RTS_NS), RAD.winCond);
+      // opaque wall via sol-air and CTS
+      var te = TO.map(function (t, h) { return t + P.aWall / ho * (sol[h].beam + sol[h].diff); });
+      var qin = cyc(te.map(function (t) { return P.uWall * Aop * (t - TI_COOL); }), CTS_W);
+      add(out.walls, qin, 1 - RAD.wall); add(out.walls, cyc(qin, RTS_NS), RAD.wall);
+    });
+    if (top) {
+      var ter = TO.map(function (t, h) { return t + P.aRoof / ho * ROOF[h] - 3.9; });
+      var qr = cyc(ter.map(function (t) { return P.uRoof * zone.area * (t - TI_COOL); }), CTS_R);
+      add(out.roof, qr, 1 - RAD.roof); add(out.roof, cyc(qr, RTS_NS), RAD.roof);
+    }
+    var occ = zero(), hv = zero();
+    for (var h = 0; h < 24; h++) { var he = h + 1; occ[h] = (he >= OCC_ON && he <= OCC_OFF) ? 1 : 0; hv[h] = (he >= HVAC_ON && he <= HVAC_OFF) ? 1 : 0; }
+    var n = zone.area / P.m2pp;
+    var qp = occ.map(function (o) { return o * n * P.wSens; });
+    add(out.people, qp, 1 - RAD.people); add(out.people, cyc(qp, RTS_NS), RAD.people);
+    add(out.people, occ.map(function (o) { return o * n * P.wLat; }));
+    var ql = occ.map(function (o) { return o * P.lpd * zone.area; });
+    add(out.lights, ql, 1 - RAD.lights); add(out.lights, cyc(ql, RTS_NS), RAD.lights);
+    var qe = occ.map(function (o) { return o * P.epd * zone.area; });
+    add(out.equip, qe, 1 - RAD.equip); add(out.equip, cyc(qe, RTS_NS), RAD.equip);
+    var Q = n * P.oaLps; // L/s, design occupancy, whenever the system runs
+    var dWlat = Math.max(0, W_OUT - W_IN);
+    out.oa = hv.map(function (o, h) { return o * (1.23 * Q * (TO[h] - TI_COOL) * (1 - P.hr) + 3010 * Q * dWlat); });
+    var Qi = infTotal * infShare; // L/s
+    out.inf = TO.map(function (t) { return 1.23 * Qi * (t - TI_COOL); });
+    var total = zero(); COMPS.forEach(function (c) { add(total, out[c]); });
+    return { comp: out, total: total };
+  }
+
+  function zoneHeating(P, zone, top, infShare, infTotal) {
+    var out = {}; COMPS.forEach(function (c) { out[c] = 0; });
+    if (!zone.cond) return { comp: out, total: 0 };
+    var dT = TI_HEAT - CLIM.tdbHeat;
+    zone.facades.forEach(function (f) {
+      out.winCond += P.uWin * P.wwr * f.len * H_FLOOR * dT;
+      out.walls += P.uWall * (1 - P.wwr) * f.len * H_FLOOR * dT;
+    });
+    if (top) out.roof = P.uRoof * zone.area * dT;
+    out.oa = 1.23 * (zone.area / P.m2pp) * P.oaLps * dT * (1 - P.hr);
+    out.inf = 1.23 * infTotal * infShare * dT;
+    var t = 0; COMPS.forEach(function (c) { t += out[c]; });
+    return { comp: out, total: t };
+  }
+
+  // Zoning options -> list of zones per floor
+  // opt: "one" | "perim" | "misassigned"
+  function zonesFor(opt) {
+    var fac = {}; FACADES.forEach(function (f) { (fac[f.zone] = fac[f.zone] || []).push({ len: f.len, az: f.az }); });
+    if (opt === "one") {
+      var a = 0; ZONES.forEach(function (z) { if (z.id !== "svc") a += z.area; });
+      return [
+        { id: "whole", area: a, cond: true, facades: FACADES.map(function (f) { return { len: f.len, az: f.az }; }) },
+        { id: "svc", area: 74.40, cond: false, facades: [] }
+      ];
+    }
+    return ZONES.map(function (z) {
+      return { id: z.id, area: z.area, cond: z.id === "svc" ? opt === "misassigned" : true, facades: fac[z.id] || [] };
+    });
+  }
+
+  // Full building run: 5 floors, top floor has the roof. Zones reported as stacks (same zone on every floor).
+  function run(P, opt) {
+    var zs = zonesFor(opt);
+    var facTot = 0; FACADES.forEach(function (f) { facTot += f.len; });
+    var condBaseVol = 0; ZONES.forEach(function (z) { if (z.id !== "svc") condBaseVol += z.area * H_FLOOR; });
+    var infTotal = P.ach * condBaseVol / 3.6; // L/s per floor (ach of the office volume)
+    var res = { zones: [], cool: zero(), heat: 0, comp: {}, heatComp: {}, area: 0, floorPeaksSum: 0 };
+    COMPS.forEach(function (c) { res.comp[c] = zero(); res.heatComp[c] = 0; });
+    zs.forEach(function (z) {
+      var share = 0; z.facades.forEach(function (f) { share += f.len; }); share /= facTot;
+      var typ = zoneCooling(P, z, false, share, infTotal), tp = zoneCooling(P, z, true, share, infTotal);
+      var hTyp = zoneHeating(P, z, false, share, infTotal), hTop = zoneHeating(P, z, true, share, infTotal);
+      var tot = zero(); add(tot, typ.total, N_FLOORS - 1); add(tot, tp.total);
+      var comp = {}, hc = {};
+      COMPS.forEach(function (c) {
+        comp[c] = zero(); add(comp[c], typ.comp[c], N_FLOORS - 1); add(comp[c], tp.comp[c]);
+        hc[c] = (N_FLOORS - 1) * hTyp.comp[c] + hTop.comp[c];
+        add(res.comp[c], comp[c]); res.heatComp[c] += hc[c];
+      });
+      var heat = (N_FLOORS - 1) * hTyp.total + hTop.total;
+      var pk = peakOf(tot), pkTyp = peakOf(typ.total), pkTop = peakOf(tp.total);
+      if (z.cond) { res.area += z.area * N_FLOORS; res.floorPeaksSum += (N_FLOORS - 1) * pkTyp.v + pkTop.v; }
+      res.zones.push({ id: z.id, area: z.area * N_FLOORS, cond: z.cond, facades: z.facades, cool: tot, comp: comp, peak: pk, heat: heat, heatComp: hc });
+      add(res.cool, tot); res.heat += heat;
+    });
+    res.peak = peakOf(res.cool);
+    res.sumPeaks = 0; res.zones.forEach(function (z) { if (z.cond) res.sumPeaks += z.peak.v; });
+    return res;
+  }
+  function peakOf(a) {
+    var v = -Infinity, h = -1;
+    for (var i = HVAC_ON - 1; i <= HVAC_OFF - 1; i++) if (a[i] > v) { v = a[i]; h = i + 1; }
+    return { v: v, h: h }; // h = hour ending
+  }
+
+  return {
+    CLIM: CLIM, BASE: BASE, ZONES: ZONES, FACADES: FACADES, COMPS: COMPS, TO: TO, SUN: SUN,
+    W_OUT: W_OUT, W_IN: W_IN, run: run, vertSolar: vertSolar, ROOF: ROOF,
+    TI_COOL: TI_COOL, TI_HEAT: TI_HEAT, HVAC_ON: HVAC_ON, HVAC_OFF: HVAC_OFF, OCC_ON: OCC_ON, OCC_OFF: OCC_OFF,
+    N_FLOORS: N_FLOORS, H_FLOOR: H_FLOOR, RTS_NS: RTS_NS, RTS_SO: RTS_SO, CTS_W: CTS_W, CTS_R: CTS_R, RAD: RAD
+  };
+})();
+(function () {
+  "use strict";
+  var SVGNS = "http://www.w3.org/2000/svg";
+  function $(id) { return document.getElementById(id); }
+  function fmt(x, d) {
+    if (x == null || !isFinite(x)) return "—";
+    return x.toLocaleString("en-AU", { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
+  }
+  function kw(w, d) { return fmt(w / 1000, d || 0); }
+  function pct(x, d) { return (x > 0 ? "+" : x < 0 ? "−" : "") + fmt(Math.abs(x), d == null ? 1 : d) + "%"; }
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function hr(h) { return pad(h - 1) + ":00–" + pad(h) + ":00"; }
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); }
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+
+  var BASE = ZL.BASE, COMPS = ZL.COMPS;
+  var COMP_NAME = {
+    solar: "Sun through glass", winCond: "Glass conduction", walls: "Walls", roof: "Roof",
+    people: "People", lights: "Lights", equip: "Equipment", oa: "Outside air", inf: "Infiltration"
+  };
+  var COMP_SHORT = { solar: "Sun", winCond: "Glass cond.", walls: "Walls", roof: "Roof", people: "People", lights: "Lights", equip: "Equip.", oa: "Outside air", inf: "Infiltr." };
+  var OPT_NAME = { one: "One zone per floor", perim: "Perimeter + core", misassigned: "Perimeter + core, services as office" };
+
+  // ---------- zone identity ----------
+  var FAMVAR = { A: "--z-a", B: "--z-b", C: "--z-c", core: "--z-core", svc: "--z-svc" };
+  var BASEAZ = { A: 90, B: 0, C: 270 };
+  function famOf(id) { return id === "whole" || id === "core" ? "core" : id === "svc" ? "svc" : id.charAt(0); }
+  function col(id) { return "var(" + FAMVAR[famOf(id)] + ")"; }
+  function isDashed(id) { return id === "B2" || id === "C2"; }
+  function compass(az) { az = ((az % 360) + 360) % 360; return ["North", "East", "South", "West"][Math.round(az / 90) % 4]; }
+  function zoneName(id, rot, cond) {
+    if (id === "whole") return "Whole floor";
+    if (id === "core") return "Core";
+    if (id === "svc") return cond ? "Services, as office" : "Services (unconditioned)";
+    var c = compass(BASEAZ[id.charAt(0)] + rot);
+    return id === "A" ? c : c + " " + id.charAt(1);
+  }
+  function zoneShort(id, rot) {
+    if (id === "whole") return "One zone";
+    if (id === "core") return "Core";
+    if (id === "svc") return "";
+    var c = compass(BASEAZ[id.charAt(0)] + rot).charAt(0);
+    return id === "A" ? c : c + id.charAt(1);
+  }
+  function faces(id, rot) {
+    if (id === "whole") return "all";
+    if (id === "core" || id === "svc") return "none";
+    var len = id === "A" ? 30 : id.charAt(0) === "B" ? 16 : 15;
+    return compass(BASEAZ[id.charAt(0)] + rot).toLowerCase() + ", " + len + " m";
+  }
+
+  // ---------- state ----------
+  var S = { opt: "perim", v1: "cool", v2: "cool", P: clone(BASE), log: [], sel: null, tab: 0 };
+  var BASE_RES = ZL.run(BASE, "perim");
+  function sameP(a, b) {
+    for (var k in BASE) if (Math.abs(a[k] - b[k]) > 1e-9) return false;
+    return true;
+  }
+  function lastP() { return S.log.length ? S.log[S.log.length - 1].P : BASE; }
+
+  // ---------- svg helpers ----------
+  function el(tag, attrs, parent) {
+    var e = document.createElementNS(SVGNS, tag);
+    for (var k in attrs) if (attrs[k] != null) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function txt(parent, x, y, s, attrs) {
+    var a = { x: x, y: y }; for (var k in attrs) a[k] = attrs[k];
+    var t = el("text", a, parent); t.textContent = s; return t;
+  }
+  function niceStep(max, n) {
+    var raw = max / n, mag = Math.pow(10, Math.floor(Math.log(raw) / Math.LN10)), r = raw / mag;
+    return (r <= 1 ? 1 : r <= 2 ? 2 : r <= 2.5 ? 2.5 : r <= 5 ? 5 : 10) * mag;
+  }
+
+  // ---------- the plan ----------
+  var POLY = {
+    A:  [[33, 1], [33, 31], [29.4, 31], [29.4, 4.6]],
+    B1: [[17, 1], [33, 1], [29.4, 4.6], [20.6, 4.6]],
+    C1: [[17, 1], [20.6, 4.6], [20.6, 19.6], [17, 16]],
+    B2: [[1, 16], [17, 16], [20.6, 19.6], [4.6, 19.6]],
+    C2: [[1, 16], [4.6, 19.6], [4.6, 31], [1, 31]],
+    core: [[20.6, 4.6], [29.4, 4.6], [29.4, 28], [4.6, 28], [4.6, 19.6], [20.6, 19.6]],
+    svc: [[4.6, 28], [29.4, 28], [29.4, 31], [4.6, 31]]
+  };
+  var LABELPT = { A: [31.2, 17], B1: [25, 2.8], C1: [18.8, 10], B2: [11, 17.8], C2: [2.8, 24], core: [24, 16] };
+  var OUTLINE = [[1, 16], [17, 16], [17, 1], [33, 1], [33, 31], [1, 31]];
+  function tp(p, rot) {
+    var x = p[0] - 17, y = p[1] - 16, r = rot * Math.PI / 180;
+    var xr = x * Math.cos(r) - y * Math.sin(r), yr = x * Math.sin(r) + y * Math.cos(r);
+    return [Math.round(xr * 1000) / 1000, Math.round(yr * 1000) / 1000];
+  }
+  function pts(arr, rot) { return arr.map(function (p) { var q = tp(p, rot); return q[0] + "," + q[1]; }).join(" "); }
+
+  function drawPlan(res) {
+    var rot = S.P.rot, host = $("plan");
+    host.innerHTML = "";
+    var svg = el("svg", { viewBox: "-21 -22 42 44", role: "group", "aria-label": "Typical floor, " + OPT_NAME[S.opt] }, host);
+    var defs = el("defs", {}, svg);
+    var pat = el("pattern", { id: "hatchSvc", width: 1.2, height: 1.2, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" }, defs);
+    el("line", { x1: 0, y1: 0, x2: 0, y2: 1.2, style: "stroke:var(--z-svc);stroke-width:.35" }, pat);
+    var condMap = {}; res.zones.forEach(function (z) { condMap[z.id] = z.cond; });
+    var merged = S.opt === "one";
+    ["A", "B1", "C1", "B2", "C2", "core", "svc"].forEach(function (id) {
+      var zid = merged && id !== "svc" ? "whole" : id;
+      var g = el("g", { "class": "zone", tabindex: (merged && id !== "core") || (id === "svc" && !condMap.svc) ? null : 0, role: "button",
+        "aria-label": zoneName(zid, rot, condMap[zid]) + (S.sel === zid ? ", selected" : ""), "data-z": zid }, svg);
+      var fill, op = 0.32, dash = null, stroke = "var(--card)";
+      if (id === "svc" && !condMap.svc) { fill = "url(#hatchSvc)"; op = 1; }
+      else { fill = col(zid); }
+      if (id === "svc" && condMap.svc) { stroke = "var(--warn)"; dash = ".8 .5"; }
+      if (merged && id !== "svc") stroke = "none";
+      var faded = S.sel && S.sel !== zid;
+      el("polygon", { points: pts(POLY[id], rot), style: "fill:" + fill + ";fill-opacity:" + (faded ? op * 0.35 : op) + ";stroke:" + stroke + ";stroke-width:" + (id === "svc" && condMap.svc ? .3 : .15) + (dash ? ";stroke-dasharray:" + dash : "") }, g);
+    });
+    // virtual partitions (dashed), only when split
+    if (!merged) {
+      ["A", "B1", "C1", "B2", "C2"].forEach(function (id) {
+        el("polygon", { points: pts(POLY[id], rot), style: "fill:none;stroke:var(--muted);stroke-width:.12;stroke-dasharray:.6 .4", "pointer-events": "none" }, svg);
+      });
+    }
+    // services strip partitions: toilets, lift, plant room
+    [[[17, 28], [17, 31]], [[23, 28], [23, 31]], [[4.6, 28], [29.4, 28]]].forEach(function (l) {
+      var a = tp(l[0], rot), b = tp(l[1], rot);
+      el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], style: "stroke:var(--muted);stroke-width:.15", "pointer-events": "none" }, svg);
+    });
+    // facades and party wall
+    var o = OUTLINE.map(function (p) { return tp(p, rot); });
+    var d = "M" + o.slice(0, 6).map(function (p) { return p[0] + " " + p[1]; }).join(" L");
+    el("path", { d: d, style: "fill:none;stroke:var(--ink);stroke-width:.5;stroke-linejoin:round", "pointer-events": "none" }, svg);
+    var pw0 = tp([1, 31], rot), pw1 = tp([33, 31], rot);
+    el("line", { x1: pw0[0], y1: pw0[1], x2: pw1[0], y2: pw1[1], style: "stroke:var(--muted);stroke-width:.9;stroke-dasharray:.35 .35", "pointer-events": "none" }, svg);
+    // labels
+    var halo = "paint-order:stroke;stroke:var(--card);stroke-width:.45;stroke-linejoin:round;";
+    function lab(p, s, size, extra) {
+      var q = tp(p, rot);
+      txt(svg, q[0], q[1] + size * 0.35, s, { "text-anchor": "middle", style: halo + "font-size:" + size + "px;fill:var(--ink);font-weight:600;" + (extra || ""), "pointer-events": "none" });
+    }
+    if (merged) lab([24, 16], "One zone", 1.6);
+    else ["A", "B1", "C1", "B2", "C2", "core"].forEach(function (id) { lab(LABELPT[id], zoneShort(id, rot), 1.6); });
+    var svcSize = 1.05;
+    lab([10.8, 29.5], "WC", svcSize, "font-weight:500;fill:var(--muted)");
+    lab([20, 29.5], "Lift", svcSize, "font-weight:500;fill:var(--muted)");
+    lab([26.2, 29.5], "Plant", svcSize, "font-weight:500;fill:var(--muted)");
+    // party wall label, outside the wall
+    var mid = tp([17, 32.6], rot), vert = rot === 90 || rot === 270;
+    var pl = txt(svg, mid[0], mid[1] + (vert ? 0 : 0.45), "party wall", { "text-anchor": "middle", style: "font-size:1.15px;fill:var(--muted)", "pointer-events": "none" });
+    if (vert) pl.setAttribute("transform", "rotate(" + (rot === 90 ? -90 : 90) + " " + mid[0] + " " + mid[1] + ")");
+    // north arrow
+    el("path", { d: "M18.4 -15.6 L18.4 -19.6 M17.4 -18.4 L18.4 -19.8 L19.4 -18.4", style: "fill:none;stroke:var(--ink);stroke-width:.25" }, svg);
+    txt(svg, 18.4, -20.2, "N", { "text-anchor": "middle", style: "font-size:1.4px;fill:var(--ink);font-weight:700" });
+    // scale bar
+    el("path", { d: "M-19.5 20 L-9.5 20 M-19.5 19.5 L-19.5 20.5 M-9.5 19.5 L-9.5 20.5", style: "fill:none;stroke:var(--muted);stroke-width:.2" }, svg);
+    txt(svg, -14.5, 21.6, "10 m", { "text-anchor": "middle", style: "font-size:1.15px;fill:var(--muted)" });
+    // interaction
+    svg.querySelectorAll(".zone").forEach(function (g) {
+      var z = g.getAttribute("data-z");
+      if (z === "svc" && !condMap.svc) return;
+      function pick() { S.sel = S.sel === z ? null : z; renderTab1(); }
+      g.addEventListener("click", pick);
+      g.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
+    });
+  }
+
+  // ---------- hourly chart (line or stacked) ----------
+  var HOURS = []; for (var hh = ZL.HVAC_ON; hh <= ZL.HVAC_OFF; hh++) HOURS.push(hh);
+
+  function hourChart(host, cfg) {
+    host.innerHTML = "";
+    var W = Math.max(280, host.clientWidth || 600), narrow = W < 520;
+    var H = narrow ? 220 : 260, pl = narrow ? 38 : 46, pr = 12, pt = 24, pb = 30;
+    var svg = el("svg", { viewBox: "0 0 " + W + " " + H, width: W, height: H, role: "img", "aria-label": cfg.aria }, host);
+    // each value is an hour's load, so it is drawn at the middle of its hour (07:00-08:00 at 07:30)
+    var x0 = HOURS[0] - 1, x1 = HOURS[HOURS.length - 1];
+    function T(t) { return pl + (t - x0) / (x1 - x0) * (W - pl - pr); }
+    function X(h) { return T(h - 0.5); }
+    var ymax = cfg.ymax, step = niceStep(ymax, narrow ? 4 : 5); ymax = Math.ceil(ymax / step) * step;
+    function Y(v) { return pt + (1 - v / ymax) * (H - pt - pb); }
+    var fs = narrow ? 10 : 11;
+    var ax = el("g", { "class": "axis" }, svg);
+    for (var v = 0; v <= ymax + 1e-9; v += step) {
+      el("line", { x1: pl, x2: W - pr, y1: Y(v), y2: Y(v), "class": v === 0 ? "base" : "gridl" }, ax);
+      txt(ax, pl - 6, Y(v) + 3.5, fmt(v / 1000), { "text-anchor": "end", "font-size": fs });
+    }
+    txt(ax, pl - 6, pt - 12, "kW", { "text-anchor": "end", "font-size": fs });
+    for (var t = x0 + 1; t <= x1; t += 2) {
+      el("line", { x1: T(t), x2: T(t), y1: H - pb, y2: H - pb + 4, "class": "base" }, ax);
+      txt(ax, T(t), H - pb + 16, pad(t) + ":00", { "text-anchor": "middle", "font-size": fs });
+    }
+    var plot = el("g", {}, svg);
+    if (cfg.stack) {
+      var cum = HOURS.map(function () { return 0; });
+      cfg.series.forEach(function (s) {
+        var lo = cum.slice(), hi = cum.map(function (c, i) { return c + Math.max(0, s.vals[HOURS[i] - 1]); });
+        var d = "M" + HOURS.map(function (h, i) { return X(h) + " " + Y(hi[i]); }).join(" L") +
+          " L" + HOURS.slice().reverse().map(function (h, i) { var j = HOURS.length - 1 - i; return X(h) + " " + Y(lo[j]); }).join(" L") + "Z";
+        var faded = S.sel && S.sel !== s.id;
+        el("path", { d: d, style: "fill:" + s.colour + ";fill-opacity:" + (faded ? 0.22 : 0.8) + ";stroke:var(--card);stroke-width:1.5;stroke-linejoin:round" }, plot);
+        cum = hi;
+      });
+      el("path", { d: "M" + HOURS.map(function (h, i) { return X(h) + " " + Y(cum[i]); }).join(" L"), style: "fill:none;stroke:var(--ink);stroke-width:2;stroke-linejoin:round" }, plot);
+    } else {
+      cfg.series.forEach(function (s) {
+        var faded = S.sel && S.sel !== s.id;
+        el("path", { d: "M" + HOURS.map(function (h) { return X(h) + " " + Y(s.vals[h - 1]); }).join(" L"),
+          style: "fill:none;stroke:" + s.colour + ";stroke-width:" + (S.sel === s.id ? 3 : 2) + ";stroke-linejoin:round;opacity:" + (faded ? 0.18 : 1) + (s.dash ? ";stroke-dasharray:6 4" : "") }, plot);
+      });
+      cfg.series.forEach(function (s) {
+        if (S.sel && S.sel !== s.id) return;
+        el("circle", { cx: X(s.peak.h), cy: Y(s.peak.v), r: 4.5, style: "fill:" + s.colour + ";stroke:var(--card);stroke-width:2" }, plot);
+      });
+    }
+    if (cfg.after) cfg.after(svg, X, Y, W, H, pl, pr, pt, fs);
+    // hover layer: crosshair + tooltip
+    var cross = el("line", { x1: 0, x2: 0, y1: pt, y2: H - pb, "class": "cross", visibility: "hidden" }, svg);
+    var tip = document.createElement("div"); tip.className = "tip"; tip.hidden = true; host.appendChild(tip);
+    var hit = el("rect", { x: pl, y: pt, width: W - pl - pr, height: H - pt - pb, "class": "hit" }, svg);
+    function show(evt) {
+      var r = svg.getBoundingClientRect(), sx = (evt.clientX - r.left) * W / r.width;
+      var h = Math.floor(x0 + (sx - pl) / (W - pl - pr) * (x1 - x0)) + 1; h = Math.max(HOURS[0], Math.min(x1, h));
+      cross.setAttribute("x1", X(h)); cross.setAttribute("x2", X(h)); cross.setAttribute("visibility", "visible");
+      tip.innerHTML = cfg.tip(h); tip.hidden = false;
+      var px = X(h) * r.width / W, tw = tip.offsetWidth;
+      tip.style.left = (px + 14 + tw > r.width ? Math.max(0, px - 14 - tw) : px + 14) + "px";
+      tip.style.top = "6px";
+    }
+    function hide() { cross.setAttribute("visibility", "hidden"); tip.hidden = true; }
+    hit.addEventListener("pointermove", show);
+    hit.addEventListener("pointerdown", show);
+    hit.addEventListener("pointerleave", hide);
+    return svg;
+  }
+
+  // ---------- tab 1 ----------
+  var R = {};
+  function runAll() {
+    R.one = ZL.run(S.P, "one"); R.perim = ZL.run(S.P, "perim"); R.misassigned = ZL.run(S.P, "misassigned");
+  }
+  function condZones(res) { return res.zones.filter(function (z) { return z.cond; }); }
+
+  function tile(k, v, unit, d, wide) {
+    return '<div class="tile' + (wide ? " wide" : "") + '"><p class="k">' + k + '</p><p class="v">' + v + (unit ? "<small>" + unit + "</small>" : "") + '</p>' + (d ? '<p class="d">' + d + "</p>" : "") + "</div>";
+  }
+
+  function renderTab1() {
+    var res = R[S.opt], rot = S.P.rot, cool = S.v1 === "cool";
+    if (S.sel && !res.zones.some(function (z) { return z.id === S.sel && z.cond; })) S.sel = null;
+    document.querySelectorAll("#optSeg button").forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-opt") === S.opt ? "true" : "false"); });
+    document.querySelectorAll("#v1Seg button").forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-v") === S.v1 ? "true" : "false"); });
+    drawPlan(res);
+    var gap = res.sumPeaks - res.peak.v;
+    if (cool) {
+      $("tiles1").innerHTML =
+        tile("Sum of zone peaks", kw(res.sumPeaks), "kW", "each zone at its own worst hour") +
+        tile("Coincident peak", kw(res.peak.v), "kW", "the building at " + hr(res.peak.h)) +
+        tile("Sum minus coincident", kw(gap), "kW", gap > 500 ? pct(gap / res.peak.v * 100) + " above the building&rsquo;s own peak" : "the two are equal") +
+        tile("Conditioned floor area", fmt(res.area), "m²", fmt(res.peak.v / res.area) + " W/m² at the coincident peak");
+    } else {
+      $("tiles1").innerHTML =
+        tile("Sum of zone loads", kw(res.heat), "kW", "every zone at the same design condition") +
+        tile("Building heating load", kw(res.heat), "kW", "equal to the sum, whatever the zoning") +
+        tile("Conditioned floor area", fmt(res.area), "m²", fmt(res.heat / res.area) + " W/m²", true);
+    }
+    $("notice1").innerHTML = notices1(res, cool).map(function (s) { return "<li>" + s + "</li>"; }).join("");
+    $("coolCharts1").hidden = !cool; $("heatCharts1").hidden = cool;
+    if (cool) drawCharts1(res); else drawHeatBars1(res);
+    drawZoneTable(res, cool);
+    drawOptTable();
+    var fp = res.floorPeaksSum - res.sumPeaks;
+    $("floorNote").innerHTML = "<b>Floors.</b> Each zone in the tables is that zone on all five floors added together; the top floor also carries the roof. DesignBuilder lists each floor&rsquo;s zone separately. Counted that way, the sum of zone peaks for the zoning on screen is " + kw(res.floorPeaksSum) + "&nbsp;kW rather than " + kw(res.sumPeaks) + "&nbsp;kW" + (fp < 500 ? ", near enough the same, because the top floor peaks in about the same hour as the floors below it." : ", a little higher, because the top floor&rsquo;s roof moves its peak an hour or so later.");
+  }
+
+  function notices1(res, cool) {
+    var one = R.one, per = R.perim, mis = R.misassigned, rot = S.P.rot, out = [];
+    var perZ = per.zones.filter(function (z) { return z.id !== "core" && z.id !== "svc"; });
+    var early = perZ.slice().sort(function (a, b) { return a.peak.h - b.peak.h; })[0];
+    var late = perZ.slice().sort(function (a, b) { return b.peak.h - a.peak.h; })[0];
+    var lates = perZ.filter(function (z) { return z.peak.h === late.peak.h; }).map(function (z) { return zoneName(z.id, rot); });
+    var core = per.zones.filter(function (z) { return z.id === "core"; })[0];
+    var wm = perZ.map(function (z) { return z.peak.v / z.area; });
+    if (!cool) {
+      out.push("Heating design has no sun and nobody inside, so every zone peaks under the same conditions and the sum of zone loads <b>is</b> the building&rsquo;s heating load. Zoning moves the heating load between zones but not the total: " + kw(one.heat) + "&nbsp;kW with one zone per floor or with perimeter and core.");
+      if (S.opt === "misassigned") out.push("Counting the services as office adds their outside air, " + kw(mis.heat - per.heat) + "&nbsp;kW, to a load that should not include it.");
+      else out.push("The perimeter zones carry the conduction through the facade; the core&rsquo;s heating load is its share of the outside air, plus the roof on the top floor.");
+      return out;
+    }
+    if (S.opt === "one") {
+      out.push("With one zone a floor, the zone peak <b>is</b> the building peak: the sum of zone peaks and the coincident peak are both " + kw(one.peak.v) + "&nbsp;kW, at " + hr(one.peak.h) + ".");
+      out.push("That single zone hides what the facades are doing. Split, the " + zoneName(early.id, rot) + " zone peaks at " + hr(early.peak.h) + " and " + lates.join(" and ") + " at " + hr(late.peak.h) + "; one thermostat sees only their average, so one side is too warm while the other is overcooled. Choose <i>Perimeter + core</i> to see it.");
+    } else if (S.opt === "perim") {
+      out.push("Splitting off the perimeter raised the sum of zone peaks from " + kw(one.sumPeaks) + " to " + kw(per.sumPeaks) + "&nbsp;kW (" + pct((per.sumPeaks / one.sumPeaks - 1) * 100) + "). The coincident peak stayed at " + kw(per.peak.v) + "&nbsp;kW (" + pct((per.peak.v / one.peak.v - 1) * 100) + "): the same sun, people and outside air are in the building, only grouped differently.");
+      out.push("<b>" + zoneName(early.id, rot) + "</b> peaks at " + hr(early.peak.h) + " and <b>" + lates.join("</b> and <b>") + "</b> at " + hr(late.peak.h) + ". One merged zone averaged that away. It is the reason to split: separate zones let the morning side and the afternoon side be cooled separately.");
+      out.push("At their peaks the perimeter zones run at " + fmt(Math.min.apply(null, wm)) + "&ndash;" + fmt(Math.max.apply(null, wm)) + "&nbsp;W/m², the core at " + fmt(core.peak.v / core.area) + "&nbsp;W/m². The core&rsquo;s load is mostly its people, lights and equipment; the perimeter&rsquo;s is mostly the sun.");
+    } else {
+      var dA = mis.area - per.area, dk = mis.peak.v - per.peak.v;
+      out.push("Counting the toilets, lift and plant room as office adds " + fmt(dA) + "&nbsp;m² of &ldquo;conditioned&rdquo; floor and " + kw(dk) + "&nbsp;kW of people, lights, equipment and outside air that will never be there: the coincident peak rises " + pct(dk / per.peak.v * 100) + ".");
+      out.push("Yet the W/m² <b>falls</b>, from " + fmt(per.peak.v / per.area) + " to " + fmt(mis.peak.v / mis.area) + ", because the added floor has no facade and so less load per square metre than the average. A W/m² check would not catch this mistake; reading the zone list does. Put these spaces in one unconditioned zone.");
+    }
+    return out;
+  }
+
+  function drawCharts1(res) {
+    var rot = S.P.rot, zs = condZones(res);
+    // legend chips (select a zone)
+    $("legend1").innerHTML = zs.map(function (z) {
+      return '<button type="button" class="chipbtn" data-z="' + z.id + '" aria-pressed="' + (S.sel === z.id) + '"><i style="display:inline-block;width:16px;border-top:3px ' + (isDashed(z.id) ? "dashed" : "solid") + " " + col(z.id) + '"></i>' + esc(zoneName(z.id, rot, z.cond)) + "</button>";
+    }).join("");
+    $("legend1").querySelectorAll(".chipbtn").forEach(function (b) {
+      b.addEventListener("click", function () { var z = b.getAttribute("data-z"); S.sel = S.sel === z ? null : z; renderTab1(); });
+    });
+    var ymax1 = 0; zs.forEach(function (z) { HOURS.forEach(function (h) { ymax1 = Math.max(ymax1, z.cool[h - 1]); }); });
+    hourChart($("chartZones"), {
+      aria: "Hourly cooling load of each zone",
+      ymax: ymax1 * 1.08,
+      series: zs.map(function (z) { return { id: z.id, vals: z.cool, colour: col(z.id), dash: isDashed(z.id), peak: z.peak }; }),
+      tip: function (h) {
+        return "<b>" + hr(h) + "</b>" + zs.map(function (z) {
+          return '<div class="row"><span><i style="background:' + col(z.id) + '"></i>' + esc(zoneName(z.id, rot, z.cond)) + "</span><span>" + kw(z.cool[h - 1]) + " kW" + (z.peak.h === h ? " &#9679;" : "") + "</span></div>";
+        }).join("");
+      }
+    });
+    var order = ["core", "whole", "B1", "B2", "A", "C1", "C2", "svc"];
+    var stackZ = zs.slice().sort(function (a, b) { return order.indexOf(a.id) - order.indexOf(b.id); });
+    var maxT = 0; HOURS.forEach(function (h) { maxT = Math.max(maxT, res.cool[h - 1]); });
+    hourChart($("chartBldg"), {
+      aria: "Building cooling load, zones stacked, with the coincident peak and the sum of zone peaks",
+      stack: true, ymax: Math.max(maxT, res.sumPeaks) * 1.1,
+      series: stackZ.map(function (z) { return { id: z.id, vals: z.cool, colour: col(z.id) }; }),
+      after: function (svg, X, Y, W, H, pl, pr, pt, fs) {
+        var equal = res.sumPeaks - res.peak.v < 0.005 * res.peak.v;
+        var ys = Y(res.sumPeaks), yp = Y(res.peak.v), xp = X(res.peak.h);
+        if (!equal) {
+          el("line", { x1: pl, x2: W - pr, y1: ys, y2: ys, style: "stroke:var(--ink);stroke-width:1.5;stroke-dasharray:6 4" }, svg);
+          txt(svg, pl + 6, ys - 6, "sum of zone peaks " + kw(res.sumPeaks) + " kW", { "class": "lbl-ink", "font-size": fs });
+        }
+        el("circle", { cx: xp, cy: yp, r: 5, style: "fill:var(--ink);stroke:var(--card);stroke-width:2" }, svg);
+        var label = (equal ? "coincident peak = sum of zone peaks, " : "coincident peak ") + kw(res.peak.v) + " kW";
+        // the stack runs close under the dot, so the label sits at the left, where the morning load is low,
+        // keyed to the dot by its glyph
+        txt(svg, pl + 6, equal ? ys - 6 : ys + 16, "\u25cf " + label, { "class": "lbl-ink", "font-size": fs });
+      },
+      tip: function (h) {
+        var rows = stackZ.slice().reverse().map(function (z) {
+          return '<div class="row"><span><i style="background:' + col(z.id) + '"></i>' + esc(zoneName(z.id, rot, z.cond)) + "</span><span>" + kw(z.cool[h - 1]) + " kW</span></div>";
+        }).join("");
+        return "<b>" + hr(h) + "</b>" + rows + '<div class="row"><span><b>Building</b></span><span><b>' + kw(res.cool[h - 1]) + " kW</b></span></div>";
+      }
+    });
+  }
+
+  function barRows(items, max, topIdx) {
+    return items.map(function (it, i) {
+      var w = max > 0 ? Math.max(0, it.v) / max * 100 : 0;
+      return '<div class="bar-row' + (i === topIdx ? " top" : "") + '"><span class="nm" title="' + esc(it.name) + '">' + (it.sw ? '<span class="sw" style="display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;background:' + it.sw + '"></span>' : "") + esc(it.name) + '</span><span class="bar-track"><span class="bar-fill" style="width:' + w.toFixed(1) + '%' + (it.colour ? ";background:" + it.colour : "") + '"></span></span><span class="val">' + it.txt + "</span></div>";
+    }).join("");
+  }
+  function drawHeatBars1(res) {
+    var rot = S.P.rot, zs = condZones(res);
+    var items = zs.map(function (z) { return { name: zoneName(z.id, rot, z.cond), v: z.heat, sw: col(z.id), colour: col(z.id), txt: "<b>" + kw(z.heat) + "</b> kW" }; });
+    items.push({ name: "Building", v: res.heat, colour: "var(--ink)", txt: "<b>" + kw(res.heat) + "</b> kW" });
+    $("heatBars1").innerHTML = barRows(items, res.heat, -1);
+  }
+
+  function drawZoneTable(res, cool) {
+    var rot = S.P.rot, rows = "";
+    var head = "<tr><th>Zone</th><th class=\"hide-n\">Facade</th><th class=\"num\">Floor area (m², 5 floors)</th>" +
+      (cool ? '<th class="num">Peak (kW)</th><th>Peak hour</th><th class="num">W/m² at its peak</th>' : '<th class="num">Heating (kW)</th><th class="num">W/m²</th>') + "</tr>";
+    res.zones.forEach(function (z) {
+      var name = zoneName(z.id, rot, z.cond);
+      var nm = z.cond ? '<button type="button" class="zbtn" data-z="' + z.id + '" aria-pressed="' + (S.sel === z.id) + '"><span class="sw" style="background:' + col(z.id) + '"></span>' + esc(name) + "</button>" : '<span class="sw" style="background:var(--z-svc)"></span>' + esc(name);
+      if (cool) rows += "<tr><td>" + nm + '</td><td class="hide-n">' + faces(z.id, rot) + '</td><td class="num">' + fmt(z.area) + '</td><td class="num">' + (z.cond ? kw(z.peak.v) : "not served") + '</td><td class="nw">' + (z.cond ? hr(z.peak.h) : "") + '</td><td class="num">' + (z.cond ? fmt(z.peak.v / z.area) : "") + "</td></tr>";
+      else rows += "<tr><td>" + nm + '</td><td class="hide-n">' + faces(z.id, rot) + '</td><td class="num">' + fmt(z.area) + '</td><td class="num">' + (z.cond ? kw(z.heat) : "not served") + '</td><td class="num">' + (z.cond ? fmt(z.heat / z.area) : "") + "</td></tr>";
+    });
+    if (cool) {
+      rows += '<tr class="sum"><td>Sum of zone peaks</td><td class="hide-n"></td><td class="num">' + fmt(res.area) + '</td><td class="num">' + kw(res.sumPeaks) + '</td><td class="nw">' + (condZones(res).length > 1 ? "various" : hr(res.peak.h)) + '</td><td class="num">' + fmt(res.sumPeaks / res.area) + "</td></tr>";
+      rows += '<tr><td><b>Coincident building peak</b></td><td class="hide-n"></td><td class="num">' + fmt(res.area) + '</td><td class="num"><b>' + kw(res.peak.v) + '</b></td><td class="nw">' + hr(res.peak.h) + '</td><td class="num">' + fmt(res.peak.v / res.area) + "</td></tr>";
+    } else {
+      rows += '<tr class="sum"><td>Sum of zone loads = building heating load</td><td class="hide-n"></td><td class="num">' + fmt(res.area) + '</td><td class="num">' + kw(res.heat) + '</td><td class="num">' + fmt(res.heat / res.area) + "</td></tr>";
+    }
+    $("zoneTable").innerHTML = "<thead>" + head + "</thead><tbody>" + rows + "</tbody>";
+    $("zoneTable").querySelectorAll(".zbtn").forEach(function (b) {
+      b.addEventListener("click", function () { var z = b.getAttribute("data-z"); S.sel = S.sel === z ? null : z; renderTab1(); });
+    });
+  }
+
+  function drawOptTable() {
+    var rows = ["one", "perim", "misassigned"].map(function (o) {
+      var r = R[o];
+      return '<tr class="' + (o === S.opt ? "cur" : "") + '"><td>' + OPT_NAME[o] + '</td><td class="num">' + fmt(r.area) + '</td><td class="num">' + kw(r.sumPeaks) + '</td><td class="num">' + kw(r.peak.v) + '</td><td class="nw">' + hr(r.peak.h) + '</td><td class="num">' + fmt(r.peak.v / r.area) + '</td><td class="num">' + kw(r.heat) + '</td><td class="num">' + fmt(r.heat / r.area) + "</td></tr>";
+    }).join("");
+    $("optTable").innerHTML = '<thead><tr><th>Zoning</th><th class="num">Conditioned (m²)</th><th class="num">Sum of zone peaks (kW)</th><th class="num">Coincident cooling (kW)</th><th>at</th><th class="num">Cooling W/m²</th><th class="num">Heating (kW)</th><th class="num">Heating W/m²</th></tr></thead><tbody>' + rows + "</tbody>";
+  }
+
+  // ---------- tab 2 ----------
+  function compItems(vals, total, skipZero) {
+    var items = COMPS.map(function (c) { return { c: c, v: vals[c] }; });
+    if (skipZero) items = items.filter(function (it) { return Math.abs(it.v) > 1; });
+    items.sort(function (a, b) { return b.v - a.v; });
+    return items.map(function (it) { return { c: it.c, name: COMP_NAME[it.c], v: it.v, share: it.v / total, txt: "<b>" + kw(it.v) + "</b> kW · " + fmt(it.v / total * 100) + "%" }; });
+  }
+  function coolComps(res) { var h = res.peak.h - 1, o = {}; COMPS.forEach(function (c) { o[c] = res.comp[c][h]; }); return o; }
+
+  function renderTab2() {
+    var res = R.perim, cc = coolComps(res), hc = res.heatComp, rot = S.P.rot;
+    document.querySelectorAll("#v2Seg button").forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-v") === S.v2 ? "true" : "false"); });
+    $("coolHead2").textContent = "Cooling, at " + hr(res.peak.h) + " (" + kw(res.peak.v) + " kW)";
+    var ci = compItems(cc, res.peak.v, false), hi = compItems(hc, res.heat, true);
+    var mx = Math.max(ci[0].v, hi[0].v);
+    $("compCool").innerHTML = barRows(ci, mx, 0);
+    $("compHeat").innerHTML = barRows(hi, mx, 0) + '<p class="hint">Steady winter design, ' + kw(res.heat) + " kW. Sun, people, lights and equipment are not counted.</p>";
+    var glassC = (cc.solar + cc.winCond) / res.peak.v * 100, glassH = hc.winCond / res.heat * 100, airH = (hc.oa + hc.inf) / res.heat * 100;
+    $("notice2").innerHTML = [
+      "Cooling: <b>" + ci[0].name.toLowerCase() + "</b> is the largest part of the peak, " + fmt(ci[0].share * 100) + "%, ahead of " + ci[1].name.toLowerCase() + " (" + fmt(ci[1].share * 100) + "%) and " + ci[2].name.toLowerCase() + " (" + fmt(ci[2].share * 100) + "%).",
+      "Heating: <b>" + hi[0].name.toLowerCase() + "</b> is the largest, " + fmt(hi[0].share * 100) + "%. Outside air and infiltration together are " + fmt(airH) + "% of it.",
+      "The glazing (sun and conduction through glass) is " + fmt(glassC) + "% of the cooling peak but " + fmt(glassH) + "% of the heating load, so a glazing change can do a lot for one and little for the other."
+    ].map(function (s) { return "<li>" + s + "</li>"; }).join("");
+    var cool = S.v2 === "cool", zs = condZones(res);
+    $("zoneCompSub").innerHTML = cool ? "Each zone&rsquo;s share of the building&rsquo;s cooling peak, read at the building&rsquo;s peak hour (" + hr(res.peak.h) + "), in kW." : "Each zone&rsquo;s heating load at the winter design condition, in kW.";
+    var cols = cool ? COMPS : COMPS.filter(function (c) { return Math.abs(hc[c]) > 1; });
+    var head = "<tr><th>Zone</th>" + cols.map(function (c) { return '<th class="num">' + COMP_SHORT[c] + "</th>"; }).join("") + '<th class="num">Total</th></tr>';
+    var body = zs.map(function (z) {
+      var t = 0, cells = cols.map(function (c) { var v = cool ? z.comp[c][res.peak.h - 1] : z.heatComp[c]; t += v; return '<td class="num">' + kw(v, 1) + "</td>"; }).join("");
+      return '<tr><td><span class="sw" style="background:' + col(z.id) + '"></span>' + esc(zoneName(z.id, rot, z.cond)) + "</td>" + cells + '<td class="num"><b>' + kw(t, 1) + "</b></td></tr>";
+    }).join("");
+    var tot = 0, foot = cols.map(function (c) { var v = cool ? cc[c] : hc[c]; tot += v; return '<td class="num">' + kw(v, 1) + "</td>"; }).join("");
+    body += '<tr class="sum"><td>Building</td>' + foot + '<td class="num">' + kw(tot, 1) + "</td></tr>";
+    $("zoneCompTable").innerHTML = "<thead>" + head + "</thead><tbody>" + body + "</tbody>";
+  }
+
+  // ---------- tab 3 ----------
+  var CTRLS = [
+    { group: "Glazing" },
+    { k: "wwr", label: "Window-to-wall ratio", min: 0.2, max: 0.8, step: 0.05, f: function (v) { return Math.round(v * 100) + "%"; }, hint: "Vision glass as a share of each facade" },
+    { k: "shgc", label: "Glass SHGC", min: 0.2, max: 0.8, step: 0.05, f: function (v) { return v.toFixed(2); }, hint: "Share of the sunshine on the glass that becomes heat inside" },
+    { k: "uWin", label: "Glass U-value", min: 1.0, max: 5.8, step: 0.1, f: function (v) { return v.toFixed(1) + " W/m²K"; }, hint: "Single clear 5.8, clear double 2.9, low-e double about 1.8" },
+    { k: "overhang", label: "Overhang at the window head", min: 0, max: 1.5, step: 0.1, f: function (v) { return v < 0.05 ? "none" : v.toFixed(1) + " m"; }, hint: "External shading, on every facade" },
+    { group: "Form and fabric" },
+    { k: "rot", label: "The 30 m facade faces", sel: [[0, "East (as on tab 1)"], [90, "South"], [180, "West"], [270, "North"]], f: function (v) { return compass(90 + v); }, hint: "Turns the whole building on its site" },
+    { k: "uWall", label: "Wall U-value", min: 0.2, max: 1.5, step: 0.05, f: function (v) { return v.toFixed(2) + " W/m²K"; }, hint: "Lower is better insulated" },
+    { k: "uRoof", label: "Roof U-value", min: 0.15, max: 1.0, step: 0.05, f: function (v) { return v.toFixed(2) + " W/m²K"; }, hint: "Top floor only" },
+    { k: "ach", label: "Infiltration", min: 0.1, max: 1.5, step: 0.05, f: function (v) { return v.toFixed(2) + " ach"; }, hint: "Air changes an hour of the office volume; set by how airtight the facade is built" },
+    { group: "Lighting and outside air" },
+    { k: "lpd", label: "Lighting power density", min: 2, max: 10, step: 0.5, f: function (v) { return v.toFixed(1) + " W/m²"; }, hint: "Efficient fittings and daylight design" },
+    { k: "hr", label: "Outside-air heat recovery", sel: [[0, "None"], [0.6, "60% sensible"]], f: function (v) { return v > 0 ? Math.round(v * 100) + "% recovery" : "no recovery"; }, hint: "",
+      caveat: "An engineering measure rather than an architect&rsquo;s: it needs space for the unit and its ducts. The outside-air rate itself is a ventilation minimum, so cutting it is not an option." }
+  ];
+  function buildCtrls() {
+    var h = "";
+    CTRLS.forEach(function (c) {
+      if (c.group) { h += '<p class="ctrlgroup">' + c.group + "</p>"; return; }
+      h += '<div class="ctrl"><div class="top"><label for="c_' + c.k + '">' + c.label + '</label><output id="o_' + c.k + '" for="c_' + c.k + '"></output></div>';
+      if (c.sel) h += '<select id="c_' + c.k + '">' + c.sel.map(function (o) { return '<option value="' + o[0] + '">' + o[1] + "</option>"; }).join("") + "</select>";
+      else h += '<input type="range" id="c_' + c.k + '" min="' + c.min + '" max="' + c.max + '" step="' + c.step + '">';
+      if (c.hint) h += '<p class="hint">' + c.hint + "</p>";
+      if (c.caveat) h += '<p class="caveat">' + c.caveat + "</p>";
+      h += "</div>";
+    });
+    $("ctrls").innerHTML = h;
+    CTRLS.forEach(function (c) {
+      if (c.group) return;
+      var inp = $("c_" + c.k);
+      inp.addEventListener("input", function () { S.P[c.k] = parseFloat(inp.value); update(); });
+      inp.addEventListener("change", function () { S.P[c.k] = parseFloat(inp.value); update(); });
+    });
+  }
+  function syncCtrls() {
+    CTRLS.forEach(function (c) {
+      if (c.group) return;
+      var inp = $("c_" + c.k), o = $("o_" + c.k), v = S.P[c.k];
+      if (parseFloat(inp.value) !== v) inp.value = v;
+      o.textContent = c.f(v);
+      o.classList.toggle("changed", Math.abs(v - BASE[c.k]) > 1e-9);
+      if (inp.type === "range") inp.setAttribute("aria-valuetext", c.f(v));
+    });
+  }
+  function diffLabel(a, b) {
+    var parts = [];
+    CTRLS.forEach(function (c) { if (!c.group && Math.abs(a[c.k] - b[c.k]) > 1e-9) parts.push(c.label + " " + c.f(a[c.k]) + " → " + c.f(b[c.k])); });
+    return parts.join("; ");
+  }
+  function snapshot(P) {
+    var r = ZL.run(P, "perim");
+    return { cool: r.peak.v, h: r.peak.h, heat: r.heat, cc: coolComps(r), hc: clone(r.heatComp) };
+  }
+  var BASE_SNAP = snapshot(BASE);
+
+  function largestText(snap) {
+    var ci = compItems(snap.cc, snap.cool, false), hi = compItems(snap.hc, snap.heat, true);
+    function lst(items, tot) {
+      return "<b>" + items[0].name.toLowerCase() + " " + kw(items[0].v) + " kW</b> (" + fmt(items[0].v / tot * 100) + "%), then " +
+        items.slice(1, 3).map(function (i) { return i.name.toLowerCase() + " " + kw(i.v); }).join(", ");
+    }
+    return "Largest now. Cooling: " + lst(ci, snap.cool) + ". Heating: " + lst(hi, snap.heat) + ".";
+  }
+
+  function renderTab3() {
+    syncCtrls();
+    var now = snapshot(S.P), prev = S.log.length ? S.log[S.log.length - 1] : BASE_SNAP;
+    $("baseBox").innerHTML = "<p><b>The base case</b>: perimeter and core zoning, services unconditioned, five floors (" + fmt(BASE_RES.area) + "&nbsp;m² conditioned). Coincident cooling <b>" + kw(BASE_SNAP.cool) + "&nbsp;kW</b> at " + hr(BASE_SNAP.h) + "; heating <b>" + kw(BASE_SNAP.heat) + "&nbsp;kW</b>.</p>" +
+      "<ul><li>Clear double glazing, U&nbsp;2.9, SHGC&nbsp;0.70, 50% of each facade, no shading; the 30&nbsp;m facade faces east</li><li>Walls U&nbsp;0.60, roof U&nbsp;0.45; infiltration 0.75 air changes an hour</li><li>10&nbsp;m² a person, lights 4.5&nbsp;W/m², equipment 11&nbsp;W/m², outside air 10&nbsp;L/s a person, no heat recovery</li></ul>";
+    function d(v, ref) { return pct((v / ref - 1) * 100); }
+    var sinceTxt = S.log.length ? " · " + d(now.cool, prev.cool) + " since step " + S.log.length : "";
+    var sinceH = S.log.length ? " · " + d(now.heat, prev.heat) + " since step " + S.log.length : "";
+    $("tiles3").innerHTML =
+      tile("Coincident cooling now", kw(now.cool), "kW", d(now.cool, BASE_SNAP.cool) + " from base, at " + hr(now.h) + sinceTxt) +
+      tile("Heating now", kw(now.heat), "kW", d(now.heat, BASE_SNAP.heat) + " from base" + sinceH);
+    $("largest3").innerHTML = largestText(now);
+    var atLast = sameP(S.P, lastP());
+    $("logBtn").disabled = atLast;
+    $("undoBtn").disabled = !S.log.length;
+    $("resetBtn").disabled = !S.log.length && sameP(S.P, BASE);
+    drawLog();
+  }
+
+  function biggestMove(a, b, key, tkey) {
+    var best = null, bv = 0;
+    COMPS.forEach(function (c) { var dv = b[key][c] - a[key][c]; if (Math.abs(dv) > Math.abs(bv)) { bv = dv; best = c; } });
+    return Math.abs(bv) < 500 ? null : { c: best, v: bv };
+  }
+
+  function drawLog() {
+    var rows = '<tr><td>0</td><td>Base case</td><td class="num">' + kw(BASE_SNAP.cool) + '</td><td class="num">&nbsp;</td><td class="num">&nbsp;</td><td class="num">' + kw(BASE_SNAP.heat) + '</td><td class="num">&nbsp;</td><td class="num">&nbsp;</td><td></td></tr>';
+    var prev = BASE_SNAP;
+    S.log.forEach(function (e, i) {
+      var cumC = (1 - e.cool / BASE_SNAP.cool) * 100, cumH = (1 - e.heat / BASE_SNAP.heat) * 100;
+      var mc = biggestMove(prev, e, "cc"), mh = biggestMove(prev, e, "hc");
+      var moved = [mc ? "cooling: " + COMP_NAME[mc.c].toLowerCase() + " " + (mc.v < 0 ? "−" : "+") + kw(Math.abs(mc.v)) : "cooling: little change", mh ? "heating: " + COMP_NAME[mh.c].toLowerCase() + " " + (mh.v < 0 ? "−" : "+") + kw(Math.abs(mh.v)) : "heating: no change"].join("; ");
+      rows += "<tr><td>" + (i + 1) + "</td><td>" + esc(e.label) + '</td><td class="num">' + kw(e.cool) + '</td><td class="num">' + incr(prev.cool - e.cool) + '</td><td class="num">' + cum(cumC) + '</td><td class="num">' + kw(e.heat) + '</td><td class="num">' + incr(prev.heat - e.heat) + '</td><td class="num">' + cum(cumH) + "</td><td>" + moved + "</td></tr>";
+      prev = e;
+    });
+    $("logTable").innerHTML = '<thead><tr><th>Step</th><th>Change</th><th class="num">Cooling (kW)</th><th class="num">Increment</th><th class="num">Cumulative</th><th class="num">Heating (kW)</th><th class="num">Increment</th><th class="num">Cumulative</th><th>Moved most</th></tr></thead><tbody>' + rows + "</tbody>";
+    drawLogChart();
+  }
+  function incr(dw) { return (dw > 0 ? "−" : dw < 0 ? "+" : "") + kw(Math.abs(dw)) + " kW"; }
+  function cum(p) { var s = (p >= 0 ? "−" : "+") + fmt(Math.abs(p), 1) + "%"; return p >= 15 - 1e-9 ? "<b>" + s + "</b>" : s; }
+
+  function drawLogChart() {
+    var host = $("chartLog");
+    host.innerHTML = "";
+    if (!S.log.length) { host.innerHTML = '<p class="empty">Log a change and the cumulative reduction for each step appears here, against the 15% line.</p>'; return; }
+    var W = Math.max(280, host.clientWidth || 600), narrow = W < 520, H = narrow ? 200 : 230, pl = narrow ? 38 : 46, pr = 12, pt = 16, pb = 30;
+    var vals = []; S.log.forEach(function (e) { vals.push((1 - e.cool / BASE_SNAP.cool) * 100, (1 - e.heat / BASE_SNAP.heat) * 100); });
+    var ymax = Math.max(20, Math.max.apply(null, vals) * 1.12), ymin = Math.min(0, Math.min.apply(null, vals) * 1.12);
+    var step = niceStep(ymax - ymin, 4); ymax = Math.ceil(ymax / step) * step; ymin = Math.floor(ymin / step) * step;
+    var svg = el("svg", { viewBox: "0 0 " + W + " " + H, width: W, height: H, role: "img", "aria-label": "Cumulative reduction in cooling and heating after each logged step" }, host);
+    function Y(v) { return pt + (ymax - v) / (ymax - ymin) * (H - pt - pb); }
+    var fs = narrow ? 10 : 11;
+    for (var v = ymin; v <= ymax + 1e-9; v += step) {
+      el("line", { x1: pl, x2: W - pr, y1: Y(v), y2: Y(v), style: "stroke:" + (Math.abs(v) < 1e-9 ? "var(--line)" : "var(--grid)") }, svg);
+      txt(svg, pl - 6, Y(v) + 3.5, fmt(v) + "%", { "text-anchor": "end", "font-size": fs, style: "fill:var(--muted)" });
+    }
+    var n = S.log.length, slot = (W - pl - pr) / n, bw = Math.min(26, slot * 0.3);
+    S.log.forEach(function (e, i) {
+      var cx = pl + slot * (i + 0.5);
+      [[(1 - e.cool / BASE_SNAP.cool) * 100, "var(--s-cool)", -1, "cooling"], [(1 - e.heat / BASE_SNAP.heat) * 100, "var(--s-heat)", 1, "heating"]].forEach(function (b) {
+        var x = cx + b[2] * (bw / 2 + 1) - bw / 2, y0 = Y(0), y1 = Y(b[0]);
+        var top = Math.min(y0, y1), h = Math.max(1, Math.abs(y1 - y0)), r = Math.min(4, h / 2);
+        var d = b[0] >= 0
+          ? "M" + x + " " + y0 + " V" + (top + r) + " Q" + x + " " + top + " " + (x + r) + " " + top + " H" + (x + bw - r) + " Q" + (x + bw) + " " + top + " " + (x + bw) + " " + (top + r) + " V" + y0 + "Z"
+          : "M" + x + " " + y0 + " V" + (top + h - r) + " Q" + x + " " + (top + h) + " " + (x + r) + " " + (top + h) + " H" + (x + bw - r) + " Q" + (x + bw) + " " + (top + h) + " " + (x + bw) + " " + (top + h - r) + " V" + y0 + "Z";
+        var p = el("path", { d: d, style: "fill:" + b[1] }, svg);
+        var t = el("title", {}, p); t.textContent = "Step " + (i + 1) + ", " + b[3] + ": " + (b[0] >= 0 ? "−" : "+") + fmt(Math.abs(b[0]), 1) + "% from base";
+      });
+      txt(svg, cx, H - pb + 16, String(i + 1), { "text-anchor": "middle", "font-size": fs, style: "fill:var(--muted)" });
+    });
+    txt(svg, W - pr, H - 2, "step", { "text-anchor": "end", "font-size": fs, style: "fill:var(--muted)" });
+    var yt = Y(15);
+    el("line", { x1: pl, x2: W - pr, y1: yt, y2: yt, style: "stroke:var(--muted);stroke-width:1.5;stroke-dasharray:6 4" }, svg);
+    txt(svg, pl + 4, yt - 5, "15% target", { "font-size": fs, style: "fill:var(--ink);font-weight:600" });
+  }
+
+  // ---------- datasource ----------
+  var lastSource = "";
+  function updateSource() {
+    var n = S.log.length, html;
+    if (!n && sameP(S.P, BASE)) html = "Numbers on screen: <b>the model plate, base case</b>.";
+    else if (sameP(S.P, lastP())) html = "Numbers on screen: <b>the model plate, base case plus " + n + " logged change" + (n > 1 ? "s" : "") + "</b> (tab 3).";
+    else html = "Numbers on screen: <b>the model plate, with " + (n ? "changes since step " + n : "changes") + " not yet logged</b> (tab 3).";
+    if (html !== lastSource) { $("dataSource").innerHTML = html; lastSource = html; }
+    $("dataSource").classList.toggle("mine", !(n === 0 && sameP(S.P, BASE)));
+  }
+
+  // ---------- render all ----------
+  function update() {
+    runAll();
+    renderTab1(); renderTab2(); renderTab3(); updateSource();
+  }
+
+  // ---------- events ----------
+  document.querySelectorAll("#optSeg button").forEach(function (b) {
+    b.addEventListener("click", function () { S.opt = b.getAttribute("data-opt"); S.sel = null; renderTab1(); });
+  });
+  document.querySelectorAll("#v1Seg button").forEach(function (b) {
+    b.addEventListener("click", function () { S.v1 = b.getAttribute("data-v"); renderTab1(); });
+  });
+  document.querySelectorAll("#v2Seg button").forEach(function (b) {
+    b.addEventListener("click", function () { S.v2 = b.getAttribute("data-v"); renderTab2(); });
+  });
+  $("logBtn").addEventListener("click", function () {
+    var snap = snapshot(S.P); snap.P = clone(S.P); snap.label = diffLabel(lastP(), S.P);
+    S.log.push(snap); update();
+  });
+  $("undoBtn").addEventListener("click", function () {
+    S.log.pop(); S.P = clone(lastP()); update();
+  });
+  $("resetBtn").addEventListener("click", function () {
+    S.log = []; S.P = clone(BASE); $("carry").hidden = true; update();
+  });
+  $("copyBtn").addEventListener("click", function () {
+    var lines = ["Zoning and heat balance tool, model plate (not my building): intervention log",
+      "Base case: " + kw(BASE_SNAP.cool) + " kW coincident cooling at " + hr(BASE_SNAP.h) + "; " + kw(BASE_SNAP.heat) + " kW heating"];
+    var prev = BASE_SNAP;
+    S.log.forEach(function (e, i) {
+      lines.push("Step " + (i + 1) + ": " + e.label + ". Cooling " + kw(e.cool) + " kW (increment " + incr(prev.cool - e.cool) + ", cumulative " + cum((1 - e.cool / BASE_SNAP.cool) * 100).replace(/<\/?b>/g, "") + "); heating " + kw(e.heat) + " kW (increment " + incr(prev.heat - e.heat) + ", cumulative " + cum((1 - e.heat / BASE_SNAP.heat) * 100).replace(/<\/?b>/g, "") + ")");
+      prev = e;
+    });
+    if (!S.log.length) lines.push("No steps logged yet.");
+    var box = $("carry"); box.textContent = lines.join("\n"); box.hidden = false;
+    try { navigator.clipboard.writeText(box.textContent).catch(function () {}); } catch (err) {}
+  });
+
+  // ---------- tabs ----------
+  var tabs = Array.prototype.slice.call(document.querySelectorAll(".tab"));
+  var panels = [$("panel-1"), $("panel-2"), $("panel-3")];
+  function activate(idx, focusTab) {
+    if (idx < 0 || idx >= panels.length) return;
+    S.tab = idx;
+    tabs.forEach(function (t, i) {
+      var on = i === idx;
+      t.classList.toggle("active", on);
+      t.setAttribute("aria-selected", on ? "true" : "false");
+      t.tabIndex = on ? 0 : -1;
+      panels[i].hidden = !on;
+    });
+    // charts measure their width, so draw them once their panel is visible
+    if (idx === 0) renderTab1(); else if (idx === 2) drawLogChart();
+    if (focusTab) tabs[idx].focus();
+  }
+  tabs.forEach(function (t) {
+    t.addEventListener("click", function () { activate(+t.getAttribute("data-idx")); });
+    t.addEventListener("keydown", function (e) {
+      var i = +t.getAttribute("data-idx");
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); activate(Math.min(i + 1, tabs.length - 1), true); }
+      else if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); activate(Math.max(i - 1, 0), true); }
+      else if (e.key === "Home") { e.preventDefault(); activate(0, true); }
+      else if (e.key === "End") { e.preventDefault(); activate(tabs.length - 1, true); }
+    });
+  });
+  document.querySelectorAll("[data-nav]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      activate(S.tab + (b.getAttribute("data-nav") === "next" ? 1 : -1), true);
+      window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    });
+  });
+
+  // ---------- accessible info popovers ----------
+  (function () {
+    var openPop = null;
+    function hasHover() { return matchMedia("(hover: hover)").matches; }
+    function close() { if (openPop) { openPop.pop.hidden = true; openPop.btn.setAttribute("aria-expanded", "false"); openPop = null; } }
+    document.addEventListener("click", function (e) {
+      var btn = e.target.closest ? e.target.closest(".info-tip") : null;
+      if (btn) {
+        e.stopPropagation();
+        var pop = btn.parentNode.querySelector(".popover"), isOpen = openPop && openPop.btn === btn;
+        close();
+        if (!isOpen && pop) { pop.hidden = false; btn.setAttribute("aria-expanded", "true"); openPop = { btn: btn, pop: pop }; }
+      } else { close(); }
+    });
+    document.addEventListener("mouseover", function (e) {
+      if (!hasHover() || !e.target.closest) return;
+      var wrap = e.target.closest(".info-wrap"); if (!wrap) return;
+      var btn = wrap.querySelector(".info-tip"), pop = wrap.querySelector(".popover");
+      if (pop) { pop.hidden = false; btn.setAttribute("aria-expanded", "true"); }
+    });
+    document.addEventListener("mouseout", function (e) {
+      if (!hasHover() || !e.target.closest) return;
+      var wrap = e.target.closest(".info-wrap"); if (!wrap || wrap.contains(e.relatedTarget)) return;
+      var btn = wrap.querySelector(".info-tip"), pop = wrap.querySelector(".popover");
+      if ((!openPop || openPop.btn !== btn) && pop) { pop.hidden = true; btn.setAttribute("aria-expanded", "false"); }
+    });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+  })();
+
+  // ---------- resize ----------
+  var lastW = 0, rt = null;
+  window.addEventListener("resize", function () {
+    clearTimeout(rt);
+    rt = setTimeout(function () {
+      var w = document.querySelector(".wrap").clientWidth;
+      if (w === lastW) return; lastW = w;
+      if (S.tab === 0) renderTab1(); else if (S.tab === 2) drawLogChart();
+    }, 120);
+  });
+  /* Charts take their colours from CSS variables, so a theme change needs no redraw. */
+
+  // ---------- init ----------
+  buildCtrls();
+  update();
+  lastW = document.querySelector(".wrap").clientWidth;
+  // read-only handle used by the headless checks; nothing on the page depends on it
+  window.__zl = { S: S, R: R, update: update, activate: activate };
+})();
+</script>
+<script>
+  /* Theme control. The head script has already applied the theme; this reflects
+     it in the radios and handles changes. */
+  (function () {
+    var group = document.getElementById("themePick");
+    if (!group) return;
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    var pref = window.__ttPref || "system";
+    function apply() {
+      var dark = pref === "dark" || (pref === "system" && mq.matches);
+      document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+      if (window.__ttRedraw) window.__ttRedraw();
+    }
+    var sel = group.querySelector('input[value="' + pref + '"]');
+    if (sel) sel.checked = true;
+    group.addEventListener("change", function (e) {
+      if (e.target.name !== "theme") return;
+      pref = e.target.value;
+      try { localStorage.setItem("tt-theme", pref); } catch (err) {}
+      apply();
+    });
+    mq.addEventListener("change", function () { if (pref === "system") apply(); });
+  })();
+</script>
+</body>
+</html>
