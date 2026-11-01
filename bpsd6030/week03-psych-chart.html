@@ -242,8 +242,28 @@
   .themepick span:hover { border-color: var(--accent); color: var(--ink); }
   .themepick input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
   .themepick input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  /* ---- tab 1's reading: climate, then building, then AHU. A segmented radio
+     group, held at the top of the screen while tab 1 scrolls, so switching the
+     reading changes the chart and the counts in view. ---- */
+  .stepbar { position: sticky; top: 0; z-index: 3; background: var(--card);
+    margin: calc(-1 * var(--s-2)) 0 var(--s-4); padding: var(--s-2) 0; border-bottom: 1px solid var(--line); }
+  .steppick { border: 0; padding: 0; margin: 0; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-1) var(--s-2); }
+  .steppick legend { float: left; font-size: var(--t-label); color: var(--ink); font-weight: 600; padding: 0; margin-right: var(--s-1); }
+  .steppick .seg { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 2px;
+    border: 1px solid var(--line); border-radius: var(--r-pill); background: var(--field); }
+  .steppick label { margin: 0; }
+  .steppick input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .steppick span { display: inline-block; cursor: pointer; border-radius: var(--r-pill);
+    padding: var(--s-1) var(--s-3); color: var(--muted); font-size: var(--t-label); }
+  .steppick span:hover { color: var(--ink); background: var(--result-bg); }
+  .steppick input:checked + span { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .steppick input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .steppick input:active + span { transform: translateY(1px); }
+  [data-step-min][hidden], [data-step][hidden] { display: none !important; }
   .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  @media (max-width: 560px) { section.card { padding: var(--s-4); } }
+  @media (max-width: 560px) { section.card { padding: var(--s-4); }
+    /* the three readings wrap on a phone: a wrapped pill reads badly, a box does not */
+    .steppick .seg { border-radius: var(--r-md); } .steppick span { border-radius: var(--r-sm); } }
 </style>
 <script>
   /* Resolve the colour theme before first paint. Storage is wrapped in
@@ -275,7 +295,7 @@
   </div>
   <header class="page">
     <h1>Psychrometric Chart for HVAC Design</h1>
-    <p class="lede">A psychrometric chart set up for the questions this unit asks of it. Load the weather file your DesignBuilder model uses and every hour of the year lands on the chart, sorted by what the outside air would have to go through to become comfortable. The chart reads the climate; deciding what that means for your building is yours.</p>
+    <p class="lede">A psychrometric chart set up for the questions this unit asks of it. Load the weather file your DesignBuilder model uses and every hour of the year lands on the chart. Read those hours for the climate, then for the building, then for the air-handling unit, and see where the answers part.</p>
     <p class="note">Start from a capital city on tab 1, or load your own building&#x27;s weather file (.epw). Everything happens in your browser: a file you load is read on your computer and is not uploaded anywhere.</p>
   </header>
 
@@ -292,8 +312,8 @@
         <li>Lecture, <i>The chart is a coordinate system</i> &rarr; tab <b>1</b> with no file loaded: switch the chart lines on one at a time and read a state with the cross-hair</li>
         <li>Lecture, the box an engineer draws and <i>The distance from outside to that box is the plant</i> &rarr; tab <b>2</b>: the outside design point, the arrow to the band, and the band&#x27;s edge moved</li>
         <li>Lecture, <i>Two air streams, one box</i> and <i>The cooling coil for dehumidification</i> &rarr; tab <b>3</b>: the mixed state, the coil and its apparatus dew point, the reheat leg, and the same job done by a DOAS</li>
-        <li>Lecture, <i>A climate on the psychrometric chart</i>, and its closing question (is your bigger problem sensible or latent?) &rarr; tab <b>1</b> with a weather file loaded</li>
-        <li>Assignment 1, the building description&#x27;s climate (design conditions, seasonal pattern) &rarr; tab <b>1</b> with your own building&#x27;s weather file for the hours by process and the month-by-month pattern, then tab <b>2</b> for the design conditions and where they come from</li>
+        <li>Lecture, <i>A climate on the psychrometric chart</i>, and its closing question (is your bigger problem sensible or latent?) &rarr; tab <b>1</b> with a weather file loaded, read for the climate, then the building, then the air-handling unit</li>
+        <li>Assignment 1, the building description&#x27;s climate (design conditions, seasonal pattern) &rarr; tab <b>1</b> read for the climate, with your own building&#x27;s weather file, for the hours against the comfort band and the month-by-month pattern, then tab <b>2</b> for the design conditions and where they come from</li>
       </ul>
       <p class="none">The tutorial uses no tab: the chart work lives in the lecture. Nothing here is submitted or marked.</p>
     </details>
@@ -302,11 +322,30 @@
 
   <!-- ===== Tab 1: Your building's climate ===== -->
   <section class="card" role="tabpanel" id="panel-1" aria-labelledby="tab-1" tabindex="0">
-    <div class="primer">
-      <p class="what">What the outside air needs is not what your building needs.</p>
-      <p>Any two properties fix a state of air, so one point on this chart is one hour of weather, and a weather file is 8,760 of them. Each hour is sorted by what the outside air would have to go through to reach the comfort band: <b>heating</b> (right), <b>sensible cooling</b> (left), <b>cooling and dehumidifying</b> (down and left, through a coil colder than the air&#x27;s dew point) or <b>humidifying</b> (up). That is what an air-handling unit does to the outside air it brings in.</p>
-      <p>The building is a different question. People, lights, equipment and sun keep adding heat indoors, so an office stays warm enough on its own until the weather drops below its <b>balance point</b>, which sits well below the heating setpoint. Between the two, the outside air is too cold to supply as it is, yet the building needs cooling, and that cool air can provide it: <b>free cooling</b>. So read the cold hours twice, once for the air and once for the building. More internal heat moves the balance point down and turns more of them into free cooling.</p>
-      <p>The balance point on the chart is a line to move, not a calculation. Your building&#x27;s own depends on its gains and its envelope, which is what DesignBuilder works out.</p>
+    <div class="stepbar">
+      <fieldset class="steppick" id="stepPick">
+        <legend>Read the hours for:</legend>
+        <span class="seg">
+          <label><input type="radio" name="step" value="1" checked><span>The climate</span></label>
+          <label><input type="radio" name="step" value="2"><span>The building</span></label>
+          <label><input type="radio" name="step" value="3"><span>The air-handling unit</span></label>
+        </span>
+      </fieldset>
+    </div>
+    <div class="primer" data-step="1">
+      <p class="what">First the climate: where each hour of the year sits against the comfort band.</p>
+      <p>Any two properties fix a state of air, so one point on this chart is one hour of weather, and a weather file is 8,760 of them. The <b>comfort band</b> is the box of temperature and moisture the building is meant to hold (set it below). Each hour is read against it in plain words: <b>cold</b> (left of the band), <b>warm</b> (right of it), <b>humid</b> (more water in the air than the band allows, whatever the temperature), <b>dry</b> (less water than it allows, when the band has a lower limit) or <b>comfortable</b> (inside it).</p>
+      <p>Moisture is read first: a humid hour stays humid however much it is warmed. Every hour of the year counts here, because the weather does not keep office hours. The monthly bars give the seasonal pattern; with the design conditions on tab 2, that is the climate a building description needs.</p>
+    </div>
+    <div class="primer" data-step="2" hidden>
+      <p class="what">Then the building: a cold hour outside is not always a cold hour inside.</p>
+      <p>People, lights, equipment and sun keep adding heat indoors, so an office stays warm enough on its own until the weather drops below its <b>balance point</b>: the outdoor temperature at which the heat it gains equals the heat it loses. That sits well below the heating setpoint. In the cold hours below the line the building needs heating; in the cold hours above it, the building is shedding heat and needs cooling, although the air outside is cold.</p>
+      <p>The balance point here is a guess about the building, not a calculation: it is a line to move. More people and equipment, or a better-insulated envelope, move it down. Your building&#x27;s real figure is what a load simulation settles, which is DesignBuilder&#x27;s job. Only the hours the building is in use count from here on (set them below).</p>
+    </div>
+    <div class="primer" data-step="3" hidden>
+      <p class="what">Last the air-handling unit: what it has to do to each hour of outside air. What the outside air needs is not what your building needs.</p>
+      <p>An <b>air-handling unit</b> (AHU) takes in outside air and brings it to the band. Each hour is now named by the process that does that: <b>heating</b> (right on the chart), <b>sensible cooling</b> (left), <b>cooling and dehumidifying</b> (down and left, through a coil colder than the air&#x27;s dew point) or <b>humidifying</b> (up). These are the climate&#x27;s hours with new names: cold hours need heating, warm ones sensible cooling, humid ones cooling and dehumidifying, dry ones humidifying.</p>
+      <p>The building&#x27;s answer still splits the cold ones. Above the balance point the air needs heating, yet the building needs cooling, and that cool outside air can provide it: <b>free cooling</b>. More internal heat moves the balance point down and turns more of the cold hours into free cooling.</p>
     </div>
 
     <h3 style="margin-top:0">1. The weather</h3>
@@ -353,10 +392,6 @@
           <select id="loUnit" aria-label="Lower humidity limit unit"><option value="none" selected>none</option><option value="rh">% RH</option><option value="w">g/kg</option></select>
         </div>
       </div>
-      <div>
-        <label for="bpVal">The building&#x27;s balance point (a line to move), &deg;C</label>
-        <input id="bpVal" type="number" step="0.5" min="0" max="25" value="12" aria-describedby="bpHint">
-      </div>
     </div>
     <div class="btn-row">
       <span class="note">Bands to start from:</span>
@@ -364,11 +399,20 @@
       <button type="button" class="btn ghost" data-band="slides">The lecture&#x27;s box: 20&ndash;24&nbsp;&deg;C, 40&ndash;60%&nbsp;RH</button>
       <button type="button" class="btn ghost" data-band="ashrae">ASHRAE 55 humidity limit: up to 12&nbsp;g/kg</button>
     </div>
-    <p class="note" id="bpHint">Below the balance point the building needs heat; above it, the heat from people, lights and sun is more than the building loses. Leave it empty to hide it.</p>
     <p class="msg error" id="bandMsg" role="status" aria-live="polite"></p>
 
-    <h3>Hours the HVAC runs</h3>
-    <p class="sub">Count only the hours the system is on. An office that starts early meets cooler mornings; a building that runs all night meets the coldest hours of all.</p>
+    <div id="bldgSec" data-step-min="2" hidden>
+    <h3>The building&#x27;s balance point</h3>
+    <div class="grid" style="grid-template-columns: minmax(0, 260px)">
+      <div>
+        <label for="bpVal">Balance point (a guess to move), &deg;C</label>
+        <input id="bpVal" type="number" step="0.5" min="0" max="25" value="12" aria-describedby="bpHint">
+      </div>
+    </div>
+    <p class="note" id="bpHint" style="margin-top:var(--s-2)">Below the balance point the building needs heat; above it, the heat from people, lights, equipment and sun is more than the building loses, so it needs cooling. A load simulation settles the real figure. Leave it empty to hide the line.</p>
+
+    <h3>Hours the building is in use</h3>
+    <p class="sub">Count only the hours the building is in use. An office that opens early meets cooler mornings; a building in use all night meets the coldest hours of all.</p>
     <div class="grid">
       <div>
         <label for="winStart">Starts at <span class="v" id="winStartVal">00:00</span></label>
@@ -389,6 +433,7 @@
       <button type="button" class="btn ghost" data-win="9,17,1">09:00&ndash;17:00 weekdays</button>
     </div>
     <p class="winline" id="winText" role="status" aria-live="polite"></p>
+    </div>
 
     <h3>3. The chart</h3>
     <fieldset class="layers" id="layers">
@@ -397,7 +442,7 @@
       <label><input type="checkbox" data-layer="wb" checked><span style="--sw: var(--ch-wb)">Wet bulb</span></label>
       <label><input type="checkbox" data-layer="h"><span style="--sw: var(--ch-h)">Enthalpy</span></label>
       <label><input type="checkbox" data-layer="band" checked><span style="--sw: var(--accent)">The band</span></label>
-      <label><input type="checkbox" data-layer="regions" checked><span style="--sw: var(--water)">Process regions</span></label>
+      <label data-step-min="3" hidden><input type="checkbox" data-layer="regions" checked><span style="--sw: var(--water)">Process regions</span></label>
       <label><input type="checkbox" data-layer="hours" checked><span style="--sw: var(--ch-ok)">The hours</span></label>
     </fieldset>
     <div class="chartbox" id="chartbox">
@@ -407,7 +452,7 @@
     <div class="readout" id="readout"></div>
     <p class="visually-hidden" id="readoutLive" aria-live="polite"></p>
 
-    <h3>4. The year, by process</h3>
+    <h3 id="resultsHead">4. The year, against the band</h3>
     <div id="results"><p class="empty">Load a weather file to count its hours. The band and the regions are drawn already, so the chart works without one.</p></div>
     <canvas id="months" height="220" role="img" aria-label="Hours by process for each month" hidden></canvas>
     <p class="note" id="monthsText"></p>
@@ -425,6 +470,7 @@ pressure at altitude  p  = 101.325 (1 &minus; 2.25577&times;10&#8315;&#8309; Z)^
       <p class="deriv"><b>One chart, one pressure.</b> The chart is drawn at the standard pressure for the weather station&#x27;s elevation, read from the file (101.325&nbsp;kPa before a file is loaded). Each hour is placed by its dry bulb and dew point. The dew point fixes how much water the air holds whatever the pressure, which is why it is the second coordinate carried from the file. Plotting each hour at its own barometric pressure would put some points above the saturation curve drawn here.</p>
       <p class="deriv"><b>How an hour is sorted.</b> Moisture first, because only a coil colder than the air&#x27;s dew point can take water out. If the hour holds more water than the wettest air in the band, it needs <i>cooling and dehumidifying</i>. If it holds less than the driest air in the band, it needs <i>humidifying</i> (and usually heating). Otherwise its moisture is already acceptable and a horizontal move brings it in: <i>heating</i> if it sits left of the band at that humidity ratio, <i>sensible cooling</i> if right. With a relative-humidity limit the band&#x27;s edges lean, so the test uses the band&#x27;s width at the hour&#x27;s own humidity ratio rather than the setpoints alone.</p>
       <p class="deriv"><b>The balance point.</b> The outdoor temperature at which the heat a building gains from people, lights, equipment and sun equals what it loses through its envelope and its outside air. Below it the building needs heating; above it, cooling. Here it is an illustrative vertical line: hours that the outside air needs heated, but that lie above the line, are counted as free cooling for the building. No load is calculated.</p>
+      <p class="deriv"><b>Three readings of the same hours.</b> Every hour is sorted once, by the rule above, and the three readings name the result differently. Read for the climate, cold is the hours the air-handling unit reading calls heating, warm is sensible cooling, humid is cooling and dehumidifying and dry is humidifying, so those two readings count the same hours in the same places. The building reading splits the cold hours at the balance point, and the air-handling unit reading keeps that split as heating and free cooling. The climate reading counts all 8,760 hours of the year; the hours the building is in use apply from the building reading on, so with a window set the climate reading still shows the whole year.</p>
       <p class="deriv"><b>Operating hours.</b> A weather file labels each hour by its end: file hour 1 is 00:00 to 01:00, file hour 9 is 08:00 to 09:00, and file hour 24 is 23:00 to midnight. A window from 07:00 to 19:00 therefore counts file hours 8 to 19, twelve hours a day. A window that starts later than it stops runs overnight: 22:00 to 06:00 counts file hours 23, 24 and 1 to 6. Weekdays only uses each hour&#x27;s own date from the file&#x27;s calendar, so a shift that starts on Friday night keeps its Friday hours and drops the Saturday ones. Public holidays are not removed.</p>
     </details>
     <div class="tabnav">
@@ -897,6 +943,47 @@ var EPW = (function () {
     { key: "dehum", name: "Cooling and dehumidifying", tok: "--water", hint: "too much water: down and left through the coil" }
   ];
   var REG_BY = {}; REG.forEach(function (r) { REG_BY[r.key] = r; });
+  /* Tab 1 reads the same sorted hours three ways. Every hour gets one of the
+     six keys above, once; a reading only groups and names them. Each row lists
+     the keys it gathers ("from"), so the climate reading and the AHU reading
+     count identical hours by construction, and the colour stays with the part
+     of the chart, so switching the reading changes the words, not the cloud. */
+  function row(id, from, name, tok, hint, lower) { return { key: id, from: from, name: name, tok: tok, hint: hint, lower: !!lower }; }
+  var R_DRY = row("dry", ["humid"], "Dry", "--elec", "less water in the air than the band allows", true);
+  var R_OK = row("ok", ["ok"], "Comfortable", "--ch-ok", "already inside the band");
+  var R_WARM = row("warm", ["cool"], "Warm", "--cool", "warmer than the band, with its moisture inside the band&#x27;s range");
+  var R_WET = row("wet", ["dehum"], "Humid", "--water", "more water in the air than the band allows, whatever its temperature");
+  var READ = {
+    climate: [R_DRY, row("cold", ["heat", "free"], "Cold", "--heat", "colder than the band, with its moisture inside the band&#x27;s range"), R_OK, R_WARM, R_WET],
+    building: [R_DRY,
+      row("bheat", ["heat"], "Cold, and the building needs heating", "--heat", "colder than the band and below the building&#x27;s balance point, so the building needs heat too"),
+      row("bcool", ["free"], "Cold, but the building needs cooling", "--free", "colder than the band, but above the balance point: the heat of people, lights and sun is more than the building loses"),
+      R_OK, R_WARM, R_WET],
+    ahu: REG.map(function (r) { return row(r.key, [r.key], r.name, r.tok, r.hint); })
+  };
+  var STEP_HEAD = { 1: "4. The year, against the band", 2: "4. The year, for the building", 3: "4. The year, by process" };
+  var STEP_COL = { 1: "The outside air, against the comfort band", 2: "The outside air, and what the building needs", 3: "What the outside air needs, and what that means for the building" };
+  var STEP_NAME = { 1: "the climate", 2: "the building", 3: "the air-handling unit" };
+  /* The rows on screen for the current reading. The building reading without
+     a balance point has nothing to split, so it shows the climate's rows; the
+     dry row appears only once the band has a lower humidity limit. */
+  function stepRows() {
+    var s = state.step, b = state.band;
+    if (s === 3) return READ.ahu;
+    var rows = (s === 2 && state.bp !== null) ? READ.building : READ.climate;
+    return rows.filter(function (r) { return !r.lower || (b && b.loU !== "none"); });
+  }
+  /* key -> row, for the rows on screen */
+  function rowMap(rows) {
+    var m = {};
+    rows.forEach(function (r) { r.from.forEach(function (k) { m[k] = r; }); });
+    return m;
+  }
+  function sumOf(o, r) { var s = 0; r.from.forEach(function (k) { s += o[k] || 0; }); return s; }
+  /* The climate is every hour; the building's hours of use apply from the
+     building reading on. */
+  var ALL_HOURS = { s: 0, e: 24, wk: false };
+  function effWin() { return state.step === 1 ? ALL_HOURS : state.win; }
   /* The balance point splits the outside air's heating hours in two. */
   /* The operating window. EPW hour h is the hour ending at h:00, i.e. the
      interval (h-1):00 to h:00, so a window from S to E counts file hours S+1
@@ -924,7 +1011,7 @@ var EPW = (function () {
   }
 
   var state = {
-    p: P.P_STD, data: null, cls: null, axis: { tMin: 0, tMax: 45 }, bp: 12, win: { s: 0, e: 24, wk: false }, layers: { rh: true, wb: true, h: false, band: true, regions: true, hours: true },
+    p: P.P_STD, data: null, cls: null, axis: { tMin: 0, tMax: 45 }, bp: 12, win: { s: 0, e: 24, wk: false }, step: 1, layers: { rh: true, wb: true, h: false, band: true, regions: true, hours: true },
     ind: { t: 25, w: P.wFromRh(25, 0.5, P.P_STD) }
   };
 
@@ -987,7 +1074,8 @@ var EPW = (function () {
   var cv, ctx, LAY, current = 0;
   CH1.overlay = function (g, p) {
     var bp = state.bp;
-    if (bp === null || bp < G.tMin || bp > G.tMax) return;
+    // the balance point belongs to the building: not drawn in the climate reading
+    if (state.step < 2 || bp === null || bp < G.tMin || bp > G.tMax) return;
     var top = Math.min(P.wSat(bp, p), G.wMax);
     g.save(); g.strokeStyle = css("--ink"); g.lineWidth = 1.6; g.setLineDash([7, 4]);
     g.beginPath(); g.moveTo(X(bp), Y(0)); g.lineTo(X(bp), Y(top)); g.stroke(); g.setLineDash([]);
@@ -1033,8 +1121,10 @@ var EPW = (function () {
     // the saturation field
     g.save(); satPath(g); g.fillStyle = css("--ch-field"); g.fill(); g.clip();
 
-    // process regions, row by row, under the saturation curve
-    if (LAY.regions && b && !b.err) {
+    // process regions, row by row, under the saturation curve; on tab 1 they
+    // belong to the air-handling unit reading only
+    var regionsOn = LAY.regions && (ch !== CH1 || state.step === 3);
+    if (regionsOn && b && !b.err) {
       g.globalAlpha = 0.11;
       var rowPx = 2, y0 = Y(G.wMax), y1 = Y(0);
       for (var y = y0; y < y1; y += rowPx) {
@@ -1116,15 +1206,19 @@ var EPW = (function () {
       if (ch.hours === "faint") {
         g.globalAlpha = 0.28; g.fillStyle = css("--muted");
         for (var fi = 0; fi < rows.length; fi++) { var fy = Y(rows[fi].w); if (fy >= G.T - 2) g.fillRect(X(rows[fi].db) - hl, fy - hl, ps, ps); }
-      } else REG.forEach(function (r) {
+      } else {
+        Wn = effWin();
+        var sr = stepRows(), sm = rowMap(sr);
+        sr.forEach(function (r) {
         g.fillStyle = css(r.tok);
         for (var i = 0; i < rows.length; i++) {
-          if (state.cls[i] !== r.key || !inWin(rows[i], Wn)) continue;
+          if (sm[state.cls[i]] !== r || !inWin(rows[i], Wn)) continue;
           var x = X(rows[i].db), yy = Y(rows[i].w);
           if (yy < G.T - 2) continue;
           g.fillRect(x - hl, yy - hl, ps, ps);
         }
-      });
+        });
+      }
       g.globalAlpha = 1;
     }
     g.restore();
@@ -1139,7 +1233,9 @@ var EPW = (function () {
     g.stroke();
 
     // labels: region names
-    if (LAY.regions && b && !b.err) regionLabels(g, b, p, fs);
+    // (the climate and building readings name the same places in their own words, with the band)
+    if (regionsOn && b && !b.err) regionLabels(g, b, p, fs, 3);
+    else if (ch === CH1 && state.step < 3 && LAY.band && b && !b.err) regionLabels(g, b, p, fs, state.step);
     // RH labels
     if (LAY.rh) {
       g.fillStyle = css("--ch-rh-text"); g.textAlign = "center"; g.textBaseline = "middle";
@@ -1205,24 +1301,39 @@ var EPW = (function () {
     g.fillStyle = fill; g.fillText(s, x, y);
   }
 
-  function regionLabels(g, b, p, fs) {
+  /* Names for the parts of the chart, in the words of the reading on screen:
+     1 the climate, 2 the building, 3 the air-handling unit (the process
+     regions). Same places in all three. */
+  var LABELS = {
+    1: { heat: "cold", free: "", cool: "warm", dehum: "humid", humid: "dry" },
+    2: { heat: "cold: building heats", free: "cold: building cools", cool: "warm", dehum: "humid", humid: "dry" },
+    3: { heat: "heating", free: "free cooling", cool: "sensible cooling", dehum: "cooling and dehumidifying", humid: "humidifying" }
+  };
+  function regionLabels(g, b, p, fs, mode) {
     g.font = "600 " + fs + "px -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
     g.textBaseline = "middle";
+    var L = LABELS[mode];
     var wMid = Math.max(b.wLo, Math.min(b.wHi, 0.5 * (b.wLo + b.wHi)));
     var s = slice(b, wMid, p);
-    function put(key, text, t, w, align) {
+    function put(key, text, t, w, align, maxPx) {
+      if (!text) return;
       if (t < G.tMin + 0.5 || t > G.tMax - 0.5 || w > G.wMax || w <= 0) return;
       if (w > P.wSat(t, p) - 0.0006) return;
+      if (maxPx && g.measureText(text).width > maxPx) return;
       g.textAlign = align; g.fillStyle = css(REG_BY[key].tok); haloText(g, text, X(t), Y(w));
     }
-    var bp = state.bp, split = bp !== null && bp < s[0] - 1;
+    var bp = mode >= 2 ? state.bp : null, split = bp !== null && bp < s[0] - 1;
     var th = split ? Math.min(bp - 1, s[0] - 4) : s[0] - 4;
-    put("heat", "heating", Math.max(G.tMin + 1, th), Math.min(wMid, P.wSat(th, p) - 0.0015), "right");
-    if (split && s[0] - bp >= 4) put("free", "free cooling", (bp + s[0]) / 2, Math.min(0.0025, P.wSat((bp + s[0]) / 2, p) - 0.0015), "center");
-    put("cool", "sensible cooling", s[1] + 3, Math.min(wMid, b.wHi - 0.001), "left");
+    // the building reading pairs its two cold labels low down, either side of the
+    // line, clear of the wet-bulb labels along the saturation curve
+    var wH = (mode === 2 && split) ? 0.0025 : wMid;
+    put("heat", L.heat, Math.max(G.tMin + 1, th), Math.min(wH, P.wSat(th, p) - 0.0015), "right", split ? X(th) - G.L - 4 : 0);
+    // the label between the balance point and the band has to fit between them
+    if (split && s[0] - bp >= 4) put("free", L.free, (bp + s[0]) / 2, Math.min(0.0025, P.wSat((bp + s[0]) / 2, p) - 0.0015), "center", X(s[0]) - X(bp) - 8);
+    put("cool", L.cool, s[1] + 3, Math.min(wMid, b.wHi - 0.001), "left");
     var wD = Math.min(G.wMax - 0.002, b.wHi + 0.0045);
-    put("dehum", "cooling and dehumidifying", Math.max(b.tHi + 2, P.dewPoint(wD, p) + 6), wD, "left");
-    if (b.wLo > 0.0025) put("humid", "humidifying", b.tLo, b.wLo / 2, "center");
+    put("dehum", L.dehum, Math.max(b.tHi + 2, P.dewPoint(wD, p) + 6), wD, "left");
+    if (b.wLo > 0.0025) put("humid", L.humid, b.tLo, b.wLo / 2, "center");
   }
 
   function drawIndicator(g) {
@@ -1242,7 +1353,8 @@ var EPW = (function () {
   function chartLabel() {
     var s = "Psychrometric chart, dry bulb " + G.tMin + " to " + G.tMax + " degrees C, humidity ratio 0 to 30 g/kg";
     if (state.band && !state.band.err) s += ", comfort band " + state.band.tLo + " to " + state.band.tHi + " degrees C";
-    if (state.data) s += ", with " + state.counts.n + " hours of " + state.data.loc.city + " weather plotted";
+    if (state.data && state.counts) s += ", with " + state.counts.n + " hours of " + state.data.loc.city + " weather plotted, read for " + STEP_NAME[state.step];
+    if (state.step >= 2 && state.bp !== null) s += ", balance point " + state.bp + " degrees C";
     return s + ". The read-out below the chart gives the state at the cross-hair.";
   }
 
@@ -1250,14 +1362,15 @@ var EPW = (function () {
   function readout(fromKeys) {
     var p = state.p, t = state.ind.t, w = state.ind.w;
     var rh = P.rhFromW(t, w, p), wb = P.wetBulb(t, w, p), td = P.dewPoint(w, p), h = P.enthalpy(t, w);
-    var b = state.band, k = b && !b.err ? forBuilding(classify(b, t, w, p), t) : null;
+    var b = state.band, k0 = b && !b.err ? forBuilding(classify(b, t, w, p), t) : null;
+    var k = k0 ? rowMap(stepRows())[k0] : null;
     function cell(kk, v) { return '<div><span class="k">' + kk + '</span><span class="v">' + v + "</span></div>"; }
     var html = cell("Dry bulb", fmt(t, 1) + " °C") + cell("Humidity ratio", fmt(w * 1000, 1) + " g/kg") +
       cell("Relative humidity", fmt(100 * rh, 0) + "%") + cell("Wet bulb", fmt(wb, 1) + " °C") +
       cell("Dew point", fmt(td, 1) + " °C") + cell("Enthalpy", fmt(h, 1) + " kJ/kg");
-    if (k) html += '<div class="proc"><span class="sw" style="background:' + css(REG_BY[k].tok) + '"></span><span><b>' + REG_BY[k].name + "</b>: " + REG_BY[k].hint + "</span></div>";
+    if (k) html += '<div class="proc"><span class="sw" style="background:' + css(k.tok) + '"></span><span><b>' + k.name + "</b>: " + k.hint + "</span></div>";
     $("readout").innerHTML = html;
-    if (fromKeys) $("readoutLive").textContent = fmt(t, 1) + " degrees, " + fmt(w * 1000, 1) + " grams per kilogram, " + fmt(100 * rh, 0) + " percent RH" + (k ? ", " + REG_BY[k].name : "");
+    if (fromKeys) $("readoutLive").textContent = fmt(t, 1) + " degrees, " + fmt(w * 1000, 1) + " grams per kilogram, " + fmt(100 * rh, 0) + " percent RH" + (k ? ", " + k.name : "");
   }
   function setInd(t, w, fromKeys) {
     var p = state.p; G = CH1.G;
@@ -1287,15 +1400,20 @@ var EPW = (function () {
     var d = state.data, b = state.band;
     state.cls = null; state.counts = null;
     if (!d || !b || b.err) { renderResults(); return; }
-    var p = state.p, Wn = state.win;
-    var cls = new Array(d.rows.length), c = { n: 0 }, months = [];
+    // counted over the reading's hours (the whole year for the climate);
+    // nWin is the building's window on its own, for the status line under it,
+    // and above is the hours at or above the balance point, for the building verdict
+    var p = state.p, Wn = effWin(), bp = state.bp;
+    var cls = new Array(d.rows.length), c = { n: 0, nWin: 0, above: 0 }, months = [];
     REG.forEach(function (r) { c[r.key] = 0; });
     for (var m = 0; m < 12; m++) { months.push({ n: 0 }); REG.forEach(function (r) { months[m][r.key] = 0; }); }
     for (var i = 0; i < d.rows.length; i++) {
       var r = d.rows[i], k = forBuilding(classify(b, r.db, r.w, p), r.db);
       cls[i] = k;
+      if (inWin(r, state.win)) c.nWin++;
       if (!inWin(r, Wn)) continue;
       c[k]++; c.n++; months[r.mo - 1][k]++; months[r.mo - 1].n++;
+      if (bp !== null && r.db >= bp) c.above++;
     }
     state.cls = cls; state.counts = c; state.months = months;
     renderWin();
@@ -1309,7 +1427,7 @@ var EPW = (function () {
     $("winStartVal").textContent = hh(W.s); $("winEndVal").textContent = hh(W.e);
     $("winStart").setAttribute("aria-valuetext", hh(W.s)); $("winEnd").setAttribute("aria-valuetext", hh(W.e));
     var fh = W.s === W.e ? "none" : (W.s < W.e ? (W.s + 1) + " to " + W.e : (W.s + 1) + " to 24 and 1 to " + W.e);
-    var n = state.counts ? state.counts.n : null;
+    var n = state.counts ? state.counts.nWin : null;
     var msg = "<b>" + winLabel(W) + "</b>" + (n !== null ? ": " + n.toLocaleString("en-AU") + " hours" : "") +
       (W.s === W.e ? ". The start and stop are the same, so no hours are counted." : " (file hours " + fh + ")");
     if ($("winText").innerHTML !== msg) $("winText").innerHTML = msg;
@@ -1317,33 +1435,59 @@ var EPW = (function () {
   var MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   function renderResults() {
     var c = state.counts, el = $("results");
+    $("resultsHead").textContent = STEP_HEAD[state.step];
     if (!c) {
       $("months").hidden = true; $("monthsText").textContent = "";
       if (state.data && state.band && state.band.err) el.innerHTML = '<p class="empty">Fix the band above to count the hours.</p>';
       return;
     }
-    var wl = winLabel(state.win);
-    var max = 0; REG.forEach(function (r) { max = Math.max(max, c[r.key]); });
-    var rows = REG.slice().reverse().map(function (r) {
-      var share = c.n ? c[r.key] / c.n : 0;
+    var step = state.step, sr = stepRows(), wl = winLabel(effWin());
+    var N = function (x) { return x.toLocaleString("en-AU"); }, pc = function (x) { return fmt(c.n ? 100 * x / c.n : 0, 0) + "%"; };
+    var max = 0; sr.forEach(function (r) { max = Math.max(max, sumOf(c, r)); });
+    var rows = sr.slice().reverse().map(function (r) {
+      var v = sumOf(c, r), share = c.n ? v / c.n : 0;
       return "<tr><td><span class=\"sw\" style=\"background:" + css(r.tok) + "\"></span>" + r.name + "</td>" +
-        "<td class=\"num\">" + c[r.key].toLocaleString("en-AU") + "</td><td class=\"num\">" + fmt(100 * share, 0) + "%</td>" +
-        "<td style=\"width:34%\"><span class=\"bar\" style=\"width:" + (max ? 100 * c[r.key] / max : 0) + "%;background:" + css(r.tok) + "\"></span></td></tr>";
+        "<td class=\"num\">" + v.toLocaleString("en-AU") + "</td><td class=\"num\">" + fmt(100 * share, 0) + "%</td>" +
+        "<td style=\"width:34%\"><span class=\"bar\" style=\"width:" + (max ? 100 * v / max : 0) + "%;background:" + css(r.tok) + "\"></span></td></tr>";
     }).join("");
-    var cool = c.cool + c.dehum, cold = c.heat + c.free, verdict, N = function (x) { return x.toLocaleString("en-AU"); };
+    var cool = c.cool + c.dehum, cold = c.heat + c.free, verdict;
     var span = "hours (" + wl + ")";
-    // first the reframe: the cold hours, read once for the air and once for the building
-    if (!cold) verdict = "The outside air never needs heating in these " + span + ".";
-    else if (state.bp === null) verdict = "The outside air needs heating in <b>" + N(cold) + "</b> of these " + span + " (" + fmt(100 * cold / c.n, 0) + "%). Set a balance point to see how many of them an office would spend cooling instead.";
-    else verdict = "The outside air needs heating in <b>" + N(cold) + "</b> of these " + span + " (" + fmt(100 * cold / c.n, 0) + "%). The building, with its balance point at " + fmt(state.bp, 1) + " °C, needs heat in only <b>" + N(c.heat) + "</b> of them. In the other <b>" + N(c.free) + "</b> it is still shedding the heat of its people, lights and sun, and the cool outside air does that for free. <b>What the air needs is not what the building needs.</b>";
-    // then the cooling hours, which the outside air and the building share
-    if (cool) {
-      var lat = c.dehum / cool;
-      verdict += "<br>When the outside air needs cooling (" + N(cool) + " " + span + "), " + fmt(100 * lat, 0) + "% of the time it also needs water taken out, so the cooling problem here is " +
-        (lat >= 0.5 ? "<b>latent</b>: drying the air, not just cooling it." : "<b>sensible</b>: mostly cooling, not drying.");
+    if (step === 1) {
+      // the climate in plain words: where the hours sit against the band, then which
+      // matters more when it is too warm or too wet, the temperature or the water
+      var parts = [["cold", cold], ["comfortable", c.ok], ["warm", c.cool], ["humid", c.dehum]];
+      if (state.band.loU !== "none") parts.push(["dry", c.humid]);
+      parts = parts.map(function (q) { return "<b>" + q[0] + "</b> in " + N(q[1]) + " (" + pc(q[1]) + ")"; });
+      verdict = "Across every hour of the year, the air outside is " + parts.slice(0, -1).join(", ") + " and " + parts[parts.length - 1] + ".";
+      if (cool) {
+        var wet = c.dehum / cool;
+        verdict += "<br>When it is warmer or wetter than the band (" + N(cool) + " hours), it is humid " + fmt(100 * wet, 0) + "% of the time, so in the warm months this climate&#x27;s bigger problem is " +
+          (wet >= 0.5 ? "<b>the water in the air</b>, not its temperature." : "<b>its temperature</b>, not the water in it.");
+      }
+    } else if (step === 2) {
+      // the same cold hours, read for a building with internal gains
+      if (!cold) verdict = "The air outside is never cold in these " + span + ", so the balance point has nothing to split.";
+      else if (state.bp === null) verdict = "Of the " + N(c.n) + " hours counted (" + wl + "), the air outside is cold in <b>" + N(cold) + "</b> (" + pc(cold) + "). Set a balance point to see how many of them the building would spend cooling instead.";
+      else verdict = "Of the " + N(c.n) + " hours counted (" + wl + "), the air outside is cold in <b>" + N(cold) + "</b> (" + pc(cold) + "). The building, with its balance point at " + fmt(state.bp, 1) + " °C, needs heat in only <b>" + N(c.heat) + "</b> of them. In the other <b>" + N(c.free) + "</b> the heat of its people, lights, equipment and sun is more than it loses, so it needs cooling while the air outside is cold." +
+        "<br><b>Read for the climate, " + pc(cold) + " of these hours are cold. Read for the building, " + pc(c.above) + " are above its balance point, where it needs cooling.</b>";
+    } else {
+      // first the reframe: the cold hours, read once for the air and once for the building
+      if (!cold) verdict = "The outside air never needs heating in these " + span + ".";
+      else if (state.bp === null) verdict = "The outside air needs heating in <b>" + N(cold) + "</b> of these " + span + " (" + fmt(100 * cold / c.n, 0) + "%). Set a balance point to see how many of them an office would spend cooling instead.";
+      else verdict = "The outside air needs heating in <b>" + N(cold) + "</b> of these " + span + " (" + fmt(100 * cold / c.n, 0) + "%). The building, with its balance point at " + fmt(state.bp, 1) + " °C, needs heat in only <b>" + N(c.heat) + "</b> of them. In the other <b>" + N(c.free) + "</b> it is still shedding the heat of its people, lights and sun, and the cool outside air does that for free. <b>What the air needs is not what the building needs.</b>";
+      // then the cooling hours, which the outside air and the building share
+      if (cool) {
+        var lat = c.dehum / cool;
+        verdict += "<br>When the outside air needs cooling (" + N(cool) + " " + span + "), " + fmt(100 * lat, 0) + "% of the time it also needs water taken out, so the cooling problem here is " +
+          (lat >= 0.5 ? "<b>latent</b>: drying the air, not just cooling it." : "<b>sensible</b>: mostly cooling, not drying.");
+      }
     }
-    el.innerHTML = '<table class="counts"><caption class="visually-hidden">Hours by process</caption><thead><tr><th>What the outside air needs, and what that means for the building</th><th class="num">Hours</th><th class="num">Share</th><th><span class="visually-hidden">Bar</span></th></tr></thead><tbody>' +
-      rows + '</tbody><tfoot><tr><td>' + "Hours counted, " + esc(wl) + '</td><td class="num">' + c.n.toLocaleString("en-AU") + '</td><td class="num">100%</td><td></td></tr></tfoot></table>' +
+    // the climate keeps every hour; say so when the building's window would count fewer
+    var W = state.win, held = step === 1 && !(W.s === 0 && W.e === 24 && !W.wk);
+    var foot = step === 1 ? "Hours counted, every hour of the year" : "Hours counted, " + esc(wl);
+    el.innerHTML = '<table class="counts"><caption class="visually-hidden">Hours of the year, read for ' + STEP_NAME[step] + '</caption><thead><tr><th>' + STEP_COL[step] + '</th><th class="num">Hours</th><th class="num">Share</th><th><span class="visually-hidden">Bar</span></th></tr></thead><tbody>' +
+      rows + '</tbody><tfoot><tr><td>' + foot + '</td><td class="num">' + c.n.toLocaleString("en-AU") + '</td><td class="num">100%</td><td></td></tr></tfoot></table>' +
+      (held ? '<p class="note" style="margin:var(--s-2) 0 0">The climate counts every hour of the year. The building&#x27;s hours of use (' + esc(winLabel(W)) + ") are kept, and apply from the building reading on.</p>" : "") +
       '<p class="verdict" role="status" aria-live="polite">' + verdict + "</p>";
     drawMonths();
   }
@@ -1352,6 +1496,7 @@ var EPW = (function () {
     var c2 = $("months"), mths = state.months;
     if (!mths) return;
     c2.hidden = false;
+    var sr = stepRows();
     var sz = sizeCanvas(c2, 0.26, 200), g = c2.getContext("2d");
     var L = 34, R = 8, T = 10, B = 26, w = sz.w - L - R, h = sz.h - T - B, bw = w / 12;
     g.clearRect(0, 0, sz.w, sz.h);
@@ -1361,9 +1506,10 @@ var EPW = (function () {
     [0, 50, 100].forEach(function (v) { var y = T + h * (1 - v / 100); g.fillText(v + "%", L - 6, y); g.beginPath(); g.moveTo(L, y); g.lineTo(L + w, y); g.stroke(); });
     mths.forEach(function (m, i) {
       var y = T + h, x = L + i * bw + bw * 0.14, ww = bw * 0.72;
-      REG.forEach(function (r) {
-        if (!m.n || !m[r.key]) return;
-        var hh = h * m[r.key] / m.n;
+      sr.forEach(function (r) {
+        var v = sumOf(m, r);
+        if (!m.n || !v) return;
+        var hh = h * v / m.n;
         g.fillStyle = css(r.tok); g.globalAlpha = r.key === "ok" ? 0.55 : 0.85;
         g.fillRect(x, y - hh, ww, hh); y -= hh;
       });
@@ -1371,17 +1517,19 @@ var EPW = (function () {
       g.fillText(MON[i], L + i * bw + bw / 2, T + h + 6);
     });
     // a text version, which is also the seasonal pattern in one sentence
-    var by = {};
+    var by = {}, okRow = sr.filter(function (r) { return r.key === "ok"; })[0];
     mths.forEach(function (m, i) {
       if (!m.n) return;
-      var best = "ok"; REG.forEach(function (r) { if (m[r.key] > m[best]) best = r.key; });
-      (by[best] = by[best] || []).push(MON[i]);
+      var best = okRow; sr.forEach(function (r) { if (sumOf(m, r) > sumOf(m, best)) best = r; });
+      (by[best.key] = by[best.key] || []).push(MON[i]);
     });
-    var parts = REG.filter(function (r) { return by[r.key]; }).map(function (r) { return r.name.toLowerCase() + " in " + by[r.key].join(", "); });
-    var txt = "Largest share each month, " + winLabel(state.win) + ": " + parts.join("; ") + "." +
-      (state.bp !== null && by.free ? " Those free-cooling months are when the outside air is cold and an office is not." : "");
+    var parts = sr.filter(function (r) { return by[r.key]; }).map(function (r) { return r.name.toLowerCase() + " in " + by[r.key].join(", "); });
+    var lead = state.step === 1 ? "Largest share each month, every hour of the year: " : "Largest share each month, " + winLabel(effWin()) + ": ";
+    var txt = lead + parts.join("; ") + "." +
+      (state.step === 2 && by.bcool ? " In those months the air outside is cold and an office inside is not." : "") +
+      (state.step === 3 && state.bp !== null && by.free ? " Those free-cooling months are when the outside air is cold and an office is not." : "");
     $("monthsText").textContent = txt;
-    c2.setAttribute("aria-label", "Hours by process for each month. " + txt);
+    c2.setAttribute("aria-label", (state.step === 3 ? "Hours by process for each month. " : "Hours of the year for each month, read for " + STEP_NAME[state.step] + ". ") + txt);
   }
 
   // ---------- loading a file ----------
@@ -1476,6 +1624,19 @@ var EPW = (function () {
       update();
     });
   });
+  /* The reading: climate, then building, then AHU. Switching it changes what
+     is shown and how the hours are grouped, never the band, the file or the
+     window. Native radios, so the arrow keys move along the group. */
+  function setStep(n) {
+    n = Math.max(1, Math.min(3, +n || 1));
+    state.step = n;
+    var r = document.querySelector('#stepPick input[value="' + n + '"]');
+    if (r && !r.checked) r.checked = true;
+    document.querySelectorAll("#panel-1 [data-step]").forEach(function (el) { el.hidden = +el.getAttribute("data-step") !== n; });
+    document.querySelectorAll("#panel-1 [data-step-min]").forEach(function (el) { el.hidden = n < +el.getAttribute("data-step-min"); });
+    recount(); draw(); readout(false);
+  }
+  $("stepPick").addEventListener("change", function (e) { if (e.target.name === "step") setStep(e.target.value); });
   document.querySelectorAll("#layers input").forEach(function (inp) {
     inp.addEventListener("change", function () { state.layers[inp.getAttribute("data-layer")] = inp.checked; draw(); });
   });
@@ -1876,8 +2037,11 @@ var EPW = (function () {
     new ResizeObserver(function () { var w = $("chartbox").clientWidth; if (w !== lastW) { lastW = w; window.__ttRedraw(); } }).observe($("chartbox"));
   }
   // test hook for the headless checks; reads state, sends nothing anywhere
-  window.__psych = { state: state, setData: setData, update: update, EPW: EPW, activate: activate, PRESETS: PRESETS };
+  window.__psych = { state: state, setData: setData, update: update, EPW: EPW, activate: activate, PRESETS: PRESETS, setStep: setStep };
   update();
+  // a browser restoring the form on back navigation may have kept another reading
+  var sc = document.querySelector('#stepPick input:checked');
+  if (sc && +sc.value !== 1) setStep(sc.value);
 })();
 </script>
 <script>
