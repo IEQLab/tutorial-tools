@@ -1,0 +1,2236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plan the Plant Room — BPSD6030</title>
+<style>
+  /* BPSD6030 Building Systems · indigo accent · IEQ Lab · rev. 2026-11 */
+  :root {
+    color-scheme: light;
+    --bg: #f4f6f7; --card: #fcfdfd; --ink: #1c2430; --muted: #5a6675;
+    --line: #dfe4ea; --accent: #4a52b5; --accent-ink: #fbfcfe;
+    --good: #1a7f4b; --warn: #9c5a0b; --bad: #b02a37;
+    --field: #fdfefe; --result-bg: #eef0f8; --chip: #eef2f5;
+    --r-sm: 3px; --r-md: 8px; --r-pill: 999px;
+    --shadow: 0 3px 8px rgba(26, 28, 62, .12);
+    --ease-out: cubic-bezier(.2, 0, 0, 1); --dur: 150ms;
+
+    --t-glyph: .68rem;
+    --t-meta:  .78rem;
+    --t-label: .875rem;
+    --t-body:  1rem;
+    --t-lead:  1.125rem;
+    --t-h2:    1.3rem;
+    --t-h1:    1.625rem;
+    --t-display: 2.4rem;
+
+    --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px;
+    --s-5: 20px; --s-6: 24px; --s-8: 32px; --s-12: 48px;
+
+    --bar: #c5cbe6; --grid: #e6e9ee;
+
+    /* schematic service palette: shared with the BPSD6030 lecture figures
+       (teachr bpsd6030/lectures/common/hvac_draw.py, PALETTE) and with
+       week05-hvac-selector.html and week09-hvac-systems.html. */
+    --heat: #c0392b; --cool: #0b5fa5; --elec: #c98a12; --gas: #7a4e2d;
+    --water: #0e7c86; --air: #8a8880; --refrig: #7b4bc9;
+    --plant: #cfd8e0; --plant-ink: #33414f; --floor: #f7f8fa;
+    --zone: rgba(74, 82, 181, .09); --zone-line: rgba(74, 82, 181, .55);
+    --wall: #33414f;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #10151b; --card: #171e27; --ink: #e7ecf2; --muted: #9aa7b6;
+    --line: #2a3441; --accent: #99a4ef; --accent-ink: #131635;
+    --good: #57c98a; --warn: #e0a955; --bad: #e2707a;
+    --field: #0f151c; --result-bg: #191f33; --chip: #1c2733;
+    --shadow: 0 3px 8px rgba(0, 0, 0, .34);
+    --bar: #3a4270; --grid: #1e2630;
+    --heat: #e2707a; --cool: #6ba7e6; --elec: #e3b25a; --gas: #c9a079;
+    --water: #38b2bd; --air: #8d8b84; --refrig: #a583e0;
+    --plant: #2b3947; --plant-ink: #c4d0dc; --floor: #121a22;
+    --zone: rgba(153, 164, 239, .12); --zone-line: rgba(153, 164, 239, .6);
+    --wall: #c4d0dc;
+  }
+  :root[data-theme="dark"] :is(body) { line-height: 1.6; letter-spacing: .004em; }
+  :root[data-theme="dark"] :is(.primer p, .sub, .hint, .note, label, .deriv, .mapsto li, .checks li, .fb, .inote) { font-weight: 450; }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: .01ms !important; animation-duration: .01ms !important; scroll-behavior: auto !important; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: var(--s-6) var(--s-4) var(--s-12); }
+  a.home { display: inline-block; color: var(--accent); text-decoration: none; font-size: var(--t-label); margin-bottom: var(--s-4); }
+  a.home:hover { text-decoration: underline; }
+  header.page { margin-bottom: var(--s-2); }
+  h1 { font-size: var(--t-h1); margin: 0 0 var(--s-1); letter-spacing: -.018em; }
+  .lede { color: var(--muted); margin: 0 0 var(--s-6); max-width: 72ch; }
+
+  /* ---- tabs ---- */
+  .tabs { display: flex; gap: var(--s-2); margin: 0 0 var(--s-3); flex-wrap: wrap; }
+  .tab { border: 1px solid var(--line); background: var(--field); color: var(--muted);
+    border-radius: var(--r-pill); padding: var(--s-2) var(--s-4) var(--s-2) var(--s-2); font-size: var(--t-label); cursor: pointer;
+    display: inline-flex; align-items: center; gap: var(--s-2); font-family: inherit; }
+  .tab:hover { border-color: var(--accent); color: var(--ink); }
+  .tab:active { transform: translateY(1px); }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .tab .n { display: inline-flex; align-items: center; justify-content: center;
+    width: 21px; height: 21px; border-radius: 50%; background: var(--line); color: var(--muted);
+    font-size: var(--t-meta); font-weight: 700; flex: none; }
+  .tab.active .n { background: var(--accent-ink); color: var(--accent); }
+
+  /* ---- orientation strip ---- */
+  .orient { margin: 0 0 var(--s-6); display: grid; gap: var(--s-2); }
+  details.mapsto { border: 1px solid var(--line); border-radius: var(--r-md); background: var(--field); }
+  details.mapsto > summary { cursor: pointer; color: var(--muted); font-size: var(--t-label);
+    font-weight: 600; padding: var(--s-2) var(--s-3); list-style: none; border-radius: var(--r-md); }
+  details.mapsto > summary::-webkit-details-marker { display: none; }
+  details.mapsto > summary::before { content: "\25b8  "; }
+  details.mapsto[open] > summary::before { content: "\25be  "; }
+  details.mapsto > summary:hover { color: var(--ink); }
+  details.mapsto > summary:active { color: var(--accent); }
+  details.mapsto > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .mapsto ul { margin: 0; padding: 0 var(--s-3) var(--s-2); list-style: none; }
+  .mapsto li { font-size: var(--t-label); color: var(--muted); padding: var(--s-1) 0; }
+  .mapsto li b { color: var(--ink); font-weight: 600; }
+  .mapsto .none { font-size: var(--t-label); color: var(--muted); margin: 0;
+    padding: var(--s-2) var(--s-3) var(--s-3); border-top: 1px solid var(--line); }
+  .datasource { margin: 0; font-size: var(--t-label); color: var(--muted);
+    border: 1px solid var(--line); border-radius: var(--r-md); background: var(--field);
+    padding: var(--s-2) var(--s-3); transition: border-color var(--dur) var(--ease-out); }
+  .datasource[hidden] { display: none; }
+  .datasource b { color: var(--ink); font-weight: 600; }
+  .datasource.mine { border-color: var(--accent); }
+  .datasource.mine b { color: var(--accent); }
+
+  section.card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md);
+    padding: var(--s-6); margin: 0; min-width: 0;
+  }
+  @media (max-width: 480px) { section.card { padding: var(--s-4); } .wrap { padding-left: var(--s-3); padding-right: var(--s-3); } }
+  h2 { font-size: var(--t-h2); margin: 0 0 var(--s-1); letter-spacing: -.012em; }
+  h3 { font-size: var(--t-body); margin: var(--s-6) 0 var(--s-2); }
+  h4 { font-size: var(--t-label); margin: var(--s-4) 0 var(--s-2); color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .sub { color: var(--muted); font-size: var(--t-label); margin: 0 0 var(--s-4); max-width: 72ch; }
+
+  label, .lbl { display: block; font-size: var(--t-label); color: var(--muted); margin-bottom: var(--s-1); }
+  select, input[type="number"], input[type="text"] {
+    width: 100%; padding: var(--s-2) var(--s-3); font-size: var(--t-body); color: var(--ink);
+    background: var(--field); border: 1px solid var(--line); border-radius: var(--r-md); font-family: inherit; min-width: 0;
+  }
+  select:focus, input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  input[type="number"] { font-variant-numeric: tabular-nums; }
+  select:disabled { opacity: .6; }
+  input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); margin: 0; flex: none; }
+  input[type="checkbox"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .check { display: flex; gap: var(--s-2); align-items: center; font-size: var(--t-label); color: var(--ink); margin: var(--s-2) 0 0; cursor: pointer; }
+  .hint { color: var(--muted); font-size: var(--t-meta); margin: var(--s-1) 0 0; }
+  .hint b { color: var(--ink); font-weight: 600; }
+
+  .btn { background: var(--accent); color: var(--accent-ink); border: none; border-radius: var(--r-md);
+    padding: var(--s-2) var(--s-4); font-size: var(--t-label); cursor: pointer; font-family: inherit; white-space: nowrap; }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:focus-visible, .linkbtn:focus-visible, .xbtn:focus-visible, .ibtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled, .btn[disabled] { opacity: .45; cursor: not-allowed; transform: none; filter: none; }
+  .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+  .btn.ghost:hover { border-color: var(--accent); filter: none; }
+  .linkbtn { background: none; border: none; padding: 0; color: var(--accent); font: inherit; font-size: var(--t-label);
+    cursor: pointer; text-decoration: underline; }
+  .linkbtn:hover { color: var(--ink); }
+  .linkbtn:active { color: var(--accent); }
+  .linkbtn:disabled { opacity: .45; cursor: not-allowed; text-decoration: none; }
+  .xbtn { flex: none; width: 34px; height: 38px; border: 1px solid var(--line); background: var(--field); color: var(--muted);
+    border-radius: var(--r-md); cursor: pointer; font: inherit; font-size: var(--t-body); line-height: 1; }
+  .xbtn:hover { border-color: var(--accent); color: var(--ink); }
+  .xbtn:active { transform: translateY(1px); }
+  .xbtn:disabled { opacity: .35; cursor: not-allowed; transform: none; }
+  .ibtn { min-width: 38px; height: 36px; border: 1px solid var(--line); background: var(--field); color: var(--ink);
+    border-radius: var(--r-md); cursor: pointer; font: inherit; font-size: var(--t-label); padding: 0 var(--s-2); }
+  .ibtn:hover { border-color: var(--accent); }
+  .ibtn:active { transform: translateY(1px); }
+  .ibtn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--r-pill); overflow: hidden; flex-wrap: wrap; }
+  .seg button { border: none; background: var(--field); color: var(--muted); font: inherit; font-size: var(--t-label);
+    padding: var(--s-1) var(--s-4); cursor: pointer; }
+  .seg button:hover { color: var(--ink); }
+  .seg button:active { color: var(--accent); }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+  .nav { display: flex; justify-content: space-between; gap: var(--s-2); margin-top: var(--s-6); flex-wrap: wrap; }
+  .btn-row { display: flex; gap: var(--s-2); flex-wrap: wrap; margin-top: var(--s-3); align-items: center; }
+
+  /* ---- inputs ---- */
+  .fgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--s-3) var(--s-4); }
+  .fld { min-width: 0; }
+  fieldset.grp { border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-3) var(--s-4) var(--s-4); margin: 0 0 var(--s-4); min-width: 0; }
+  fieldset.grp > legend { font-size: var(--t-label); color: var(--ink); font-weight: 600; padding: 0 var(--s-1); }
+  .rg { border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-3); margin: 0 0 var(--s-3); background: var(--field); }
+  .rg-head { display: flex; gap: var(--s-2); align-items: flex-end; margin-bottom: var(--s-2); }
+  .rg-head .fld { flex: 1; }
+  .rg .fgrid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+  .flag { margin: var(--s-3) 0 0; padding: var(--s-2) var(--s-3); border-left: 3px solid var(--warn); background: var(--card);
+    border-radius: 0 var(--r-sm) var(--r-sm) 0; font-size: var(--t-label); }
+  .flag b { color: var(--warn); }
+  .flag.info { border-left-color: var(--accent); }
+  .flag.info b { color: var(--accent); }
+  .flags:empty { display: none; }
+
+  /* ---- results ---- */
+  .results { margin-top: var(--s-4); background: var(--result-bg); border-radius: var(--r-md); padding: var(--s-4); }
+  .headline { display: flex; flex-wrap: wrap; gap: var(--s-3) var(--s-8); align-items: flex-end; }
+  .big { font-size: var(--t-display); font-weight: 650; letter-spacing: -.022em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .big.sm { font-size: 1.7rem; }
+  .big small { font-size: var(--t-label); font-weight: 500; color: var(--muted); letter-spacing: 0; margin-left: var(--s-1); }
+  .bigcap { font-size: var(--t-meta); color: var(--muted); margin-top: var(--s-1); max-width: 34ch; }
+  .verdict { margin: var(--s-3) 0 0; font-size: var(--t-label); max-width: 76ch; }
+  .empty { color: var(--muted); font-size: var(--t-label); margin: 0; }
+  .note { color: var(--muted); font-size: var(--t-label); max-width: 72ch; }
+
+  .icats h3:first-child { margin-top: var(--s-4); }
+  .igrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: var(--s-3); }
+  .icard { border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-3); background: var(--field); min-width: 0; }
+  .icard.forgot { border-style: dashed; }
+  .ihead { display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-2); align-items: center; margin-bottom: var(--s-2); }
+  .ihead b { font-size: var(--t-body); }
+  .sw { width: 12px; height: 12px; border-radius: 2px; flex: none; }
+  .cnt { color: var(--muted); font-size: var(--t-label); font-variant-numeric: tabular-nums; }
+  .where { margin-left: auto; font-size: var(--t-meta); border-radius: var(--r-pill); padding: 0 var(--s-2); border: 1px solid var(--line); background: var(--chip); color: var(--muted); white-space: nowrap; }
+  .where.deck { color: var(--water); }
+  .icard dl { margin: 0; display: grid; grid-template-columns: 5.6rem minmax(0, 1fr); gap: var(--s-1) var(--s-2); font-size: var(--t-label); }
+  .icard dt { color: var(--muted); }
+  .icard dd { margin: 0; font-variant-numeric: tabular-nums; }
+  .mfr { display: block; color: var(--muted); font-size: var(--t-meta); margin-top: 2px; }
+  .inote { margin: var(--s-2) 0 0; font-size: var(--t-meta); color: var(--muted); }
+  .tagf { font-size: var(--t-meta); color: var(--warn); font-weight: 600; }
+
+  table.data { border-collapse: collapse; width: 100%; font-size: var(--t-label); margin-top: var(--s-2); }
+  table.data th, table.data td { text-align: left; padding: var(--s-1) var(--s-2); border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.data th { color: var(--muted); font-weight: 600; font-size: var(--t-meta); }
+  table.data td.num, table.data th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  table.data td.num { white-space: nowrap; }
+  table.data tr.chosen td { background: var(--result-bg); }
+  table.data td.chosen, table.data th.chosen { background: var(--result-bg); }
+  .tablewrap { overflow-x: auto; max-width: 100%; }
+
+  /* ---- layout stage ---- */
+  .l2 { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: var(--s-4); align-items: start; }
+  @media (max-width: 860px) { .l2 { grid-template-columns: minmax(0, 1fr); } }
+  .stagebar { display: flex; flex-wrap: wrap; gap: var(--s-2); align-items: center; margin: 0 0 var(--s-2); }
+  .stagebar .zoom { margin-left: auto; display: inline-flex; gap: var(--s-1); }
+  .stage { position: relative; width: 100%; height: clamp(300px, min(62vh, 100vw), 560px); border: 1px solid var(--line);
+    border-radius: var(--r-md); background: var(--bg); overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .stage:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .stage.armed { cursor: crosshair; box-shadow: inset 0 0 0 2px var(--accent); }
+  .stage svg { display: block; width: 100%; height: 100%; }
+  .stage .it { cursor: grab; }
+  .stage .it:focus { outline: none; }
+  .stage .it:focus-visible .box, .stage .it.sel .box { stroke: var(--accent); stroke-width: 3px; }
+  .stage .it.dragging { cursor: grabbing; opacity: .85; }
+  svg .floor { fill: var(--floor); }
+  svg .g1 { stroke: var(--grid); stroke-width: 1px; }
+  svg .g5 { stroke: var(--line); stroke-width: 1px; }
+  svg .wall { fill: none; stroke: var(--wall); stroke-width: 4px; }
+  svg .edge { fill: none; stroke: var(--wall); stroke-width: 2px; stroke-dasharray: 8 5; }
+  svg .doorgap { stroke: var(--floor); stroke-width: 6px; }
+  svg .doorline { stroke: var(--accent); stroke-width: 2px; }
+  svg .doorzone { fill: none; stroke: var(--accent); stroke-width: 1px; stroke-dasharray: 3 3; }
+  svg .zone { fill: var(--zone); stroke: var(--zone-line); stroke-width: 1px; stroke-dasharray: 4 3; }
+  svg .zone.bad, svg .pull.bad { stroke: var(--bad); stroke-width: 2px; stroke-dasharray: none; }
+  svg .pull { stroke: var(--water); stroke-width: 1px; stroke-dasharray: 2 3; }
+  svg .hatch { stroke: var(--water); stroke-width: .035; }
+  svg .box { fill: var(--plant); stroke: var(--plant-ink); stroke-width: 1.5px; }
+  svg .it.bad .box { stroke: var(--bad); stroke-width: 3px; }
+  svg text { letter-spacing: 0; }
+  svg .plbl { fill: var(--plant-ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-weight: 600; }
+  svg .plbl2 { fill: var(--plant-ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+  svg .dim { stroke: var(--muted); stroke-width: 1px; }
+  svg .dimt { fill: var(--muted); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+  svg .sb1 { fill: var(--ink); } svg .sb0 { fill: var(--card); stroke: var(--ink); stroke-width: 1px; }
+  .s-cool { fill: var(--cool); } .s-heat { fill: var(--heat); } .s-water { fill: var(--water); }
+  .s-air { fill: var(--air); } .s-refrig { fill: var(--refrig); } .s-gas { fill: var(--gas); }
+
+  .side { display: grid; gap: var(--s-3); min-width: 0; }
+  .panel { border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-3); background: var(--field); min-width: 0; }
+  .panel h4 { margin: 0 0 var(--s-2); }
+  .tray { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: var(--s-2); }
+  .pcard { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left;
+    border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: var(--r-md);
+    padding: var(--s-2); font: inherit; font-size: var(--t-meta); line-height: 1.3; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
+    transition: border-color var(--dur) var(--ease-out); min-width: 0; }
+  .pcard b { font-size: var(--t-label); }
+  .pcard span { color: var(--muted); }
+  .pcard:hover { border-color: var(--accent); }
+  .pcard:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .pcard:active { transform: translateY(1px); }
+  .pcard[aria-pressed="true"] { border-color: var(--accent); background: var(--result-bg); box-shadow: inset 0 0 0 1px var(--accent); }
+  .pcard.lifted { opacity: .35; }
+  .ghostcard { position: fixed; z-index: 50; pointer-events: none; margin: 0; box-shadow: var(--shadow); opacity: .94; }
+  .trayempty { margin: 0; font-size: var(--t-meta); color: var(--muted); }
+  .dpad { display: grid; grid-template-columns: repeat(3, 38px); gap: var(--s-1); justify-content: start; margin: var(--s-2) 0; }
+  .dpad .ibtn { width: 38px; }
+  .selinfo { font-size: var(--t-label); margin: 0; }
+  .selinfo .hint { margin-top: var(--s-1); }
+  .fb { margin: var(--s-2) 0 0; font-size: var(--t-label); line-height: 1.5; padding: var(--s-2) var(--s-3);
+    background: var(--field); border: 1px solid var(--line); border-left: 3px solid var(--line); border-radius: var(--r-sm); min-height: 2.6em; }
+  .fb.good { border-left-color: var(--good); }
+  .fb.bad { border-left-color: var(--bad); }
+  .legendrow { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-4); margin: var(--s-2) 0 0; font-size: var(--t-meta); color: var(--muted); }
+  .legendrow span { display: inline-flex; align-items: center; gap: var(--s-1); }
+  .legendrow i { display: inline-block; width: 18px; height: 11px; border-radius: 2px; }
+  .lg-box { background: var(--plant); border: 1px solid var(--plant-ink); }
+  .lg-zone { background: var(--zone); border: 1px dashed var(--zone-line); }
+  .lg-pull { background: repeating-linear-gradient(45deg, var(--water) 0 1px, transparent 1px 5px); border: 1px dashed var(--water); }
+  .lg-bad { border: 2px solid var(--bad); }
+
+  .checks { margin: var(--s-2) 0 0; padding-left: var(--s-5); font-size: var(--t-label); }
+  .checks li { margin: 0 0 var(--s-2); }
+  .checks li.ok::marker { color: var(--good); }
+  .checks li.bad::marker { color: var(--bad); }
+  .checks li.warn::marker { color: var(--warn); }
+  .checks li b { font-weight: 600; }
+  .checks li.bad b { color: var(--bad); }
+  .checks li.warn b { color: var(--warn); }
+  .checks li.ok b { color: var(--good); }
+  ol.five { margin: var(--s-2) 0 0; padding-left: var(--s-5); font-size: var(--t-label); }
+  ol.five li { margin: 0 0 var(--s-3); max-width: 80ch; }
+  ol.five li > i { color: var(--muted); display: block; font-style: normal; font-weight: 600; color: var(--ink); }
+
+  .bars { margin-top: var(--s-2); font-size: var(--t-label); }
+  .brow { display: grid; grid-template-columns: 11rem minmax(0, 1fr) 4.6rem; gap: var(--s-2); align-items: center; padding: 3px 0; }
+  @media (max-width: 520px) { .brow { grid-template-columns: 6.6rem minmax(0, 1fr) 4rem; } }
+  .brow .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .brow.chosen .nm { font-weight: 700; }
+  .brow .val { text-align: right; font-variant-numeric: tabular-nums; }
+  .btrack { height: 16px; background: var(--grid); border-radius: var(--r-sm); position: relative; overflow: hidden; display: flex; }
+  .bseg { height: 100%; }
+  .bseg.air { background: var(--air); } .bseg.pipe { background: var(--cool); } .bseg.ref { background: var(--refrig); }
+
+  /* ---- shared bits ---- */
+  footer.page { color: var(--muted); font-size: var(--t-meta); margin-top: var(--s-8); border-top: 1px solid var(--line); padding-top: var(--s-4); }
+  footer.page p { margin: 0 0 var(--s-2); }
+  footer.page .sources { margin: 0 0 var(--s-4); padding-left: var(--s-4); }
+  footer.page .sources li { margin: 0 0 var(--s-1); max-width: 92ch; }
+  footer.page .sources li:target { background: var(--result-bg); }
+  footer.page a { color: var(--accent); word-break: break-word; }
+
+  .primer { margin: 0 0 var(--s-6); padding: 0 0 var(--s-5); border-bottom: 1px solid var(--line); }
+  .primer .what { font-weight: 600; font-size: var(--t-lead); letter-spacing: -.011em; margin: 0 0 var(--s-2); max-width: 62ch; }
+  .primer p { margin: 0 0 var(--s-2); color: var(--muted); font-size: var(--t-label); line-height: 1.62; max-width: 70ch; }
+  .primer p:last-child { margin-bottom: 0; }
+  .primer b { color: var(--ink); font-weight: 600; }
+
+  details.maths { margin-top: var(--s-6); border-top: 1px solid var(--line); padding: 0; }
+  details.maths + details.maths { margin-top: 0; }
+  details.maths[open] { padding-bottom: var(--s-4); }
+  details.maths > summary { cursor: pointer; color: var(--accent); font-size: var(--t-label);
+    font-weight: 600; padding: var(--s-3) 0; list-style: none; }
+  details.maths > summary::-webkit-details-marker { display: none; }
+  details.maths > summary::before { content: "▸ "; }
+  details.maths[open] > summary::before { content: "▾ "; }
+  details.maths > summary:hover { color: var(--ink); }
+  details.maths > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  details.maths .deriv { color: var(--muted); font-size: var(--t-label); margin: var(--s-2) 0 0; max-width: 76ch; }
+  details.maths .deriv b { color: var(--ink); }
+  details.maths code { font-size: var(--t-meta); }
+  details.maths ul.deriv { padding-left: var(--s-5); }
+  details.maths ul.deriv li { margin-bottom: var(--s-1); }
+  sup.src a { color: var(--accent); text-decoration: none; font-size: .9em; }
+
+  .info-wrap { position: relative; display: inline-block; vertical-align: middle; }
+  .info-tip { display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px; margin-left: var(--s-1); border-radius: 50%; border: none; padding: 0;
+    background: var(--line); color: var(--muted); font-size: var(--t-glyph); font-weight: 700;
+    font-family: inherit; font-style: normal; line-height: 1; cursor: pointer; user-select: none; }
+  .info-tip:hover, .info-tip[aria-expanded="true"] { background: var(--accent); color: var(--accent-ink); }
+  .info-tip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .info-tip:active { transform: translateY(1px); }
+  .popover { position: absolute; z-index: 30; left: -60px; bottom: calc(100% + 8px);
+    width: max-content; max-width: min(270px, 78vw); background: var(--card); color: var(--ink);
+    border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-2) var(--s-3);
+    font-size: var(--t-meta); font-weight: 400; line-height: 1.45; text-align: left;
+    box-shadow: var(--shadow); }
+  .popover[hidden] { display: none; }
+
+  .toprow { display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; margin-bottom: var(--s-4); }
+  .toprow .home { margin-bottom: 0; }
+  .themepick { margin-left: auto; border: 0; padding: 0; min-width: 0; display: inline-flex; gap: var(--s-1); }
+  .themepick label { margin: 0; }
+  .themepick input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .themepick span { display: inline-block; cursor: pointer; border: 1px solid var(--line); border-radius: var(--r-pill);
+    padding: var(--s-1) var(--s-3); background: var(--field); color: var(--muted); font-size: var(--t-meta); }
+  .themepick span:hover { border-color: var(--accent); color: var(--ink); }
+  .themepick input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .themepick input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px;
+    padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  /* ---- print: the tab 2 layout at a true 1:100 ---- */
+  #printSheet { display: none; }
+  @media print {
+    :root, :root[data-theme="dark"] {
+      color-scheme: light;
+      --bg: #ffffff; --card: #ffffff; --ink: #1c2430; --muted: #4a5563; --line: #c9d0d8; --grid: #e3e7ec;
+      --accent: #4a52b5; --plant: #e8e6e0; --plant-ink: #33414f; --floor: #ffffff; --wall: #1c2430;
+      --zone: rgba(74, 82, 181, .08); --zone-line: rgba(74, 82, 181, .7); --water: #0e7c86; --bad: #b02a37;
+      --heat: #c0392b; --cool: #0b5fa5; --air: #8a8880; --refrig: #7b4bc9; --gas: #7a4e2d;
+    }
+    body { background: #fff; }
+    .wrap { max-width: none; padding: 0; }
+    .wrap > :not(#printSheet) { display: none !important; }
+    #printSheet { display: block !important; }
+    .psheet { break-after: page; page-break-after: always; }
+    .psheet:last-child { break-after: auto; page-break-after: auto; }
+    .psheet h2 { font-size: 13pt; margin: 0 0 2mm; }
+    .psheet p { font-size: 8.5pt; margin: 1.5mm 0 0; color: #333; max-width: none; }
+    .psheet svg { display: block; }
+  }
+</style>
+<style id="pageSize">@page { size: A3 landscape; margin: 10mm; }</style>
+<script>
+  /* Resolve the colour theme before first paint. Storage is wrapped in
+     try/catch: a Canvas iframe with storage blocked throws, and the tool keeps
+     working without remembering the choice. */
+  (function () {
+    var pref = "system";
+    try {
+      var v = localStorage.getItem("tt-theme");
+      if (v === "light" || v === "dark") pref = v;
+    } catch (e) {}
+    window.__ttPref = pref;
+    var dark = pref === "dark" ||
+      (pref === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+  })();
+</script>
+</head>
+<body>
+<div class="wrap">
+  <div class="toprow">
+    <a class="home" href="index.html">&larr; BPSD6030 tutorial tools</a>
+    <fieldset class="themepick" id="themePick">
+    <legend class="visually-hidden">Colour theme</legend>
+    <label><input type="radio" name="theme" value="system"><span>System</span></label>
+    <label><input type="radio" name="theme" value="light"><span>Light</span></label>
+    <label><input type="radio" name="theme" value="dark"><span>Dark</span></label>
+    </fieldset>
+  </div>
+  <header class="page">
+    <h1>Plan the Plant Room</h1>
+    <p class="lede">Turn a tested plant room sketch into a scaled, dimensioned layout. Tab 1 lists what has to fit, sized from current manufacturers&rsquo; data and shown as ranges across them. Tab 2 lays it out to scale with the service and airflow clearances drawn, checks it against the five plant room questions, and prints at 1:100. Tab 3 sizes the risers. It opens on a worked example: press <i>Clear</i> on tab 1 and enter your own Assignment 2 plant. Every size here is a concept-stage allowance; a real product selection governs.</p>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Plant room steps">
+    <button class="tab active" role="tab" id="tab-1" aria-controls="panel-1" aria-selected="true" tabindex="0" data-idx="0"><span class="n">1</span><span>What goes in the room</span></button>
+    <button class="tab" role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false" tabindex="-1" data-idx="1"><span class="n">2</span><span>Lay it out to scale</span></button>
+    <button class="tab" role="tab" id="tab-3" aria-controls="panel-3" aria-selected="false" tabindex="-1" data-idx="2"><span class="n">3</span><span>Risers</span></button>
+  </div>
+
+  <!-- ===== Orientation: mirrors teachr bpsd6030/summaries/tutorial_plan.md, Week 10 Step 3 ===== -->
+  <div class="orient">
+    <details class="mapsto" open>
+      <summary>Where this fits in the Week 10 tutorial</summary>
+      <ul>
+        <li>Step 3, <i>Sketch-and-question clinic</i>, starting from the plant room you have just stood in &rarr; tab <b>1 What goes in the room</b> to list your plant at its real size, then tab <b>2 Lay it out to scale</b> for the checklist items &ldquo;plant located, with its footprint&rdquo; and &ldquo;plant room drawn to scale, with dimensions&rdquo; (print it at 1:100 and trace it into your drawings)</li>
+        <li>Step 3, the same clinic, checklist item &ldquo;risers located&rdquo; &rarr; tab <b>3 Risers</b>, then place the pipe riser on tab 2</li>
+        <li>The five plant room questions (size, clear height, replacement route, risers, noise) that you asked in the real plant room &rarr; answered for your own layout at the foot of tab <b>2</b></li>
+      </ul>
+      <p class="none">The rest of the session uses no tab: Step 1 (<i>Plant room visit</i>), which comes first on purpose, so test your hand sketch in the real room before you open this; Step 2 (<i>How HVAC concepts are planned in practice</i>); the air path and water path items on the Step 3 checklist; Step 4 (<i>Defending your concept</i>) and Step 5 (<i>IOA rehearsal in pairs</i>).</p>
+    </details>
+    <p class="datasource" id="dataSource" aria-live="polite" hidden></p>
+  </div>
+
+  <!-- ===== Tab 1: What goes in the room ===== -->
+  <section class="card" role="tabpanel" id="panel-1" aria-labelledby="tab-1" tabindex="0">
+    <div class="primer">
+      <h2 class="what">List everything the plant room and the roof have to hold, at its real size.</h2>
+      <p>Chillers, boilers and air-handling units have got smaller and lighter, but the space manufacturers ask for around them has not: room to pull the tubes out of a chiller, to slide a coil out of an air-handling unit, for air to reach the coils of a heat pump. <b>The box is not the space requirement.</b> So each item below is shown with its clearances as well as its box, and as a <b>range across current manufacturers&rsquo; data</b> rather than one product.</p>
+      <p>Enter your Assignment 2 plant: design capacities, how many machines, the plant types and a riser group for each part of the building with its own zone system. The tool also adds the items that are easy to forget: pumps, buffer tanks and hot water storage. Air-handling and outdoor-air units are sized from your own loads, not a fixed rate per square metre.</p>
+    </div>
+
+    <fieldset class="grp">
+      <legend>Plant</legend>
+      <div class="fgrid">
+        <div class="fld"><label for="in-cool">Design cooling capacity (kWr)</label><input type="number" inputmode="decimal" min="0" step="any" id="in-cool"></div>
+        <div class="fld"><label for="in-heat">Design heating capacity (kW)</label><input type="number" inputmode="decimal" min="0" step="any" id="in-heat"></div>
+        <div class="fld"><label for="in-coolPlant">Cooling plant</label>
+          <select id="in-coolPlant">
+            <option value="wc">Water-cooled chillers with cooling towers</option>
+            <option value="ac">Air-cooled chillers</option>
+            <option value="hp4">Air-to-water heat pumps, four-pipe (cool and heat at once)</option>
+          </select></div>
+        <div class="fld"><label for="in-heatPlant">Heating plant</label>
+          <select id="in-heatPlant">
+            <option value="hp">Air-to-water heat pumps</option>
+            <option value="boiler">Gas condensing boilers</option>
+            <option value="hp4">The four-pipe heat pumps</option>
+          </select></div>
+        <div class="fld"><label for="in-nCool">Cooling machines on duty</label><input type="number" inputmode="numeric" min="1" max="8" step="1" id="in-nCool">
+          <label class="check"><input type="checkbox" id="in-spareCool"> Add a standby (N+1)</label></div>
+        <div class="fld" id="nHeatWrap"><label for="in-nHeat">Heating machines on duty</label><input type="number" inputmode="numeric" min="1" max="8" step="1" id="in-nHeat">
+          <label class="check"><input type="checkbox" id="in-spareHeat"> Add a standby (N+1)</label></div>
+        <div class="fld"><label for="in-hwt">Heating water leaving temperature
+          <span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About heating water temperature">i</button><span class="popover" role="tooltip" hidden>Heat pump capacities are published at 45&nbsp;°C water. A hotter loop gets less from the same machine, and the standard units in the data stop at 55&ndash;60&nbsp;°C. Coils and fan-coil units can be selected for 45&nbsp;°C water.</span></span></label>
+          <select id="in-hwt">
+            <option value="45">45 °C (fan-coil units, air-handler coils)</option>
+            <option value="55">55 °C</option>
+            <option value="65">60–65 °C (radiators, older reheat coils)</option>
+          </select></div>
+        <div class="fld" id="derateWrap"><label for="in-derate">Indicative heat pump capacity loss (%)</label><input type="number" inputmode="decimal" min="0" max="60" step="1" id="in-derate">
+          <p class="hint">Indicative, not from a manufacturer table: see the panel on heat pumps below.</p></div>
+      </div>
+    </fieldset>
+
+    <fieldset class="grp">
+      <legend>Riser groups: the floors each riser serves, and their zone system</legend>
+      <p class="hint" style="margin-top:0">A riser group is the set of floors one shaft and one air plant serve. Give each part of the building with a different use or zone system its own group.</p>
+      <div id="groups"></div>
+      <button type="button" class="linkbtn" id="addGroup">+ Add a riser group</button>
+      <div class="flags" id="groupFlags"></div>
+    </fieldset>
+
+    <fieldset class="grp">
+      <legend>Air and hot water</legend>
+      <div class="fgrid">
+        <div class="fld"><label for="in-dt">Supply air temperature difference (K)
+          <span class="info-wrap"><button type="button" class="info-tip" aria-expanded="false" aria-label="About supply temperature difference">i</button><span class="popover" role="tooltip" hidden>Room temperature minus supply air temperature: about 10&ndash;12&nbsp;K for an office VAV system. A bigger difference moves the same heat with less air.</span></span></label><input type="number" inputmode="decimal" min="4" max="16" step="0.5" id="in-dt"></div>
+        <div class="fld"><label for="in-oaPP">Outdoor air per person (L/s)</label><input type="number" inputmode="decimal" min="0" step="any" id="in-oaPP"></div>
+        <div class="fld"><label for="in-supp">Extra outdoor air for make-up (L/s per m²)</label><input type="number" inputmode="decimal" min="0" step="any" id="in-supp"></div>
+        <div class="fld"><label for="in-rooms">Hotel rooms</label><input type="number" inputmode="numeric" min="0" step="1" id="in-rooms"></div>
+        <div class="fld"><label for="in-apts">Apartments</label><input type="number" inputmode="numeric" min="0" step="1" id="in-apts"></div>
+      </div>
+      <p class="hint">Hotel rooms and apartments size the heat pump hot water storage. An office needs little: about 1.5&nbsp;L per person in the peak hour, usually from small local heaters.</p>
+    </fieldset>
+
+    <div class="btn-row">
+      <button type="button" class="btn ghost" id="clearBtn">Clear</button>
+      <button type="button" class="btn ghost" id="resetBtn">Back to the worked example</button>
+    </div>
+
+    <div class="results" id="res1" role="status" aria-live="polite"></div>
+    <div class="icats" id="items1"></div>
+
+    <details class="maths">
+      <summary>How each item is sized</summary>
+      <p class="deriv"><b>Machines.</b> Each cooling or heating machine takes the design capacity divided by the number on duty. A standby (N+1) is one more machine of the same size: it adds space and weight but no capacity. Cooling towers follow the chillers one for one, each rated for the chiller it serves.</p>
+      <p class="deriv"><b>The range.</b> For each machine the tool takes the units in the manufacturers&rsquo; data whose capacity is within 70&ndash;140% of the size you need (or the three nearest if fewer than two are that close) and reports the spread of their length, width, height and operating weight. <b>The box drawn on tab 2 is the largest length, width and height among those units,</b> so a real selection of that size should fit inside it. A size outside the data is flagged: split the plant into more machines, or check a manufacturer&rsquo;s range directly.</p>
+      <p class="deriv"><b>Clearances.</b> Each item carries one allowance (the figures on its card), chosen from the manufacturers&rsquo; stated service and airflow clearances, with their spread shown underneath. A water-cooled chiller&rsquo;s tube-pull zone is drawn as a separate hatched zone the length of the unit at one end. It may run out through a door or louvre, which is how real plant rooms avoid giving it floor space.</p>
+      <p class="deriv"><b>Large water-cooled chillers.</b> Above about 2,400&nbsp;kWr per machine the data has only conventional centrifugal chillers, which are two to three times heavier per kW than screw and oil-free chillers of the same capacity.</p>
+      <p class="deriv"><b>Where things go.</b> Water-cooled chillers, boilers, pumps, tanks and storage default to the plant room; cooling towers, air-cooled chillers, heat pumps and VRF outdoor units to the roof or a plant deck. Air-handling and outdoor-air units default to the roof (a weatherproof unit or a roof plant room); move them into the plant room on tab 2 if that is your scheme.</p>
+    </details>
+    <details class="maths">
+      <summary>Air plant: airflow from your own loads</summary>
+      <p class="deriv"><b>All-air VAV.</b> Supply airflow per m² = sensible load (W/m²) &divide; (1.2 &times; supply temperature difference). At 60&nbsp;W/m² and 10&nbsp;K that is 5.0&nbsp;L/s per m². Multiplied by the group&rsquo;s floor area it gives the air-handling unit airflow, split into units of no more than 17&nbsp;m³/s (the largest size in the data).</p>
+      <p class="deriv"><b>Air-handling unit size</b> (fitted to one manufacturer&rsquo;s 11 sizes and checked against a second): width &asymp; 0.95&nbsp;&radic;<i>Q</i>&nbsp;m (0.78&ndash;1.11), height &asymp; 0.66&nbsp;&radic;<i>Q</i>&nbsp;m (0.57&ndash;0.79), length 3.97&nbsp;+&nbsp;0.11&nbsp;<i>Q</i>&nbsp;m (compact: mixing box, bag filter, coils, plenum fan) to 6.05&nbsp;+&nbsp;0.11&nbsp;<i>Q</i>&nbsp;m (generous), dry weight 500&nbsp;+&nbsp;160&nbsp;<i>Q</i> to 720&nbsp;+&nbsp;180&nbsp;<i>Q</i>&nbsp;kg, with <i>Q</i> in m³/s. Length depends on the number of sections, not airflow, which is why even a small unit is about 4&nbsp;m long. The tool draws the compact length and the middle width and height, and uses the generous weight for floor loading.</p>
+      <p class="deriv"><b>An assumption that carries weight: the access allowance.</b> Manufacturers ask for the unit width plus 0.3&nbsp;m on the access side to withdraw a coil (1.5&ndash;5.0&nbsp;m by size), 1.2&nbsp;m for filters and 1.2&ndash;2.0&nbsp;m for a fan. The tool offers two allowances on tab 2: <b>tight</b>, a 1.0&nbsp;m aisle on the access side, 0.6&nbsp;m behind and 0.5&nbsp;m at each end, i.e. (<i>W</i>&nbsp;+&nbsp;1.6)&nbsp;&times;&nbsp;(<i>L</i>&nbsp;+&nbsp;1.0), which assumes the coil comes out through a door or a shared aisle; and <b>full</b>, a coil-withdrawal aisle of <i>W</i>&nbsp;+&nbsp;0.3&nbsp;m (at least 1.0&nbsp;m) and 0.6&nbsp;m at each end. Neither is a manufacturer&rsquo;s figure: they are concept allowances built from the figures above.</p>
+      <p class="deriv"><b>DOAS (dedicated outdoor air).</b> Outdoor airflow per m² = outdoor air per person &divide; floor area per person + the extra make-up air. At 10&nbsp;L/s per person, 10&nbsp;m² per person and 0.3&nbsp;L/s per m² that is 1.3&nbsp;L/s per m². The unit is a stacked heat-recovery wheel unit, selected at 70% of its largest airflow (a quieter, more typical selection, about one size up): length 1.7&nbsp;+&nbsp;0.17&nbsp;<i>Q</i>&nbsp;m plus 0.9&nbsp;m for the chilled and heating water coils in the duct, width 0.95&nbsp;+&nbsp;0.23&nbsp;<i>Q</i>&nbsp;m, height 1.14&nbsp;+&nbsp;0.22&nbsp;<i>Q</i>&nbsp;m, weight 50&nbsp;+&nbsp;370&nbsp;<i>Q</i>&nbsp;kg. The two airstreams are stacked, so check the room height first. Clearance: 1.2&nbsp;m on the inspection side (0.8&ndash;1.1&nbsp;m stated, 1.1&ndash;1.5&nbsp;m to withdraw a wheel cassette) and 0.8&nbsp;m at each end for duct connections. Active chilled beams sometimes need more primary air than the ventilation minimum; the tool does not add it.</p>
+      <p class="deriv"><b>VRF (comparison only).</b> Outdoor units in systems of up to about 90&nbsp;kW, two or three modules side by side in one row, with 1.0&nbsp;m in front, 0.5&nbsp;m behind and 0.5&nbsp;m at the ends of the row. Weight is the manufacturers&rsquo; net weight, 4.5&ndash;6.7&nbsp;kg per kW, plus 10% for field refrigerant (an assumption: no manufacturer consulted gives an operating weight).</p>
+    </details>
+    <details class="maths">
+      <summary>Pumps, buffer tanks and hot water storage</summary>
+      <p class="deriv"><b>Water flows.</b> Flow (L/s) = kW &divide; (4.19 &times; temperature difference). The tool assumes 6&nbsp;K for chilled water, 10&nbsp;K for heating water and 3&nbsp;K for chilled-beam water (beams run on 14&ndash;17&nbsp;°C water, so the difference is small). Condenser water follows the cooling tower rating: 0.681&nbsp;m³/h per nominal tower ton, about 0.054&nbsp;L/s per kWr of chiller.</p>
+      <p class="deriv"><b>Pumps.</b> One duty and one standby pump per circuit, each carrying the full design flow: practice, supported by pump makers&rsquo; duty and standby controls rather than by a design guide. Above 120&nbsp;L/s the tool uses two or more duty pumps and one standby. Each is a vertical in-line pump selected from one maker&rsquo;s 4-pole curves (an indicative selection, not a supplier&rsquo;s), on a concrete inertia base 100&nbsp;mm larger all round and weighing 1.5 times the pump. <b>An assumption that carries weight: the access aisle of 915&nbsp;mm all round each pump</b> comes from a Canadian university&rsquo;s plant room standard; no Australian figure was found. Aisles can be shared between pumps in a row. Motors from 5.5&nbsp;kW need 1&nbsp;m clear above for lifting the motor off.</p>
+      <p class="deriv"><b>Buffer tanks.</b> Chillers need a minimum system water volume of about 3&ndash;6&nbsp;L per kW, and air-source heat pumps in heating 8&ndash;13&nbsp;L per kW. The pipework counts towards it, so a tank only makes up the shortfall. <b>The tool assumes the pipework holds half of the lower figure</b> and draws enough 1,425&nbsp;L vessels (1.0&nbsp;m across, 2.27&nbsp;m tall, room at least 150&nbsp;mm taller) for the other half. Gas boilers are given none.</p>
+      <p class="deriv"><b>Hot water storage.</b> Hotel: 45&nbsp;L per guest at 65&nbsp;°C for two guests a room, plus 30% for stratification, about 117&nbsp;L a room. Apartments: 1.5 times a two-bedroom apartment&rsquo;s peak-hour figure of 75&nbsp;L, about 112&nbsp;L each. At least two vessels. The heat pumps recover the stored water from 10 to 65&nbsp;°C in two hours, in units of 40&nbsp;kW (a carbon dioxide heat pump water heater of the kind designed for this duty).</p>
+    </details>
+    <details class="maths">
+      <summary>Heat pumps at heating water temperatures</summary>
+      <p class="deriv">Heat pump capacities in the data are rated at 7&nbsp;°C outdoors and 45&nbsp;°C leaving water (one series at 50&nbsp;°C). <b>None of the manufacturers&rsquo; documents used here gives a capacity at 55&ndash;65&nbsp;°C water,</b> so the loss you enter is indicative: a common rule is 20&ndash;40% less at 60&ndash;70&nbsp;°C, which is an estimate, not a published figure. The tool sizes each heat pump for its share of the load divided by (1&nbsp;&minus;&nbsp;the loss).</p>
+      <p class="deriv">What the documents do say is where the standard machines stop. The reversible units in the data list a maximum leaving water temperature of 55&nbsp;°C (two series) or 60&nbsp;°C (the four-pipe units). Above that you need a high-temperature heat pump on a natural refrigerant (propane or carbon dioxide), which the data shows reaching 70&ndash;90&nbsp;°C. The cheaper answer is usually to design the heating water at 45&ndash;50&nbsp;°C, which fan-coil units and air-handler coils are selected for.</p>
+      <p class="deriv">Two further derates are left out: cold-morning defrost in heating, and air-cooled machines on a roof above 35&nbsp;°C in cooling (western Sydney peaks exceed 40&nbsp;°C).</p>
+    </details>
+    <details class="maths">
+      <summary>What changed since the 2000s tables</summary>
+      <p class="deriv">The plant space tables long used in design teaching (Parlour, early 2000s) give an area and weight per plant item. Set against current manufacturers&rsquo; data with full service clearances, <b>the boxes have shrunk much more than the rooms</b>:</p>
+      <div class="tablewrap"><table class="data">
+        <thead><tr><th>Item</th><th class="num">2000s table</th><th class="num">Box now</th><th class="num">With clearances now</th><th>What changed</th></tr></thead>
+        <tbody>
+          <tr><td>Water-cooled chillers, 100&ndash;250&nbsp;kWr</td><td class="num">30&nbsp;m², 2.0&nbsp;t</td><td class="num">2.4&ndash;2.6&nbsp;m²</td><td class="num">28&ndash;33&nbsp;m² (pair); 22&ndash;24 with tube pull through a door</td><td>No real shrinkage: small chillers sit on a minimum frame</td></tr>
+          <tr><td>Water-cooled chillers, 1,000&ndash;1,250&nbsp;kWr</td><td class="num">49&nbsp;m², 8.0&nbsp;t</td><td class="num">4.6&ndash;7.1&nbsp;m²</td><td class="num">47&ndash;65&nbsp;m² (pair); 32&ndash;42 via a door</td><td>9&ndash;46% lighter; room about the same unless tubes pull through a door</td></tr>
+          <tr><td>Water-cooled chillers, 2,000&ndash;3,000&nbsp;kWr</td><td class="num">60&nbsp;m², 19&nbsp;t</td><td class="num">7.3&ndash;14.6&nbsp;m²</td><td class="num">66&ndash;100&nbsp;m² (pair); 42&ndash;63 via a door</td><td>40&ndash;64% lighter (screw and oil-free); room the same or larger</td></tr>
+          <tr><td>Cooling towers, 1,600&ndash;1,800&nbsp;kWr</td><td class="num">68&nbsp;m², 8.0&nbsp;t</td><td class="num">18.3&ndash;18.4&nbsp;m²</td><td class="num">about 47&nbsp;m²</td><td>30% less area; operating weight similar</td></tr>
+          <tr><td>Cooling towers, 2,800&ndash;3,000&nbsp;kWr</td><td class="num">99&nbsp;m², 13.2&nbsp;t</td><td class="num">23.7&ndash;28.9&nbsp;m²</td><td class="num">62&ndash;70&nbsp;m²</td><td>30&ndash;37% less area; operating weight similar</td></tr>
+          <tr><td>Gas boilers, 200&ndash;300&nbsp;kW</td><td class="num">28&nbsp;m², 5.6&nbsp;t</td><td class="num">0.95&nbsp;m² each</td><td class="num">about 7&nbsp;m² (pair)</td><td>75% less area, 86% lighter: the biggest change</td></tr>
+          <tr><td>Gas boilers, 2,000&ndash;3,000&nbsp;kW</td><td class="num">71&nbsp;m², 28.5&nbsp;t</td><td class="num">6.6&ndash;10.8&nbsp;m² (pair)</td><td class="num">15&ndash;30&nbsp;m² (pair)</td><td>58&ndash;79% less area, 72&ndash;75% lighter</td></tr>
+          <tr><td>Air-handling plant, about 1 / 5.7 / 14&nbsp;m³/s</td><td class="num">9 / 28 / 38&nbsp;m²</td><td class="num">n/a</td><td class="num">14 / 21&ndash;24 / 30&nbsp;m² tight; 17&ndash;24 / 30&ndash;42 / 46&ndash;60 full</td><td>Small units now larger (bag filters, plenum fans: about 4&nbsp;m long minimum); large ones smaller unless a full coil-withdrawal aisle is kept</td></tr>
+          <tr><td>Duct shafts, all-air, 2,000 / 6,000 / 10,000&nbsp;m² served</td><td class="num">4.9 / 12.1 / 19.6&nbsp;m²</td><td class="num">n/a</td><td class="num">5.0 / 15 / 25&nbsp;m² (tab 3 method)</td><td>The same at 2,000&nbsp;m²; the older figures fall with size, the method does not</td></tr>
+          <tr><td>Heat pumps, DOAS units, chilled beams</td><td class="num">none</td><td class="num">see tab 1</td><td class="num">see tab 1</td><td>Not in the older tables at all</td></tr>
+        </tbody>
+      </table></div>
+      <p class="deriv">The water-cooled rows assume two chillers side by side with 1.0&nbsp;m outer aisles, a 1.2&nbsp;m centre aisle and 1.0&nbsp;m at the non-pull end, as the 2000s figures are recorded on a two-machine basis. Air-cooled chillers are left out: the basis of the older air-cooled figures (one machine or two) is not confirmed, and the comparison turns on it. The older tables are a summary for comparison only; no size in this tool is taken from them.</p>
+      <p class="deriv">The same contrast for heating: at about 600&ndash;650&nbsp;kW an air-to-water heat pump needs about 54&nbsp;m² of roof with its airflow clearances and weighs 4.3&nbsp;t, against about 5&nbsp;m² of plant room and 1.6&nbsp;t for a gas condensing boiler of the same output. About ten times the area and 2.6 times the weight, and it moves from the plant room to the roof.</p>
+    </details>
+    <details class="maths" id="dataPanel">
+      <summary>The data behind the ranges</summary>
+      <p class="deriv">The units used for your current selection, with the source of each (numbered as in the list at the foot of the page). Capacities are at each source&rsquo;s rating condition; weights are operating weights unless marked.</p>
+      <div id="dataTables"></div>
+    </details>
+
+    <div class="nav">
+      <span></span>
+      <button type="button" class="btn" data-nav="next">Next: lay it out to scale</button>
+    </div>
+  </section>
+
+  <!-- ===== Tab 2: Lay it out to scale ===== -->
+  <section class="card" role="tabpanel" id="panel-2" aria-labelledby="tab-2" tabindex="0" hidden>
+    <div class="primer">
+      <h2 class="what">Place every item on a scaled plan, with its clearances drawn, and test the room.</h2>
+      <p>Each item is drawn as its box (solid) and its clearance zone (dashed). <b>Clearance zones may overlap each other</b>, because a real plant room shares access aisles, <b>but not another item or a wall</b>. A chiller&rsquo;s tube-pull zone (hatched) may run out through the door. The checks say what is wrong and why, and the five plant room questions are answered from your layout at the foot of the tab.</p>
+      <p>Drag items from the tray onto the plan, or select one and then select a spot. Drag to move; select an item and use the arrow keys (Shift for 0.5&nbsp;m), <kbd>R</kbd> to rotate and <kbd>Delete</kbd> to return it to the tray. Drag the empty floor to pan.</p>
+    </div>
+
+    <div class="fgrid" style="margin-bottom:var(--s-4)">
+      <fieldset class="grp" style="margin:0">
+        <legend>Plant room</legend>
+        <div class="fgrid" style="grid-template-columns:repeat(auto-fit,minmax(110px,1fr))">
+          <div class="fld"><label for="in-rw">Width (m)</label><input type="number" inputmode="decimal" min="2" max="60" step="0.1" id="in-rw"></div>
+          <div class="fld"><label for="in-rd">Depth (m)</label><input type="number" inputmode="decimal" min="2" max="60" step="0.1" id="in-rd"></div>
+          <div class="fld"><label for="in-rh">Clear height (m)</label><input type="number" inputmode="decimal" min="2" max="12" step="0.1" id="in-rh"></div>
+          <div class="fld"><label for="in-dwall">Door in the</label><select id="in-dwall"><option value="t">top wall</option><option value="r">right wall</option><option value="b">bottom wall</option><option value="l">left wall</option></select></div>
+          <div class="fld"><label for="in-doff">Door from corner (m)</label><input type="number" inputmode="decimal" min="0" step="0.1" id="in-doff"></div>
+          <div class="fld"><label for="in-dw">Door width (m)</label><input type="number" inputmode="decimal" min="0.6" max="8" step="0.1" id="in-dw"></div>
+          <div class="fld"><label for="in-dh">Door height (m)</label><input type="number" inputmode="decimal" min="1.8" max="8" step="0.1" id="in-dh"></div>
+        </div>
+      </fieldset>
+      <fieldset class="grp" style="margin:0">
+        <legend>Roof or plant deck</legend>
+        <div class="fgrid" style="grid-template-columns:repeat(auto-fit,minmax(110px,1fr))">
+          <div class="fld"><label for="in-kw">Width (m)</label><input type="number" inputmode="decimal" min="2" max="80" step="0.1" id="in-kw"></div>
+          <div class="fld"><label for="in-kd">Depth (m)</label><input type="number" inputmode="decimal" min="2" max="80" step="0.1" id="in-kd"></div>
+        </div>
+        <p class="hint">Air-handling unit access allowance</p>
+        <div class="seg" role="group" aria-label="Air-handling unit access allowance">
+          <button type="button" id="pullTight" aria-pressed="true">Tight (shared aisle or door)</button>
+          <button type="button" id="pullFull" aria-pressed="false">Full coil-withdrawal aisle</button>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="l2">
+      <div style="min-width:0">
+        <div class="stagebar">
+          <div class="seg" role="group" aria-label="Which area to lay out">
+            <button type="button" id="areaRoom" aria-pressed="true">Plant room</button>
+            <button type="button" id="areaDeck" aria-pressed="false">Roof or plant deck</button>
+          </div>
+          <div class="zoom">
+            <button type="button" class="ibtn" id="zoomOut" aria-label="Zoom out">&minus;</button>
+            <button type="button" class="ibtn" id="zoomIn" aria-label="Zoom in">+</button>
+            <button type="button" class="ibtn" id="zoomFit">Fit</button>
+          </div>
+        </div>
+        <div class="stage" id="stage" tabindex="0" role="application" aria-label="Scaled plan. Select an item, then use the arrow keys to move it, R to rotate, Delete to return it to the tray. With an item armed from the tray, press Enter to place it in the middle of the view." aria-describedby="fb2"></div>
+        <div class="legendrow" aria-hidden="true">
+          <span><i class="lg-box"></i>equipment box</span>
+          <span><i class="lg-zone"></i>clearance zone (may be shared)</span>
+          <span><i class="lg-pull"></i>tube-pull zone</span>
+          <span><i class="lg-bad"></i>fails a check</span>
+          <span>grid 1&nbsp;m</span>
+        </div>
+        <p class="fb" id="fb2" aria-live="polite"></p>
+      </div>
+      <div class="side">
+        <div class="panel">
+          <h4 id="trayHead">In the tray</h4>
+          <div class="tray" id="tray"></div>
+          <div class="btn-row">
+            <button type="button" class="btn ghost" id="packBtn">Rough first pass</button>
+          </div>
+          <p class="hint">A rough first pass packs every item for this area in rows, without sharing aisles. Rearrange from there.</p>
+        </div>
+        <div class="panel" id="selPanel" hidden>
+          <h4>Selected</h4>
+          <div class="selinfo" id="selInfo"></div>
+          <div class="dpad" role="group" aria-label="Nudge the selected item 0.1 m">
+            <span></span><button type="button" class="ibtn" data-nudge="0,-1" aria-label="Up">&uarr;</button><span></span>
+            <button type="button" class="ibtn" data-nudge="-1,0" aria-label="Left">&larr;</button>
+            <button type="button" class="ibtn" id="rotBtn" aria-label="Rotate 90 degrees">&#8635;</button>
+            <button type="button" class="ibtn" data-nudge="1,0" aria-label="Right">&rarr;</button>
+            <span></span><button type="button" class="ibtn" data-nudge="0,1" aria-label="Down">&darr;</button><span></span>
+          </div>
+          <div class="btn-row" style="margin-top:0">
+            <button type="button" class="btn ghost" id="moveArea">Move to the roof</button>
+            <button type="button" class="btn ghost" id="toTray">Back to the tray</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="results" id="res2"></div>
+
+    <h3>Checks</h3>
+    <ul class="checks" id="checks2"></ul>
+
+    <h3>The five plant room questions, answered from this layout</h3>
+    <ol class="five" id="five"></ol>
+
+    <h3>Print at 1:100</h3>
+    <div class="btn-row" style="margin-top:0">
+      <div class="seg" role="group" aria-label="Paper size">
+        <button type="button" id="paperA4" aria-pressed="false">A4</button>
+        <button type="button" id="paperA3" aria-pressed="true">A3</button>
+      </div>
+      <button type="button" class="btn" id="printBtn">Print the layout</button>
+    </div>
+    <p class="hint" id="printFit"></p>
+    <p class="hint">Print at 100% (&ldquo;Actual size&rdquo;), not &ldquo;Fit to page&rdquo;. Each sheet carries a scale bar: 5&nbsp;m on it measures 50&nbsp;mm when the print is true to scale.</p>
+
+    <details class="maths">
+      <summary>How the checks work</summary>
+      <ul class="deriv">
+        <li><b>Clearance zones.</b> A zone may overlap another item&rsquo;s zone (an aisle used from both sides) but not another item&rsquo;s box or a wall. On the roof or plant deck the edge counts as a wall: a zone past it is space you do not have.</li>
+        <li><b>Tube pull.</b> A chiller&rsquo;s tube-pull zone may cross a wall only where the door is. Otherwise it needs to be inside the room and clear of other boxes.</li>
+        <li><b>Air between units.</b> Air-cooled chillers and heat pumps less than 3&nbsp;m apart are flagged: they can draw in each other&rsquo;s warm discharge air.</li>
+        <li><b>Clear height.</b> The tallest item plus the space it needs above (1.0&nbsp;m over a water-cooled chiller, 1.0&nbsp;m over a pump motor of 5.5&nbsp;kW or more, 0.5&nbsp;m over a boiler, 150&nbsp;mm over a tank) against the clear height you enter. Ducts, pipes and cable trays above the plant need more, so treat a pass as the minimum.</li>
+        <li><b>Replacement route.</b> Every item in the plant room must pass the door on its narrowest side and its height (a tank can be laid on its side; an air-handling unit arrives in sections of its full cross-section). The 1.0&nbsp;m strip inside the door must be clear of boxes, an assumption that keeps the doorway usable.</li>
+        <li><b>Floor loading.</b> Operating weight over the item&rsquo;s own footprint, set against a typical office floor designed for 3.0&nbsp;kPa (AS/NZS 1170.1, offices for general use). Most plant is well above it, which is why plant rooms sit on a slab designed for them. The structure is for the engineer; the number tells you to ask.</li>
+        <li><b>Area totals</b> count the floor on a 0.1&nbsp;m grid, so shared aisles are counted once.</li>
+      </ul>
+    </details>
+    <details class="maths">
+      <summary>What this leaves out</summary>
+      <ul class="deriv">
+        <li><b>Acoustic treatment</b>: spring mounts, flexible connections, attenuators, plant room wall and door construction.</li>
+        <li><b>Structure</b>: slab design, plinths and housekeeping pads (at least 100&nbsp;mm), lifting beams, crane access to the roof.</li>
+        <li><b>Electrical rooms</b>: switchboards need about 0.6&nbsp;m clear with doors open and 1.0&nbsp;m in front of accessible faces (AS/NZS 3000, as quoted second-hand); a board longer than 3&nbsp;m needs two ways out.</li>
+        <li><b>Fire separation</b> of the plant room and the shafts, and refrigerant safety (AS/NZS 5149) in rooms with refrigerating plant.</li>
+        <li><b>Small items</b>: expansion vessels (about 0.74&nbsp;m across, 1.3&ndash;2.0&nbsp;m tall), dosing pots, side-stream filters, valve sets, headers, gas trains and boiler flues.</li>
+        <li><b>A plant room percentage of floor area.</b> The figures commonly quoted are unattributed and the recognised guide is not openly available, so the tool totals your own equipment instead of quoting one.</li>
+        <li><b>Real selections.</b> Every size is a concept-stage allowance. A manufacturer&rsquo;s certified drawing governs.</li>
+      </ul>
+    </details>
+
+    <div class="nav">
+      <button type="button" class="btn ghost" data-nav="back">Back</button>
+      <button type="button" class="btn" data-nav="next">Next: risers</button>
+    </div>
+  </section>
+
+  <!-- ===== Tab 3: Risers ===== -->
+  <section class="card" role="tabpanel" id="panel-3" aria-labelledby="tab-3" tabindex="0" hidden>
+    <div class="primer">
+      <h2 class="what">Size the shafts each riser group needs, and see what they take from the floors.</h2>
+      <p>Air carries heat poorly: a cubic metre of water holds about 3,500 times as much heat per degree as a cubic metre of air. So a system that moves the sensible cooling to water (DOAS with fan-coil units or chilled beams) needs <b>much smaller duct shafts</b> than an all-air VAV system, and somewhat larger pipe risers. Every square metre of shaft is lost on every floor it passes through.</p>
+      <p>Each group below is shown four ways, with your choice highlighted. The pipe riser leaving the plant room is on tab 2 as an item to place.</p>
+    </div>
+    <div class="fgrid" style="max-width:520px">
+      <div class="fld"><label for="in-vS">Supply and outdoor-air riser velocity (m/s)</label><input type="number" inputmode="decimal" min="3" max="12" step="0.5" id="in-vS"><p class="hint">7&nbsp;m/s default; 5&ndash;10.</p></div>
+      <div class="fld"><label for="in-vR">Return and exhaust riser velocity (m/s)</label><input type="number" inputmode="decimal" min="3" max="10" step="0.5" id="in-vR"><p class="hint">6&nbsp;m/s default; 4&ndash;8.</p></div>
+    </div>
+    <div id="res3"></div>
+
+    <details class="maths">
+      <summary>How the shafts are sized</summary>
+      <p class="deriv"><b>Air shaft</b>, for each duct in the riser: area = airflow (m³/s) &divide; velocity &times; <i>k</i> &times; 1.2. The 1.2 is 20% spare, as two Australian university design standards require for main riser ducts. Supply and outdoor air run at 7&nbsp;m/s by default (the maximum one standard sets for riser ducts in offices); return and exhaust at 6&nbsp;m/s.</p>
+      <p class="deriv"><b>Assumptions that carry weight.</b> <i>k</i> grosses the duct up to the shaft it needs: insulation, flanges and a 100&nbsp;mm working gap. It is 1.5 for an insulated supply duct and 1.35 for an uninsulated return, rising to 2.0 for any duct smaller than 1&nbsp;m² where the gap is a larger share. These come from geometry, not from a published rule: none was found. Return air is taken as 90% of supply in VAV, and exhaust or relief as 80% of the outdoor air in DOAS (toilet and kitchen exhaust leave through their own risers).</p>
+      <p class="deriv"><b>Pipe riser.</b> Chilled water at 6&nbsp;K, heating water at 10&nbsp;K and chilled-beam water at 3&nbsp;K, each with a flow and a return pipe. Each pipe is the smallest steel size whose velocity stays within 2.4&nbsp;m/s and within one university standard&rsquo;s limit for that size (1.5&nbsp;m/s up to DN100, 1.8&nbsp;m/s at DN150&ndash;200). Its footprint is a square of the outside diameter plus insulation on both sides (50&nbsp;mm chilled, 40&nbsp;mm heating) plus a 100&nbsp;mm gap, then 20% spare. With chilled beams the primary chilled water carries the latent and outdoor-air load (the group&rsquo;s cooling less its sensible load) and the beam water the sensible load. Each group&rsquo;s cooling and heating are its share of your design capacities by floor area.</p>
+      <p class="deriv"><b>VRF (comparison only).</b> Refrigerant pipes are small, so the riser is set by the number of systems: about 0.04&nbsp;m² for each system of about 90&nbsp;kW (a worked estimate, not a manufacturer&rsquo;s rule). VRF still needs a DOAS duct riser for the outdoor air.</p>
+      <p class="deriv">Not included: electrical and communications risers (no recognised source for their area was found), hydraulics, fire services, fire dampers (in Australian practice usually at each floor branch, outside the shaft) and a standing zone in walk-in risers.</p>
+    </details>
+
+    <div class="nav">
+      <button type="button" class="btn ghost" data-nav="back">Back</button>
+      <span></span>
+    </div>
+  </section>
+
+  <div id="printSheet" aria-hidden="true"></div>
+
+  <footer class="page">
+    <p>Where the numbers come from, so you can check them and go further. Manufacturers are named only here; the tool shows ranges across them.</p>
+    <ul class="sources" id="sources">
+      <li id="src-S1">[S1] Carrier, <i>30XW water-cooled liquid chiller</i> catalogue (Asia), performance data, pp. 4&ndash;7 (2017). [S2] Carrier, <i>AquaForce 30XW installation, operation and maintenance instructions</i>, 13458 (09.2023), clearances pp. 10&ndash;11.</li>
+      <li id="src-S3">[S3] Daikin Applied UK, <i>EWWD-VZ product manual</i> (2018), pp. 12&ndash;13, 33. [S4] Daikin Applied UK, <i>EWWD-DZ product manual</i> (2018).</li>
+      <li id="src-S5">[S5] Smardt, <i>Water-cooled oil-free centrifugal chiller IOM</i>, TD0061R-C (2012), Tables 2 and 5. [S6] Smardt, <i>V-Class water-cooled chillers, WB series</i> (2019), p. 12.</li>
+      <li id="src-S7">[S7] Carrier, <i>AquaEdge 19DV</i> catalogue (2025), pp. 6&ndash;7.</li>
+      <li id="src-S8">[S8] Johnson Controls, <i>York YVAA air-cooled screw chillers IOM</i>, 201.28-NM1.1 (2024), Fig. 7, Tables 3 and 5. Capacities per frame interpolated.</li>
+      <li id="src-S9">[S9] Daikin Applied UK, <i>EWYT~B product manual</i> (2021), technical specification pp. 17&ndash;19 and heating performance pp. 35&ndash;36, space requirements p. 70.</li>
+      <li id="src-S10">[S10] Trane, <i>CXAF SE/HE IOM</i>, CG-SVX057H-GB (2026), Tables 1&ndash;2, Figs 3a&ndash;6d. [S15] Trane, <i>Sintesis Balance CMAF multi-pipe unit</i> product sheet (2024), pp. 2, 5&ndash;6.</li>
+      <li id="src-S11">[S11] Aermec, <i>NRB 0800H&ndash;2406H reversible air/water heat pump</i> datasheet (empty weights; hot water to 55&nbsp;°C).</li>
+      <li id="src-S12">[S12] Mitsubishi Electric, <i>EAHV-M1500/1800YCL modular chiller and heat pump</i> product sheet (2025): heating outlet water 25&ndash;55&nbsp;°C. [S16] Mitsubishi Electric Australia, <i>QAHV-N560YA-HPB hot water heat pump</i> flyer (2022) and specification sheet: 40&nbsp;kW at 65&nbsp;°C, 55&ndash;90&nbsp;°C outlet.</li>
+      <li id="src-S13">[S13] Daikin, <i>Product catalogue chillers and heat pumps</i>, ECPEN26-411 (EWYK-QZ, propane, to 70&nbsp;°C). [S14] Daikin, <i>EWYS-4Z air-to-water polyvalent</i> brochure, ECPEN24-446 (2024): hot water 30&ndash;60&nbsp;°C. [S17] pv magazine, &ldquo;Carrier launches new air-source heat pumps&rdquo; (7 Feb 2025), AquaSnap 61AQ, propane, to 75&nbsp;°C (secondary source).</li>
+      <li id="src-S18">[S18] Hoval, <i>Gas boiler catalogue 2026/27</i>, UltraGas 2 technical data and space requirements. [S19] Viessmann, <i>Vitocrossal 300 CR3B</i> datasheet 5605 007 (2016), pp. 3&ndash;5.</li>
+      <li id="src-S20">[S20] Baltimore Aircoil, <i>Series 3000 engineering data</i> (2023), pp. C15&ndash;C18. [S21] Baltimore Aircoil, <i>Layout guidelines</i> (2023), Table 1. [S22] SPX Cooling, <i>Marley NC steel cooling tower engineering data</i>, sea_TECH-NC-20 (2020), pp. 5, 8.</li>
+      <li id="src-A1">[A1] Carrier, <i>AERO 39M</i> technical specifications and product data 39M-22PD (2026), physical data and section dimensions. [A2] Trane, <i>Performance Climate Changer dimensional data</i>, CLCH-PRC023L-EN (2025), Table 1 service clearances, Table 14.</li>
+      <li id="src-A3">[A3] Swegon, <i>GOLD RX</i> size table and <i>sizing, installation, dimensions and weights</i>, version F (2025); <i>GOLD F accessories</i> (2025), pp. 274&ndash;275. [A4] Greenheck, <i>Energy recovery ventilators</i> catalogue (2019) and ERV IOM 476412 (2021), service clearances.</li>
+      <li id="src-V1">[V1] VRF outdoor units: Daikin Australia, <i>VRV general catalogue</i> PCTVAU2301 (2023), and VRV IV+ data book EEDEN20 (2020); Mitsubishi Electric Australia, <i>City Multi</i> brochure, and data book MEES21K124 (2022); Toshiba, <i>SMMS-u</i> product data and installation manual; Samsung, <i>DVM S2</i> PI sheets and technical data book (2025); LG, Multi V i product pages. Combined systems and per-kW figures are arithmetic on these.</li>
+      <li id="src-P1">[P1] Grundfos, <i>TP, TPD data booklet, 50&nbsp;Hz</i>, V7124417 (2025), dimensions, curves, foundations pp. 140&ndash;142; <i>NBG, NKG data booklet</i>, 96653948 (2025); <i>TP, TPD installation and operating instructions</i>, 96653082 (2026), p. 10. [P2] McGill University, <i>Building design standards: mechanical rooms</i> (2024), p. 3: 915&nbsp;mm around pumps.</li>
+      <li id="src-B1">[B1] Carrier, <i>30RB/30RQ IOM</i>, 10597 (2024), p. 24; Trane, &ldquo;Chiller minimum loop time&rdquo; (2025); Mitsubishi Electric, <i>CAHV-Z450YA-HPB data book</i> (2026), p. 36; Ideal Heating, <i>ECOMOD buffer tanks</i> (2025). [B2] Rheem Australia, <i>Commercial and industrial brochure</i> (2020), pp. 54&ndash;56, 82; Mitsubishi Electric, <i>QAHV application guide</i> v1.3 (2023), pp. 6, 12, quoting CIBSE Guide G.</li>
+      <li id="src-R1">[R1] Macquarie University, <i>Mechanical services design standard</i> V1.4 (2018), cl. 5.14.2, 5.20.1; UNSW, <i>Design and construction requirements E.2, mechanical services</i> Rev 6.3 (2019), air velocities, duct risers, pipe sizes; University of Queensland, <i>DS-07 mechanical design standard</i> Rev 3.0 (2025), cl. 1.18. Outdoor air of 10&nbsp;L/s per person (AS 1668.2) and 10&nbsp;m² per person and 0.3&nbsp;L/s per m² supplementary air (Property Council office guide) are quoted second-hand.</li>
+      <li id="src-X1">[X1] Parlour, R. P., <i>Building Services: Engineering for Architects: A Guide to Integrated Design</i>, early 2000s edition (Integral Publishing): plant, shaft and air-handling space allowances as recorded in the unit&rsquo;s teaching data, used only for the comparison panel. Floor loading: AS/NZS 1170.1:2002, Table 3.1, offices for general use, 3.0&nbsp;kPa. Pipe outside diameters: standard steel tube sizes.</li>
+    </ul>
+    <p>Built by the IEQ Lab, Sydney School of Architecture, Design and Planning, for the BPSD6030 Assignment 2 plant room and riser drawings. The data were compiled from current manufacturers&rsquo; documents in November 2026; all of them state that their figures are indicative and that certified drawings govern. Your inputs and layout are kept in this browser only, so they are still there if you reload the page; nothing is sent anywhere. Self-contained, open-source, no tracking.</p>
+    <p>Revised November 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.</p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  function $(id) { return document.getElementById(id); }
+  function fmt(x, d) {
+    if (x == null || !isFinite(x)) return "—";
+    return x.toLocaleString("en-AU", { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
+  }
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;"); }
+  function rng(a, b, d, unit) {
+    var A = fmt(a, d), B = fmt(b, d);
+    return (A === B ? A : A + "–" + B) + (unit ? "&nbsp;" + unit : "");
+  }
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  function sum(a) { var s = 0; a.forEach(function (x) { s += x; }); return s; }
+  function cap1(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  // =====================================================================
+  // DATA. Every row is from teachr bpsd6030/lectures/week10/plant_room_data
+  // (generation_plant.md and airside_and_risers.md). Source keys resolve in
+  // the footer. Dimensions in mm, weights in kg (operating unless noted).
+  // =====================================================================
+  var MAKER = { S1: "a", S3: "b", S4: "b", S5: "c", S7: "a", S8: "d", S9: "b", S10: "e", S11: "f", S12: "g", S14: "b", S15: "e", S18: "h", S19: "i", S20: "j", S22: "k" };
+  // water-cooled chillers, screw and oil-free magnetic centrifugal: [kWr, L, W, H, kg, src]
+  var WC = [
+    [249.5, 2742, 960, 1568, 2002, "S1"], [540.2, 2763, 970, 1693, 2684, "S1"], [890.6, 3080, 1135, 1950, 3979, "S1"],
+    [1258, 4088, 1526, 2563, 7296, "S1"], [1745, 4787, 1258, 2307, 8934, "S1"], [2288, 4602, 2570, 1896, 11648, "S1"],
+    [610, 3722, 1178, 2123, 2977, "S3"], [894, 3690, 1233, 2292, 3611, "S3"], [1288, 4792, 1487, 2296, 6220, "S3"],
+    [1552, 4792, 1484, 2296, 6690, "S3"], [2051, 4750, 1753, 2498, 9070, "S3"],
+    [320, 3625, 1055, 1865, 1973, "S4"], [528, 3625, 1055, 1865, 2347, "S4"], [700, 3585, 1160, 1985, 3102, "S4"],
+    [1056, 3580, 1270, 2200, 4292, "S4"], [1478, 3580, 1270, 2200, 4699, "S4"], [2173, 4812, 1510, 2290, 6920, "S4"],
+    [210, 2062, 1145, 2049, 2055, "S5"], [500, 3701, 1145, 2049, 3125, "S5"], [950, 3820, 1332, 2314, 4509, "S5"],
+    [1200, 4588, 1241, 2310, 5466, "S5"], [1500, 5035, 1369, 2293, 7008, "S5"], [2400, 5585, 1956, 2409, 9662, "S5"]
+  ];
+  // large conventional centrifugal (used only above the screw/oil-free range)
+  var WC_CENT = [[1055, 4533, 2469, 2852, 13859, "S7"], [1758, 5053, 2469, 2852, 14906, "S7"], [2462, 5140, 2832, 3301, 20234, "S7"], [3517, 5234, 3335, 3677, 26553, "S7"]];
+  // air-cooled chillers: [kWr cooling, L, W, H, kg, src]
+  var AC = [
+    [75, 2227, 1211, 1801, 772, "S9"], [153, 3426, 1211, 1801, 1214, "S9"], [270, 3418, 2224, 2516, 2527, "S9"],
+    [375, 4316, 2224, 2516, 3343, "S9"], [570, 5211, 2224, 2516, 4305, "S9"],
+    [525, 5164, 2243, 2403, 5434, "S8"], [720, 7397, 2243, 2403, 6033, "S8"], [1020, 9632, 2243, 2403, 8109, "S8"],
+    [1390, 11860, 2243, 2405, 10001, "S8"], [1750, 15220, 2243, 2405, 13510, "S8"]
+  ];
+  // air-to-water heat pumps, 2-pipe: [heating kW at A7/W45, L, W, H, kg, src, empty-weight flag]
+  var HP2 = [
+    [82.24, 2227, 1211, 1801, 772, "S9"], [169.8, 3426, 1211, 1801, 1214, "S9"], [300.01, 3418, 2224, 2516, 2527, "S9"],
+    [432.79, 4316, 2224, 2516, 3343, "S9"], [627.45, 5211, 2224, 2516, 4305, "S9"],
+    [127, 2505, 1997, 2412, 1327, "S10"], [208, 2505, 1997, 2412, 1630, "S10"], [220, 3255, 2232, 2531, 2044, "S10"], [338, 3255, 2232, 2531, 2702, "S10"],
+    [215, 2780, 2200, 2450, 2520, "S11", 1], [343.9, 3970, 2200, 2450, 3250, "S11", 1], [412.6, 3970, 2200, 2450, 3340, "S11", 1], [643.2, 6350, 2200, 2450, 5030, "S11", 1],
+    [150, 3400, 1080, 2350, 1315, "S12"], [180, 3400, 1080, 2350, 1315, "S12"]
+  ];
+  // four-pipe (multi-pipe) heat pumps: [heating kW, L, W, H, kg, src, cooling kW]
+  var HP4 = [
+    [290.3, 4520, 2200, 2530, 2831, "S15", 279.8], [437.7, 4520, 2200, 2530, 3354, "S15", 423.4],
+    [556.9, 5645, 2200, 2530, 4232, "S15", 535.6], [658.3, 6770, 2200, 2530, 4761, "S15", 632.0],
+    [403.1, 5825, 2285, 2465, 6540, "S14", 393.1], [536.1, 6725, 2285, 2465, 7560, "S14", 532.1],
+    [650.4, 8525, 2285, 2465, 9540, "S14", 644.4], [790.3, 8525, 2285, 2465, 10820, "S14", 765.7]
+  ];
+  // gas condensing boilers, floor-standing modular: [kW at 80/60, depth L, W, H, kg dry+water, src]
+  var BOIL = [
+    [139, 1060, 720, 1953, 595, "S18"], [218, 1160, 820, 1998, 770, "S18"], [362, 1510, 930, 1953, 1232, "S18"],
+    [653, 1600, 1110, 2264, 1644, "S18"], [926, 1786, 1290, 2285, 2336, "S18"], [1447, 2104, 1560, 2425, 3563, "S18"]
+  ];
+  // large shell boilers (shown as an alternative in the range text only)
+  var SHELL = [[720, 3021, 1281, 1676, 2960, "S19"], [895, 3221, 1281, 1676, 3187, "S19"], [1006, 3338, 1463, 1676, 3538, "S19"], [1280, 3688, 1463, 1676, 4018, "S19"]];
+  // cooling towers, one cell: [kWr served, L (intake face), W (across intakes), H, kg op, src]
+  var CT = [
+    [601, 2591, 5512, 2997, 6804, "S20"], [1030, 2591, 5512, 2997, 6881, "S20"], [1864, 2997, 6121, 3708, 9312, "S20"],
+    [3222, 3607, 6579, 5004, 15712, "S20"], [4903, 4267, 7341, 6833, 22807, "S20"],
+    [696, 1988, 3912, 3105, 3542, "S22"], [1013, 2559, 4318, 3124, 4613, "S22"], [1576, 2559, 5537, 3638, 7172, "S22"],
+    [1991, 3016, 6071, 3651, 8932, "S22"], [2427, 3626, 6401, 3651, 11260, "S22"], [2916, 4235, 6833, 3651, 13666, "S22"]
+  ];
+  // vertical in-line pumps by flow band: [max L/s, L1, W, H (mm), kg, motor kW]
+  var PUMP = [[15, 620, 469, 848, 177, 5.5], [40, 670, 539, 1072, 317, 15], [80, 800, 623, 1187, 407, 22], [120, 900, 636, 1387, 592, 37]];
+  // end-suction pumps on a base frame for the same bands: [L, W, H mm]
+  var PUMP_ES = [[999, 490, 565], [1143, 540, 610], [1359, 610, 705], [1624, 730, 855]];
+  // hot water vessels: [litres, H, overall dia, body dia (mm), kg empty]
+  var VESSEL = [[920, 2200, 1000, 800, 136], [2960, 2845, 1450, 1250, 334], [5180, 3128, 1800, 1600, 660]];
+  // steel pipe [DN, OD mm] and one standard's velocity limits by size [DN, m/s]
+  var PIPE = [[25, 33.7], [32, 42.4], [40, 48.3], [50, 60.3], [65, 76.1], [80, 88.9], [100, 114.3], [125, 139.7], [150, 168.3], [200, 219.1], [250, 273], [300, 323.9], [350, 355.6], [400, 406.4]];
+  var VLIM = [[15, .5], [20, .7], [25, 1.0], [50, 1.5], [100, 1.5], [150, 1.8], [200, 1.8], [250, 2.2], [300, 2.5]];
+
+  var TANK_L = 1425, TANK_D = 1.0, TANK_H = 2.265, TANK_KG = 180 + 1425;
+  var KPA_OFFICE = 3.0;
+
+  // =====================================================================
+  // STATE
+  // =====================================================================
+  var EXAMPLE = {
+    v: 1,
+    cool: 1200, heat: 600, coolPlant: "wc", heatPlant: "hp", nCool: 2, spareCool: false, nHeat: 2, spareHeat: false,
+    hwt: "45", derate: 0,
+    groups: [
+      { name: "Retail and office, ground to level 5", area: 6000, floors: 6, sys: "vav", sens: 60, mpp: 10 },
+      { name: "Hotel, levels 6 to 8", area: 2000, floors: 3, sys: "fcu", sens: 50, mpp: 15 }
+    ],
+    dt: 10, oaPP: 10, supp: 0.3, rooms: 60, apts: 0,
+    room: { w: 13, d: 9.4, h: 4.5, dwall: "r", doff: 1.4, dw: 2.0, dh: 2.7 },
+    deck: { w: 26, d: 20 },
+    ahuFull: false, vS: 7, vR: 6, paper: "A3",
+    pos: {}
+  };
+  // The worked example's plant room, arranged by hand to share aisles and pull one
+  // chiller's tubes through the door (box centres in metres from the top-left corner).
+  var EXAMPLE_ROOM = {
+    "wc-1": [10.14, 2.4, 0], "wc-2": [10.14, 4.58, 180],
+    "pchw-1": [1.45, 6.58, 0], "pchw-2": [3.4, 6.58, 0], "pcw-1": [5.35, 6.58, 0], "pcw-2": [7.3, 6.58, 0], "phhw-1": [9.25, 6.58, 0], "phhw-2": [11.2, 6.58, 0],
+    "tchw-1": [0.75, 8.4, 0], "tchw-2": [2.0, 8.4, 0], "thhw-1": [3.25, 8.4, 0], "thhw-2": [4.5, 8.4, 0],
+    "dhw-1": [1.05, 1.5, 0], "dhw-2": [2.8, 1.5, 0], "dhw-3": [4.55, 1.5, 0], "riser-1": [12.0, 8.4, 180]
+  };
+  function exampleLayout() {
+    M.items.forEach(posOf);
+    pack("deck", M.items);
+    M.items.forEach(function (it) {
+      var e = EXAMPLE_ROOM[it.id];
+      if (e) S.pos[it.id] = { a: "room", on: true, x: e[0], y: e[1], r: e[2] };
+    });
+  }
+  var BLANK_GROUP = { name: "", area: null, floors: null, sys: "vav", sens: 60, mpp: 10 };
+  var S = clone(EXAMPLE);
+  var origin = "example";
+  var ui = { tab: 0, area: "room", sel: null, armed: null };
+  var STORE = "tt-bpsd6030-plant-room";
+
+  function save() {
+    try { localStorage.setItem(STORE, JSON.stringify({ S: S, origin: origin })); } catch (e) {}
+  }
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORE); if (!raw) return false;
+      var o = JSON.parse(raw);
+      if (!o || !o.S || o.S.v !== 1 || !Array.isArray(o.S.groups)) return false;
+      S = o.S; origin = o.origin || "mine";
+      return true;
+    } catch (e) { return false; }
+  }
+
+  // =====================================================================
+  // SIZING
+  // =====================================================================
+  function nearby(data, kW) {
+    var lo = Infinity, hi = -Infinity;
+    data.forEach(function (p) { lo = Math.min(lo, p[0]); hi = Math.max(hi, p[0]); });
+    var pts = data.filter(function (p) { return p[0] >= 0.7 * kW && p[0] <= 1.4 * kW; });
+    if (pts.length < 2) {
+      pts = data.slice().sort(function (a, b) { return Math.abs(Math.log(a[0] / kW)) - Math.abs(Math.log(b[0] / kW)); }).slice(0, 3);
+    }
+    function span(i, s) { var a = Infinity, b = -Infinity; pts.forEach(function (p) { var v = p[i] * s; a = Math.min(a, v); b = Math.max(b, v); }); return [a, b]; }
+    var makers = {};
+    pts.forEach(function (p) { makers[MAKER[p[5]] || p[5]] = 1; });
+    return {
+      pts: pts, cap: span(0, 1), L: span(1, .001), W: span(2, .001), H: span(3, .001), kg: span(4, 1),
+      makers: Object.keys(makers).length, below: kW < lo / 1.15, above: kW > hi * 1.15, lo: lo, hi: hi,
+      empty: pts.some(function (p) { return p[6] === 1; })
+    };
+  }
+  function dataNote(nb, unit) {
+    return nb.pts.length + " unit" + (nb.pts.length > 1 ? "s" : "") + " from " + nb.makers + " manufacturer" + (nb.makers > 1 ? "s" : "") +
+      ", " + rng(nb.cap[0], nb.cap[1], 0, unit) + ". Drawn at the largest: " + fmt(nb.L[1], 1) + " &times; " + fmt(nb.W[1], 1) + "&nbsp;m.";
+  }
+  function boxTxt(nb) {
+    return rng(nb.L[0], nb.L[1], 1) + " &times; " + rng(nb.W[0], nb.W[1], 1) + "&nbsp;m, " + rng(nb.H[0], nb.H[1], 1) + "&nbsp;m high";
+  }
+  function tTxt(a, b, extra) { return rng(a / 1000, b / 1000, 1, "t") + (extra || " operating") + " each"; }
+
+  function pipeSize(Ls) {
+    if (!(Ls > 0)) return null;
+    function vlim(dn) {
+      for (var i = 0; i < VLIM.length - 1; i++) {
+        if (dn <= VLIM[i + 1][0]) { var a = VLIM[i], b = VLIM[i + 1]; return a[1] + (b[1] - a[1]) * (dn - a[0]) / (b[0] - a[0]); }
+      }
+      return 2.5;
+    }
+    for (var i = 0; i < PIPE.length; i++) {
+      var dn = PIPE[i][0], v = (Ls / 1000) / (Math.PI / 4 * Math.pow(dn / 1000, 2));
+      if (v <= Math.min(2.4, vlim(dn)) + 1e-9) return { dn: dn, od: PIPE[i][1], v: v };
+    }
+    var last = PIPE[PIPE.length - 1];
+    return { dn: last[0], od: last[1], v: (Ls / 1000) / (Math.PI / 4 * Math.pow(last[0] / 1000, 2)), over: true };
+  }
+  function pipePair(name, kW, dT, ins) {
+    var Ls = kW > 0 ? kW / (4.19 * dT) : 0, p = pipeSize(Ls);
+    if (!p) return null;
+    var side = p.od / 1000 + 2 * ins + 0.1;
+    return { name: name, Ls: Ls, dn: p.dn, v: p.v, area: 2 * side * side * 1.2, over: p.over };
+  }
+
+  // the riser for one group, one system
+  function riser(g, sys) {
+    var A = g.area, out = { air: [], pipes: [], ref: 0 };
+    function duct(name, q, v, kBig) {
+      var Q = q * A / 1000, net = Q / v, k = net < 1 ? 2.0 : kBig;
+      out.air.push({ name: name, q: q, Q: Q, net: net, k: k, area: net * k * 1.2 });
+    }
+    if (sys === "vav") { duct("Supply", g.qVav, S.vS, 1.5); duct("Return", 0.9 * g.qVav, S.vR, 1.35); }
+    else { duct("Outdoor air", g.oa, S.vS, 1.5); duct("Exhaust and relief", 0.8 * g.oa, S.vR, 1.35); }
+    if (sys === "vav" || sys === "fcu") {
+      out.pipes.push(pipePair("Chilled water", g.cool, 6, 0.05), pipePair("Heating water", g.heat, 10, 0.04));
+    } else if (sys === "beam") {
+      out.pipes.push(pipePair("Primary chilled water", Math.max(0, g.cool - g.sensKW), 6, 0.05), pipePair("Chilled-beam water", g.sensKW, 3, 0.05), pipePair("Heating water", g.heat, 10, 0.04));
+    } else if (sys === "vrf") {
+      out.nsys = g.cool > 0 ? Math.ceil(g.cool / 90) : 0;
+      out.ref = 0.04 * out.nsys;
+    }
+    out.pipes = out.pipes.filter(Boolean);
+    out.airTot = sum(out.air.map(function (d) { return d.area; }));
+    out.pipeTot = sum(out.pipes.map(function (p) { return p.area; })) + out.ref;
+    out.tot = out.airTot + out.pipeTot;
+    out.plate = g.floors > 0 ? A / g.floors : null;
+    out.pct = out.plate ? 100 * out.tot / out.plate : null;
+    out.lost = g.floors > 0 ? out.tot * g.floors : null;
+    return out;
+  }
+
+  var SYS = {
+    vav: "All-air VAV",
+    fcu: "DOAS with fan-coil units",
+    beam: "DOAS with chilled beams",
+    vrf: "VRF with DOAS (comparison only)"
+  };
+  var SYS_LONG = {
+    vav: "All-air VAV",
+    fcu: "DOAS with fan-coil units",
+    beam: "DOAS with chilled beams",
+    vrf: "VRF with DOAS (comparison only: outside the Assignment 2 brief, which requires a water-based system)"
+  };
+
+  function model() {
+    var M = { rows: [], items: [], flags: [], groups: [] };
+    var gs = S.groups.filter(function (g) { return g.area > 0; });
+    var totA = sum(gs.map(function (g) { return g.area; }));
+    var cool = S.cool > 0 ? S.cool : 0, heat = S.heat > 0 ? S.heat : 0;
+    var der = (S.hwt === "45" ? 0 : Math.min(60, Math.max(0, S.derate || 0))) / 100;
+    gs.forEach(function (g0, i) {
+      var g = {
+        idx: S.groups.indexOf(g0), name: g0.name || "Riser group " + (S.groups.indexOf(g0) + 1), area: g0.area, floors: g0.floors > 0 ? Math.round(g0.floors) : null,
+        sys: g0.sys, sens: g0.sens > 0 ? g0.sens : 0, mpp: g0.mpp > 0 ? g0.mpp : 10
+      };
+      g.share = totA > 0 ? g.area / totA : 0;
+      g.cool = cool * g.share; g.heat = heat * g.share;
+      g.sensKW = g.sens * g.area / 1000;
+      g.qVav = S.dt > 0 ? g.sens / (1.2 * S.dt) : 0;
+      g.oa = (S.oaPP > 0 ? S.oaPP : 0) / g.mpp + (S.supp > 0 ? S.supp : 0);
+      M.groups.push(g);
+    });
+    var vrfA = sum(M.groups.filter(function (g) { return g.sys === "vrf"; }).map(function (g) { return g.area; }));
+    var cShare = totA > 0 ? (totA - vrfA) / totA : 1;
+    var coolC = cool * cShare, heatC = heat * cShare;
+    M.central = { cool: coolC, heat: heatC, vrfCool: cool - coolC };
+    M.der = der;
+
+    function addRow(r) {
+      M.rows.push(r);
+      for (var i = 0; i < r.count; i++) {
+        var it = Object.assign({}, r.item);
+        it.id = r.key + "-" + (i + 1);
+        it.name = r.item.short + (r.count > 1 ? " " + (i + 1) : "") + (r.item.grp ? ", group " + r.item.grp : "") + (r.standby && i === r.count - 1 ? " (standby)" : "");
+        it.tag = r.item.tag ? r.item.tag + (i + 1) : r.item.grp ? r.item.short + (r.count > 1 ? " " + (i + 1) : "") + " (G" + r.item.grp + ")" : null;
+        it.row = r;
+        M.items.push(it);
+      }
+    }
+    var nC = Math.max(1, Math.round(S.nCool || 1)), nCC = nC + (S.spareCool ? 1 : 0);
+    var nH = Math.max(1, Math.round(S.nHeat || 1)), nHH = nH + (S.spareHeat ? 1 : 0);
+    var CLR_AIR = "2.0&nbsp;m on the coil sides, 1.5&nbsp;m at each end, about 3&nbsp;m between units, nothing above";
+    var MFR_AIR = "Manufacturers: 1.0&ndash;2.2&nbsp;m on the coil sides, 1.0&ndash;1.5&nbsp;m at the ends (1.2&ndash;1.5&nbsp;m at the control panel), 3&nbsp;m or double the side clearance between units, open above. A wall taller than the unit needs a specialist check.";
+
+    // ---- cooling plant ----
+    if (coolC > 0) {
+      var per = coolC / nC;
+      if (S.coolPlant === "wc") {
+        var big = per > 2400 * 1.15, nb = nearby(big ? WC_CENT : WC, per);
+        addRow({
+          key: "wc", cat: "plant", name: "Water-cooled chiller", count: nCC, standby: S.spareCool, svc: "cool", where: "room",
+          each: fmt(per) + "&nbsp;kWr", box: boxTxt(nb), wt: tTxt(nb.kg[0], nb.kg[1]),
+          clr: "1.0&nbsp;m on both long sides and at one end; tube pull at the other end, the length of the unit (may run out through a door or louvre); 1.0&nbsp;m above",
+          mfr: "Manufacturers: 0.7&ndash;1.2&nbsp;m on the long sides, 1.0&ndash;1.5&nbsp;m at the ends, 0.5&ndash;0.9&nbsp;m above; tube removal at one end about the unit length (2.6&ndash;4.5&nbsp;m).",
+          note: dataNote(nb, "kWr") + (big ? " Above 2,400&nbsp;kWr the data has only conventional centrifugal chillers, two to three times heavier per kW." : ""),
+          flags: nb.above || nb.below ? ["<b>Outside the data.</b> " + fmt(per) + "&nbsp;kWr a machine is " + (nb.above ? "above" : "below") + " the range found (" + fmt(nb.lo) + "&ndash;" + fmt(nb.hi) + "&nbsp;kWr). " + (nb.above ? "Split the plant into more chillers." : "Use fewer, larger chillers.")] : [],
+          nb: nb, data: big ? WC_CENT : WC, unit: "kWr",
+          item: { kind: "wc", short: "Chiller", svc: "cool", area0: "room", L: nb.L[1], W: nb.W[1], H: nb.H[1], kg: nb.kg[1], clr: { e1: 1.0, e2: 0, s1: 1.0, s2: 1.0, top: 1.0 }, pull: true, piece: [nb.W[1], nb.H[1]], noisy: true }
+        });
+        var nt = nearby(CT, per), intake = per < 1500 ? 1.5 : per < 2500 ? 1.8 : per < 4000 ? 2.4 : 2.6;
+        addRow({
+          key: "ct", cat: "plant", name: "Cooling tower", count: nCC, standby: S.spareCool, svc: "water", where: "deck",
+          each: "one cell for each chiller, " + fmt(per) + "&nbsp;kWr served", box: boxTxt(nt) + " (the second figure is across the air intakes)", wt: tTxt(nt.kg[0], nt.kg[1], " operating (about half that to lift in)"),
+          clr: fmt(intake, 1) + "&nbsp;m from each air-intake face, 0.6&nbsp;m at the blank end, 1.2&nbsp;m at the piping end; fan discharge at or above the surrounding walls",
+          mfr: "Manufacturer: 1.5&ndash;2.7&nbsp;m from each intake face to a solid wall for one cell (2.3&ndash;4.3&nbsp;m for two cells); 0.6&nbsp;m and 1.2&nbsp;m at the ends. A second maker gives no figure.",
+          note: dataNote(nt, "kWr") + " Keep it well away from outdoor-air intakes.",
+          flags: per < 600 / 1.15 ? ["<b>Below the data.</b> The smallest tower in the data serves about 350&ndash;700&nbsp;kWr; a smaller one is drawn at that size."] : [],
+          nb: nt, data: CT, unit: "kWr served",
+          item: { kind: "ct", short: "Cooling tower", svc: "water", area0: "deck", L: nt.L[1], W: nt.W[1], H: nt.H[1], kg: nt.kg[1], clr: { e1: 0.6, e2: 1.2, s1: intake, s2: intake, top: 0 }, piece: null, noisy: true }
+        });
+      } else if (S.coolPlant === "ac") {
+        var na = nearby(AC, per);
+        addRow({
+          key: "ac", cat: "plant", name: "Air-cooled chiller", count: nCC, standby: S.spareCool, svc: "cool", where: "deck",
+          each: fmt(per) + "&nbsp;kWr", box: boxTxt(na), wt: tTxt(na.kg[0], na.kg[1]), clr: CLR_AIR, mfr: MFR_AIR,
+          note: dataNote(na, "kWr") + " Rated at 35&nbsp;°C outdoors; a hotter roof gets less.",
+          flags: na.above ? ["<b>Outside the data.</b> " + fmt(per) + "&nbsp;kWr a machine is above the range found (to " + fmt(na.hi) + "&nbsp;kWr). Split the plant into more chillers."] : [],
+          nb: na, data: AC, unit: "kWr",
+          item: { kind: "ac", short: "Air-cooled chiller", svc: "cool", area0: "deck", L: na.L[1], W: na.W[1], H: na.H[1], kg: na.kg[1], clr: { e1: 1.5, e2: 1.5, s1: 2.0, s2: 2.0, top: 0 }, airflow: true, noisy: true }
+        });
+      } else {
+        var need = Math.max(per, heatC / nC / (1 - der)), n4 = nearby(HP4, need);
+        addRow({
+          key: "hp4", cat: "plant", name: "Four-pipe heat pump", count: nCC, standby: S.spareCool, svc: "heat", where: "deck",
+          each: fmt(per) + "&nbsp;kWr cooling and " + fmt(heatC / nC) + "&nbsp;kW heating at once" + (der > 0 ? " (selected at " + fmt(need) + "&nbsp;kW, allowing for the hotter water)" : ""),
+          box: boxTxt(n4), wt: tTxt(n4.kg[0], n4.kg[1]), clr: CLR_AIR,
+          mfr: "No published clearances were found for these units; the air-cooled allowances are assumed. " + MFR_AIR.replace("Manufacturers: ", "Air-cooled units: "),
+          note: dataNote(n4, "kW heating") + " The scroll units in the data weigh about 8&nbsp;kg per kW, the screw units about 15.",
+          flags: n4.above || n4.below ? ["<b>Outside the data.</b> " + fmt(need) + "&nbsp;kW a machine is " + (n4.above ? "above" : "below") + " the range found (" + fmt(n4.lo) + "&ndash;" + fmt(n4.hi) + "&nbsp;kW)."] : [],
+          nb: n4, data: HP4, unit: "kW heating",
+          item: { kind: "hp4", short: "Four-pipe heat pump", svc: "heat", area0: "deck", L: n4.L[1], W: n4.W[1], H: n4.H[1], kg: n4.kg[1], clr: { e1: 1.5, e2: 1.5, s1: 2.0, s2: 2.0, top: 0 }, airflow: true, noisy: true }
+        });
+      }
+    }
+    // ---- heating plant ----
+    var heatPlant = S.coolPlant === "hp4" && coolC > 0 ? "hp4" : (S.heatPlant === "hp4" ? "hp" : S.heatPlant);
+    M.heatPlant = heatPlant;
+    if (heatC > 0 && heatPlant !== "hp4") {
+      var perH = heatC / nH;
+      if (heatPlant === "hp") {
+        var rated = perH / (1 - der), nh = nearby(HP2, rated);
+        addRow({
+          key: "hp", cat: "plant", name: "Air-to-water heat pump", count: nHH, standby: S.spareHeat, svc: "heat", where: "deck",
+          each: fmt(perH) + "&nbsp;kW heating" + (der > 0 ? ", so " + fmt(rated) + "&nbsp;kW as rated at 45&nbsp;°C water" : " at 45&nbsp;°C water"),
+          box: boxTxt(nh), wt: tTxt(nh.kg[0], nh.kg[1], nh.empty ? " (one series gives empty weight only)" : " operating"),
+          clr: CLR_AIR, mfr: MFR_AIR,
+          note: dataNote(nh, "kW") + " Reversible units: the same chassis as an air-cooled chiller.",
+          flags: nh.above || nh.below ? ["<b>Outside the data.</b> " + fmt(rated) + "&nbsp;kW a machine is " + (nh.above ? "above" : "below") + " the range found (" + fmt(nh.lo) + "&ndash;" + fmt(nh.hi) + "&nbsp;kW)." + (nh.above ? " Use more heat pumps." : "")] : [],
+          nb: nh, data: HP2, unit: "kW heating",
+          item: { kind: "hp", short: "Heat pump", svc: "heat", area0: "deck", L: nh.L[1], W: nh.W[1], H: nh.H[1], kg: nh.kg[1], clr: { e1: 1.5, e2: 1.5, s1: 2.0, s2: 2.0, top: 0 }, airflow: true, noisy: true }
+        });
+      } else {
+        var nbo = nearby(BOIL, perH), shell = perH >= 600 && perH <= 1500;
+        addRow({
+          key: "blr", cat: "plant", name: "Gas condensing boiler", count: nHH, standby: S.spareHeat, svc: "heat", where: "room",
+          each: fmt(perH) + "&nbsp;kW at 80/60&nbsp;°C", box: boxTxt(nbo) + " (the first figure is front to back)", wt: tTxt(nbo.kg[0], nbo.kg[1], " (dry weight plus water)"),
+          clr: "1.0&nbsp;m in front (burner), 0.5&nbsp;m behind (1.0&nbsp;m if pumps and valves sit there), 0.5&nbsp;m on the cleaning side, 0.15&nbsp;m on the other, 0.5&nbsp;m above",
+          mfr: "Manufacturers: 0.9&nbsp;m in front of a modular condensing boiler, 1.6&nbsp;m plus the burner length for a large shell boiler; 0.3&ndash;1.0&nbsp;m behind; 0.05&ndash;0.5&nbsp;m at the sides; 0.07&ndash;0.5&nbsp;m above.",
+          note: dataNote(nbo, "kW") + (shell ? " A large shell boiler of this output is 3.0&ndash;3.7&nbsp;m long before its burner and weighs 3.0&ndash;4.0&nbsp;t." : "") + " A flue runs from each boiler to above the roof.",
+          flags: nbo.above ? ["<b>Outside the data.</b> " + fmt(perH) + "&nbsp;kW a boiler is above the range found (to " + fmt(nbo.hi) + "&nbsp;kW)."] : [],
+          nb: nbo, data: BOIL, unit: "kW",
+          item: { kind: "blr", short: "Boiler", svc: "heat", area0: "room", L: nbo.L[1], W: nbo.W[1], H: nbo.H[1], kg: nbo.kg[1], clr: { e1: 0.5, e2: 1.0, s1: 0.5, s2: 0.15, top: 0.5 }, piece: [nbo.W[1], nbo.H[1]], noisy: false }
+        });
+      }
+    }
+
+    // ---- air plant ----
+    M.groups.forEach(function (g, gi) {
+      if (g.sys === "vav") {
+        var Q = g.qVav * g.area / 1000;
+        if (!(Q > 0)) return;
+        var n = Math.ceil(Q / 17), q = Q / n, rq = Math.sqrt(q);
+        var W = 0.95 * rq, H = 0.66 * rq, L = 3.97 + 0.11 * q, kgA = 500 + 160 * q, kgB = 720 + 180 * q;
+        var acc = S.ahuFull ? Math.max(1.0, W + 0.3) : 1.0, ends = S.ahuFull ? 0.6 : 0.5;
+        addRow({
+          key: "ahu" + g.idx, cat: "air", name: "Air-handling unit, " + g.name, count: n, svc: "cool", where: "deck",
+          each: fmt(q, 1) + "&nbsp;m³/s (" + fmt(g.qVav, 1) + "&nbsp;L/s per m² over " + fmt(g.area) + "&nbsp;m²)",
+          box: rng(3.97 + 0.11 * q, 6.05 + 0.11 * q, 1) + " &times; " + rng(0.78 * rq, 1.11 * rq, 1) + "&nbsp;m, " + rng(0.57 * rq, 0.79 * rq, 1) + "&nbsp;m high",
+          wt: rng(kgA / 1000, kgB / 1000, 1, "t") + " dry each, plus coil water and plinth",
+          clr: (S.ahuFull ? "Full: a " + fmt(acc, 1) + "&nbsp;m coil-withdrawal aisle on the access side, 0.6&nbsp;m behind, 0.6&nbsp;m at each end" : "Tight: a 1.0&nbsp;m aisle on the access side (coil out through a door or shared aisle), 0.6&nbsp;m behind, 0.5&nbsp;m at each end for ducts") + ". Change on tab 2.",
+          mfr: "Manufacturer: coil withdrawal needs the unit width + 0.3&nbsp;m (here " + fmt(W + 0.3, 1) + "&nbsp;m); filters 1.2&nbsp;m; fan 1.2&ndash;2.0&nbsp;m.",
+          note: "Sized from your load: " + fmt(g.sens) + "&nbsp;W/m² sensible at a " + fmt(S.dt, 1) + "&nbsp;K supply difference. Drawn at the compact length, " + fmt(L, 1) + " &times; " + fmt(W, 1) + "&nbsp;m." + (n > 1 ? " Split into " + n + " units of no more than 17&nbsp;m³/s." : ""),
+          flags: q < 1.4 ? ["<b>Small unit.</b> Below 1.4&nbsp;m³/s the casing is relatively larger (0.6&ndash;0.75&nbsp;m² per m³/s) and the length still about 4&nbsp;m."] : [],
+          item: { kind: "ahu", short: "AHU", grp: gi + 1, svc: "cool", area0: "deck", L: L, W: W, H: H, kg: kgB, clr: { e1: ends, e2: ends, s1: 0.6, s2: acc, top: 0 }, piece: [W, H], noisy: true }
+        });
+      } else {
+        var Qo = g.oa * g.area / 1000;
+        if (!(Qo > 0)) return;
+        var no = Math.ceil(Qo / (0.7 * 10.5)), qo = Qo / no, qs = qo / 0.7;
+        var Ld = 1.7 + 0.17 * qs + 0.9, Wd = 0.95 + 0.23 * qs, Hd = 1.14 + 0.22 * qs, kgd = 50 + 370 * qs;
+        var fpLo = qo >= 5 ? 1.0 : qo >= 3 ? 1.2 : 1.4, fpHi = qo >= 5 ? 1.2 : qo >= 3 ? 1.4 : 1.9;
+        addRow({
+          key: "doas" + g.idx, cat: "air", name: "Outdoor-air (DOAS) unit, " + g.name, count: no, svc: "air", where: "deck",
+          each: fmt(qo, 1) + "&nbsp;m³/s of outdoor air (" + fmt(g.oa, 2) + "&nbsp;L/s per m² over " + fmt(g.area) + "&nbsp;m²)",
+          box: fmt(Ld, 1) + " &times; " + fmt(Wd, 1) + "&nbsp;m, " + fmt(Hd, 1) + "&nbsp;m high, with its duct coils (about " + rng(fpLo * qo, fpHi * qo, 1) + "&nbsp;m² bare across the range)",
+          wt: "about " + fmt(kgd / 1000, 1) + "&nbsp;t each",
+          clr: "1.2&nbsp;m on the inspection side, 0.8&nbsp;m at each end for ducts",
+          mfr: "Manufacturers: 0.8&ndash;1.1&nbsp;m along the inspection side; 1.1&ndash;1.5&nbsp;m to withdraw the wheel cassette.",
+          note: "Sized from occupancy: " + fmt(S.oaPP, 1) + "&nbsp;L/s per person at " + fmt(g.mpp, 1) + "&nbsp;m² per person plus " + fmt(S.supp, 2) + "&nbsp;L/s per m². The sensible cooling moves to " + (g.sys === "beam" ? "the chilled beams" : g.sys === "vrf" ? "the VRF indoor units" : "the fan-coil units") + ", which sit in the ceiling, not here." + (no > 1 ? " Split into " + no + " units." : ""),
+          flags: [],
+          item: { kind: "doas", short: "DOAS", grp: gi + 1, svc: "air", area0: "deck", L: Ld, W: Wd, H: Hd, kg: kgd, clr: { e1: 0.8, e2: 0.8, s1: 0, s2: 1.2, top: 0 }, piece: [Wd, Hd], noisy: true }
+        });
+      }
+      if (g.sys === "vrf" && g.cool > 0) {
+        var ns = Math.ceil(g.cool / 90), ps = g.cool / ns, mods = ps <= 67 ? 1 : ps <= 134 ? 2 : 3, mk = ps / mods;
+        var cab = mk <= 33.5 ? 0.93 : mk <= 56 ? 1.24 : 1.75, Lv = mods * cab + (mods - 1) * 0.02;
+        addRow({
+          key: "vrf" + g.idx, cat: "vrf", name: "VRF outdoor units, " + g.name, count: ns, svc: "refrig", where: "deck",
+          each: "one system of about " + fmt(ps) + "&nbsp;kW (" + mods + " module" + (mods > 1 ? "s" : "") + " in a row)",
+          box: fmt(Lv, 1) + " &times; 0.7&ndash;0.8&nbsp;m, 1.7&ndash;1.9&nbsp;m high; cabinets 0.014&ndash;0.022&nbsp;m² per kW",
+          wt: rng(ps * 4.5 * 1.1 / 1000, ps * 6.7 * 1.1 / 1000, 1, "t") + " each (net weight plus 10%)",
+          clr: "1.0&nbsp;m in front, 0.5&nbsp;m behind, 0.5&nbsp;m at the ends of the row; 2&nbsp;m clear above. About 0.057&ndash;0.086&nbsp;m² of deck per kW in all.",
+          mfr: "Manufacturers&rsquo; minimum: 0.45&ndash;0.5&nbsp;m in front, 0.1&ndash;0.3&nbsp;m behind, 0.02&ndash;0.1&nbsp;m between modules, 0.6&ndash;0.9&nbsp;m between rows.",
+          note: "Comparison only: VRF is outside the Assignment 2 brief, which requires a water-based system. This group&rsquo;s share of your cooling (" + fmt(g.cool) + "&nbsp;kW) is taken off the central plant above.",
+          flags: [],
+          item: { kind: "vrf", short: "VRF", grp: gi + 1, svc: "refrig", area0: "deck", L: Lv, W: 0.765, H: 1.86, kg: ps * 6 * 1.1, clr: { e1: 0.5, e2: 0.5, s1: 0.5, s2: 1.0, top: 0 }, noisy: true }
+        });
+      }
+    });
+
+    // ---- pumps ----
+    var beamSens = sum(M.groups.filter(function (g) { return g.sys === "beam"; }).map(function (g) { return g.sensKW; }));
+    var circ = [];
+    if (coolC > 0) circ.push({ key: "chw", name: "Chilled water", short: "CHW pump", tag: "CHW P", svc: "cool", Ls: coolC / (4.19 * 6), basis: fmt(coolC) + "&nbsp;kWr at 6&nbsp;K" });
+    if (coolC > 0 && S.coolPlant === "wc") circ.push({ key: "cw", name: "Condenser water", short: "CW pump", tag: "CW P", svc: "water", Ls: coolC * 0.0538, basis: fmt(coolC) + "&nbsp;kWr at the tower rating" });
+    if (heatC > 0) circ.push({ key: "hhw", name: "Heating water", short: "HHW pump", tag: "HHW P", svc: "heat", Ls: heatC / (4.19 * 10), basis: fmt(heatC) + "&nbsp;kW at 10&nbsp;K" });
+    if (beamSens > 0 && coolC > 0) circ.push({ key: "bchw", name: "Chilled-beam water", short: "Beam pump", tag: "Beam P", svc: "cool", Ls: beamSens / (4.19 * 3), basis: fmt(beamSens) + "&nbsp;kW sensible at 3&nbsp;K" });
+    M.circ = circ;
+    circ.forEach(function (c) {
+      var nd = Math.ceil(c.Ls / 120), each = c.Ls / nd, b = 0;
+      while (b < PUMP.length - 1 && each > PUMP[b][0]) b++;
+      var P = PUMP[b], E = PUMP_ES[b];
+      var baseH = P[4] <= 150 ? 0.28 : P[4] <= 300 ? 0.28 + 0.08 * (P[4] - 150) / 150 : P[4] <= 400 ? 0.36 + 0.03 * (P[4] - 300) / 100 : 0.39 + 0.06 * (P[4] - 400) / 200;
+      var L = P[1] / 1000 + 0.2, W = P[2] / 1000 + 0.2, H = P[3] / 1000 + baseH, top = P[5] >= 5.5 ? 1.0 : 0.3;
+      addRow({
+        key: "p" + c.key, cat: "forgot", name: c.name + " pumps", count: nd + 1, standby: true, svc: c.svc, where: "room",
+        each: fmt(each, 1) + "&nbsp;L/s (" + c.basis + "), " + (nd > 1 ? nd + " on duty and one standby" : "one on duty, one standby"),
+        box: "in-line on its base " + fmt(L, 1) + " &times; " + fmt(W, 1) + "&nbsp;m, " + fmt(H, 1) + "&nbsp;m high; an end-suction pump is " + fmt(E[0] / 1000, 1) + " &times; " + fmt(E[1] / 1000, 1) + "&nbsp;m",
+        wt: "about " + fmt(P[4]) + "&nbsp;kg pump, " + fmt(P[4] * 2.5 / 1000, 1) + "&nbsp;t with its concrete base",
+        clr: "0.915&nbsp;m all round (shared with the next pump in a row), " + (top === 1 ? "1.0&nbsp;m above the motor" : "0.3&nbsp;m above the motor"),
+        mfr: "Pump maker: 0.3&nbsp;m above motors to 4&nbsp;kW, 1&nbsp;m from 5.5&nbsp;kW. The 915&nbsp;mm aisle is from a Canadian university standard; no Australian figure was found.",
+        note: "A " + fmt(P[5], 1) + "&nbsp;kW motor. Valve sets and expansion joints are extra, along the pipe." + (P[5] >= 11 ? " Vibration isolation is worth considering from 11&nbsp;kW." : ""),
+        flags: c.Ls > 120 ? ["<b>Large circuit.</b> " + fmt(c.Ls) + "&nbsp;L/s is beyond one pump in the data, so " + nd + " duty pumps share it."] : [],
+        item: { kind: "pump", short: c.short, tag: c.tag, motor: P[5], svc: c.svc, area0: "room", L: L, W: W, H: H, kg: P[4] * 2.5, clr: { e1: 0.915, e2: 0.915, s1: 0.915, s2: 0.915, top: top }, piece: [W, H], noisy: true }
+      });
+    });
+
+    // ---- buffer tanks ----
+    function tanks(key, name, kW, lo, hi, svc) {
+      var Vlo = kW * lo, Vhi = kW * hi, n = Math.max(1, Math.ceil(0.5 * Vlo / TANK_L));
+      addRow({
+        key: "t" + key, cat: "forgot", name: name + " buffer tank", count: n, svc: svc, where: "room",
+        each: fmt(TANK_L) + "&nbsp;L vessel. Minimum system volume " + fmt(Math.round(Vlo / 100) * 100) + "&ndash;" + fmt(Math.round(Vhi / 100) * 100) + "&nbsp;L (" + lo + "&ndash;" + hi + "&nbsp;L per kW)",
+        box: fmt(TANK_D, 1) + "&nbsp;m across, " + fmt(TANK_H, 2) + "&nbsp;m tall; room at least " + fmt(TANK_H + 0.15, 2) + "&nbsp;m",
+        wt: "about " + fmt(TANK_KG / 1000, 1) + "&nbsp;t full each",
+        clr: "0.25&nbsp;m all round (about 1.5 &times; 1.5&nbsp;m on plan)",
+        mfr: "The pipework counts toward the minimum volume, so the tank only makes up the shortfall. The tool assumes the pipework holds half the lower figure.",
+        note: "", flags: [],
+        item: { kind: "tank", short: (key === "chw" ? "CHW" : "HHW") + " tank", tag: (key === "chw" ? "CHW T" : "HHW T"), svc: svc, area0: "room", L: TANK_D, W: TANK_D, H: TANK_H, kg: TANK_KG, clr: { e1: .25, e2: .25, s1: .25, s2: .25, top: .15 }, piece: [TANK_D, TANK_D], round: true }
+      });
+    }
+    if (coolC > 0) tanks("chw", "Chilled water", coolC, 3, 6, "cool");
+    if (heatC > 0 && heatPlant !== "boiler") tanks("hhw", "Heating water", heatC, 8, 13, "heat");
+
+    // ---- hot water storage ----
+    var rooms = S.rooms > 0 ? Math.round(S.rooms) : 0, apts = S.apts > 0 ? Math.round(S.apts) : 0;
+    if (rooms + apts > 0) {
+      var V = rooms * 117 + apts * 112.5, useful = rooms * 90 + apts * 75;
+      var vi = V <= 2 * 920 ? 0 : V <= 6 * 2960 ? 1 : 2, VV = VESSEL[vi], nv = Math.max(2, Math.ceil(V / VV[0]));
+      var kWr = useful * 4.19 * 55 / 7200, nhp = Math.max(1, Math.ceil(kWr / 40));
+      addRow({
+        key: "dhw", cat: "forgot", name: "Hot water storage vessel", count: nv, svc: "water", where: "room",
+        each: fmt(VV[0]) + "&nbsp;L, for about " + fmt(Math.round(V / 100) * 100) + "&nbsp;L in all (" + (rooms ? rooms + " hotel rooms at about 117&nbsp;L" : "") + (rooms && apts ? ", " : "") + (apts ? apts + " apartments at about 112&nbsp;L" : "") + ")",
+        box: fmt(VV[2] / 1000, 2) + "&nbsp;m across, " + fmt(VV[1] / 1000, 2) + "&nbsp;m tall (body " + fmt(VV[3] / 1000, 2) + "&nbsp;m, the width it needs through a door)",
+        wt: "about " + fmt((VV[0] + VV[4]) / 1000, 1) + "&nbsp;t full each",
+        clr: "0.3&nbsp;m all round (an assumption: the maker gives pipe spacing, not a clearance); room at least " + fmt(VV[1] / 1000 + 0.15, 2) + "&nbsp;m",
+        mfr: "Range: 90&ndash;120&nbsp;L a hotel room; 75&ndash;112&nbsp;L a two-bedroom apartment. Split across at least two vessels.",
+        note: "", flags: VV[1] / 1000 > 2.8 ? ["<b>Tall vessels.</b> These need more than 2.8&nbsp;m of clear height plus their connections."] : [],
+        item: { kind: "dhw", short: "HW vessel", tag: "HW ", svc: "water", area0: "room", L: VV[2] / 1000, W: VV[2] / 1000, H: VV[1] / 1000, kg: VV[0] + VV[4], clr: { e1: .3, e2: .3, s1: .3, s2: .3, top: .15 }, piece: [VV[3] / 1000, VV[3] / 1000], round: true }
+      });
+      addRow({
+        key: "dhwhp", cat: "forgot", name: "Hot water heat pump", count: nhp, svc: "water", where: "deck",
+        each: "40&nbsp;kW at 65&nbsp;°C water; " + fmt(kWr) + "&nbsp;kW to reheat the store in two hours",
+        box: "1.2 &times; 0.8&nbsp;m, 1.8&nbsp;m high", wt: "about 0.4&nbsp;t each",
+        clr: "1.0&nbsp;m all round (an assumption: the clearances were not confirmed in the data sheet)", mfr: "",
+        note: "A carbon dioxide heat pump water heater, designed for 55&ndash;90&nbsp;°C water.", flags: [],
+        item: { kind: "dhwhp", short: "HW heat pump", tag: "HWHP ", svc: "water", area0: "deck", L: 1.22, W: 0.76, H: 1.837, kg: 406, clr: { e1: 1, e2: 1, s1: 1, s2: 1, top: 0 }, noisy: true }
+      });
+    }
+
+    // ---- the pipe riser leaving the plant room ----
+    var mainPipes = [];
+    if (coolC > 0) mainPipes.push(pipePair("Chilled water", coolC, 6, 0.05));
+    if (beamSens > 0 && coolC > 0) mainPipes.push(pipePair("Chilled-beam water", beamSens, 3, 0.05));
+    if (heatC > 0) mainPipes.push(pipePair("Heating water", heatC, 10, 0.04));
+    if (coolC > 0 && S.coolPlant === "wc") mainPipes.push(pipePair("Condenser water", coolC * 0.0538 * 4.19 * 5.5, 5.5, 0));
+    mainPipes = mainPipes.filter(Boolean);
+    M.mainPipes = mainPipes;
+    var pa = sum(mainPipes.map(function (p) { return p.area; }));
+    if (pa > 0.02) {
+      var side = Math.sqrt(pa);
+      addRow({
+        key: "riser", cat: "forgot", name: "Pipe riser leaving the plant room", count: 1, svc: "cool", where: "room",
+        each: mainPipes.map(function (p) { return p.name.toLowerCase() + " DN" + p.dn; }).join(", ") + ", flow and return",
+        box: "about " + fmt(pa, 2) + "&nbsp;m² (drawn " + fmt(side, 1) + " &times; " + fmt(side, 1) + "&nbsp;m)", wt: "n/a",
+        clr: "0.6&nbsp;m standing zone on one side (an assumption for a walk-in riser)", mfr: "",
+        note: "Sized as on tab 3, with 20% spare. Condenser water runs between the chillers and the roof towers in the same riser.", flags: [],
+        item: { kind: "riser", short: "Pipe riser", svc: "cool", area0: "room", L: side, W: side, H: 0, kg: 0, clr: { e1: 0, e2: 0, s1: 0, s2: 0.6, top: 0 }, isRiser: true }
+      });
+    }
+
+    // ---- flags ----
+    if (S.hwt === "65" && (heatPlant === "hp" || heatPlant === "hp4") && heatC > 0)
+      M.flags.push("<b>Too hot for these heat pumps.</b> The standard units in the data stop at 55&ndash;60&nbsp;°C leaving water. A 60&ndash;65&nbsp;°C loop needs a high-temperature heat pump (propane or carbon dioxide), or design the heating water at 45&ndash;50&nbsp;°C.");
+    else if (S.hwt === "55" && (heatPlant === "hp" || heatPlant === "hp4") && heatC > 0)
+      M.flags.push("<b>At the limit.</b> 55&nbsp;°C is the top of the range for two of the standard heat pump series in the data.");
+    if (heatC > 0 && heatPlant !== "hp4") {
+      var cmp = compareHeat(heatC / nH, nHH, der);
+      if (cmp) M.compare = cmp;
+    }
+    return M;
+  }
+
+  function envArea(it) {
+    var c = it.clr, l = c.e1 + (it.pull ? it.L : c.e2);
+    return (it.L + l) * (it.W + c.s1 + c.s2);
+  }
+  function compareHeat(perH, count, der) {
+    var a = nearby(HP2, perH / (1 - der)), b = nearby(BOIL, perH);
+    var hpEnv = (a.L[1] + 3.0) * (a.W[1] + 4.0), blEnv = (b.L[1] + 1.5) * (b.W[1] + 0.65);
+    return { hpA: hpEnv * count, hpT: a.kg[1] * count, blA: blEnv * count, blT: b.kg[1] * count, count: count };
+  }
+
+  // =====================================================================
+  // GEOMETRY for the layout
+  // =====================================================================
+  function areaDims(a) { return a === "room" ? { w: S.room.w > 0 ? S.room.w : 1, d: S.room.d > 0 ? S.room.d : 1 } : { w: S.deck.w > 0 ? S.deck.w : 1, d: S.deck.d > 0 ? S.deck.d : 1 }; }
+  // world clearances by rotation (clockwise, y down). Local: e1 = -x end, e2 = +x end, s1 = -y side, s2 = +y side.
+  function wclr(it, r) {
+    var c = it.clr, e2 = it.pull ? 0 : c.e2;
+    if (r === 0) return { l: c.e1, r: e2, t: c.s1, b: c.s2, pull: "r" };
+    if (r === 90) return { l: c.s2, r: c.s1, t: c.e1, b: e2, pull: "b" };
+    if (r === 180) return { l: e2, r: c.e1, t: c.s2, b: c.s1, pull: "l" };
+    return { l: c.s1, r: c.s2, t: e2, b: c.e1, pull: "t" };
+  }
+  function geom(it, p) {
+    var r = ((p.r % 360) + 360) % 360, rot = r === 90 || r === 270;
+    var bw = rot ? it.W : it.L, bh = rot ? it.L : it.W;
+    var box = [p.x - bw / 2, p.y - bh / 2, p.x + bw / 2, p.y + bh / 2];
+    var c = wclr(it, r);
+    var env = [box[0] - c.l, box[1] - c.t, box[2] + c.r, box[3] + c.b];
+    var pull = null;
+    if (it.pull) {
+      var Lp = it.L;
+      if (c.pull === "r") pull = [box[2], box[1], box[2] + Lp, box[3]];
+      else if (c.pull === "l") pull = [box[0] - Lp, box[1], box[0], box[3]];
+      else if (c.pull === "b") pull = [box[0], box[3], box[2], box[3] + Lp];
+      else pull = [box[0], box[1] - Lp, box[2], box[1]];
+    }
+    return { box: box, env: env, pull: pull, bw: bw, bh: bh, r: r, side: c.pull };
+  }
+  var EPS = 0.02;   // within 20 mm counts as touching, not overlapping
+  function ov(a, b) { return a[0] < b[2] - EPS && b[0] < a[2] - EPS && a[1] < b[3] - EPS && b[1] < a[3] - EPS; }
+  function gap(a, b) {
+    var dx = Math.max(0, Math.max(a[0], b[0]) - Math.min(a[2], b[2])), dy = Math.max(0, Math.max(a[1], b[1]) - Math.min(a[3], b[3]));
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+  function doorRect() {
+    var R = S.room, D = areaDims("room"), w = R.dw > 0 ? R.dw : 1, o = Math.max(0, R.doff || 0);
+    var along = R.dwall === "t" || R.dwall === "b" ? D.w : D.d;
+    o = Math.min(o, Math.max(0, along - w));
+    var span = [o, o + w], zone;
+    if (R.dwall === "t") zone = [o, 0, o + w, 1.0];
+    else if (R.dwall === "b") zone = [o, D.d - 1.0, o + w, D.d];
+    else if (R.dwall === "l") zone = [0, o, 1.0, o + w];
+    else zone = [D.w - 1.0, o, D.w, o + w];
+    return { wall: R.dwall, span: span, zone: zone, w: w, h: R.dh > 0 ? R.dh : 2.1 };
+  }
+  var WALLNAME = { t: "top", r: "right", b: "bottom", l: "left" };
+
+  function posOf(it) {
+    var p = S.pos[it.id];
+    if (!p) { p = S.pos[it.id] = { a: it.area0, on: false, x: 0, y: 0, r: 0 }; }
+    return p;
+  }
+
+  function pack(area, items) {
+    var D = areaDims(area), its = items.filter(function (it) { return posOf(it).a === area; });
+    its.sort(function (a, b) { return envArea(b) - envArea(a); });
+    var x = 0, y = 0, rowH = 0, left = 0;
+    its.forEach(function (it) {
+      var p = posOf(it), best = null;
+      [0, 90].forEach(function (r) {
+        if (best) return;
+        var g = geom(it, { x: 0, y: 0, r: r });
+        var e = [Math.min(g.env[0], g.pull ? g.pull[0] : Infinity), Math.min(g.env[1], g.pull ? g.pull[1] : Infinity),
+          Math.max(g.env[2], g.pull ? g.pull[2] : -Infinity), Math.max(g.env[3], g.pull ? g.pull[3] : -Infinity)];
+        var w = e[2] - e[0], h = e[3] - e[1];
+        if (w <= D.w + 1e-9) best = { r: r, w: w, h: h, ox: -e[0], oy: -e[1] };
+      });
+      if (!best) { p.on = false; left++; return; }
+      if (x + best.w > D.w + 1e-9) { x = 0; y += rowH; rowH = 0; }
+      if (y + best.h > D.d + 1e-9) { p.on = false; left++; return; }
+      p.on = true; p.r = best.r; p.x = x + best.ox; p.y = y + best.oy;
+      x += best.w; rowH = Math.max(rowH, best.h);
+    });
+    return left;
+  }
+  function round2(v) { return Math.round(v * 100) / 100; }
+
+  function checks(area, items) {
+    var D = areaDims(area), out = [], bad = {}, zoneBad = {}, pullBad = {};
+    var placed = items.filter(function (it) { var p = posOf(it); return p.a === area && p.on; });
+    var G = {};
+    placed.forEach(function (it) { G[it.id] = geom(it, posOf(it)); });
+    var door = area === "room" ? doorRect() : null;
+    var edge = area === "room" ? "wall" : "edge of the deck";
+    placed.forEach(function (it) {
+      var g = G[it.id], sides = [];
+      if (g.box[0] < -EPS || g.box[1] < -EPS || g.box[2] > D.w + EPS || g.box[3] > D.d + EPS) {
+        out.push({ s: "bad", h: "<b>" + esc(it.name) + " is outside the " + (area === "room" ? "room" : "deck") + ".</b> Move it inside, or make the " + (area === "room" ? "room" : "deck") + " bigger.", ids: [it.id] });
+        bad[it.id] = 1; return;
+      }
+      if (g.env[0] < -EPS) sides.push("l"); if (g.env[1] < -EPS) sides.push("t");
+      if (g.env[2] > D.w + EPS) sides.push("r"); if (g.env[3] > D.d + EPS) sides.push("b");
+      if (sides.length) {
+        zoneBad[it.id] = 1;
+        out.push({ s: "bad", h: "<b>" + esc(it.name) + "&rsquo;s clearance runs into the " + sides.map(function (s) { return area === "room" ? WALLNAME[s] + " wall" : WALLNAME[s] + " edge"; }).join(" and ") + ".</b> " + reasonFor(it), ids: [it.id] });
+      }
+      if (g.pull) {
+        var P = g.pull, cross = null;
+        if (P[0] < -EPS) cross = "l"; else if (P[2] > D.w + EPS) cross = "r"; else if (P[1] < -EPS) cross = "t"; else if (P[3] > D.d + EPS) cross = "b";
+        if (cross) {
+          var ok = false;
+          if (door && door.wall === cross) {
+            var a0 = cross === "t" || cross === "b" ? P[0] : P[1], a1 = cross === "t" || cross === "b" ? P[2] : P[3];
+            ok = a0 >= door.span[0] - EPS && a1 <= door.span[1] + EPS;
+          }
+          if (ok) out.push({ s: "ok", h: "<b>" + esc(it.name) + "&rsquo;s tubes pull out through the door.</b> The pull zone needs no floor space inside the room.", ids: [it.id] });
+          else { pullBad[it.id] = 1; out.push({ s: "bad", h: "<b>" + esc(it.name) + "&rsquo;s tube-pull zone hits the " + (area === "room" ? WALLNAME[cross] + " wall" : WALLNAME[cross] + " edge") + ".</b> The tubes are withdrawn from one end, about the length of the chiller. Turn the chiller so they pull into the room, or line its end up with the door (or a removable louvre).", ids: [it.id] }); }
+        }
+      }
+    });
+    for (var i = 0; i < placed.length; i++) for (var j = 0; j < placed.length; j++) {
+      if (i === j) continue;
+      var A = placed[i], B = placed[j], ga = G[A.id], gb = G[B.id];
+      if (j > i && ov(ga.box, gb.box)) { bad[A.id] = bad[B.id] = 1; out.push({ s: "bad", h: "<b>" + esc(A.name) + " and " + esc(B.name) + " overlap.</b>", ids: [A.id, B.id] }); continue; }
+      if (ov(ga.box, gb.box)) continue;
+      if (ov(ga.env, gb.box)) { zoneBad[A.id] = 1; out.push({ s: "bad", h: "<b>" + esc(B.name) + " sits in " + esc(A.name) + "&rsquo;s clearance.</b> " + reasonFor(A) + " Zones may overlap each other, not equipment.", ids: [A.id, B.id] }); }
+      if (ga.pull && ov(ga.pull, gb.box)) { pullBad[A.id] = 1; out.push({ s: "bad", h: "<b>" + esc(B.name) + " blocks " + esc(A.name) + "&rsquo;s tube pull.</b> Nothing can stand where the tubes come out.", ids: [A.id, B.id] }); }
+      if (j > i && A.airflow && B.airflow) {
+        var d = gap(ga.box, gb.box);
+        if (d < 3 - EPS) out.push({ s: "warn", h: "<b>" + esc(A.name) + " and " + esc(B.name) + " are " + fmt(d, 1) + "&nbsp;m apart.</b> Manufacturers ask for about 3&nbsp;m between air-cooled units, so one does not draw in the other&rsquo;s warm discharge air.", ids: [A.id, B.id] });
+      }
+    }
+    if (door) {
+      placed.forEach(function (it) {
+        if (ov(door.zone, G[it.id].box)) { bad[it.id] = 1; out.push({ s: "bad", h: "<b>" + esc(it.name) + " blocks the door.</b> Keep about 1&nbsp;m inside the door clear, or nothing big gets in or out.", ids: [it.id] }); }
+      });
+    }
+    var left = items.filter(function (it) { var p = posOf(it); return p.a === area && !p.on; });
+    if (left.length) out.unshift({ s: "warn", h: "<b>" + left.length + " item" + (left.length > 1 ? "s are" : " is") + " still in the tray</b> for the " + (area === "room" ? "plant room" : "roof or plant deck") + ": " + left.map(function (it) { return esc(it.name); }).join(", ") + ".", ids: [] });
+    return { list: out, bad: bad, zoneBad: zoneBad, pullBad: pullBad, placed: placed, G: G };
+  }
+  function reasonFor(it) {
+    return {
+      wc: "It is the service aisle along the chiller.",
+      ct: "Air enters the tower through these faces; a wall too close starves it of air and recirculates the warm, wet discharge.",
+      ac: "Air reaches the coils from these sides.", hp: "Air reaches the coils from these sides.", hp4: "Air reaches the coils from these sides.",
+      blr: "The burner swings open at the front, and the heat exchanger is cleaned from the side.",
+      ahu: "This is the access side for filters, the fan and coil withdrawal, and the duct connections at the ends.",
+      doas: "This is the inspection side and the wheel cassette comes out here; the ends take the ducts.",
+      pump: "Pumps need room all round to be serviced and lifted out.",
+      tank: "Pipe connections and access.", dhw: "Pipe connections and access.",
+      dhwhp: "Air to the coil and service access.", vrf: "Service access in front and air to the coils behind.",
+      riser: "This is where people stand to work in the riser."
+    }[it.kind] || "";
+  }
+
+  function totals(area, items, C) {
+    var D = areaDims(area), cell = 0.1, nx = Math.round(D.w / cell), ny = Math.round(D.d / cell);
+    if (nx * ny > 400000) { cell = Math.sqrt(D.w * D.d / 400000); nx = Math.round(D.w / cell); ny = Math.round(D.d / cell); }
+    var boxN = 0, zoneN = 0;
+    var rects = C.placed.map(function (it) { return C.G[it.id]; });
+    for (var j = 0; j < ny; j++) {
+      var y = (j + .5) * cell;
+      for (var i = 0; i < nx; i++) {
+        var x = (i + .5) * cell, inB = false, inZ = false;
+        for (var k = 0; k < rects.length; k++) {
+          var g = rects[k];
+          if (x > g.box[0] && x < g.box[2] && y > g.box[1] && y < g.box[3]) { inB = true; break; }
+          if (!inZ && ((x > g.env[0] && x < g.env[2] && y > g.env[1] && y < g.env[3]) || (g.pull && x > g.pull[0] && x < g.pull[2] && y > g.pull[1] && y < g.pull[3]))) inZ = true;
+        }
+        if (inB) boxN++; else if (inZ) zoneN++;
+      }
+    }
+    var a = cell * cell, tot = D.w * D.d;
+    return { area: tot, box: boxN * a, zone: zoneN * a, free: Math.max(0, tot - (boxN + zoneN) * a) };
+  }
+
+  // =====================================================================
+  // RENDER: tab 1
+  // =====================================================================
+  var M = null;
+  var CATS = [
+    { k: "plant", h: "Making the cooling and heating" },
+    { k: "air", h: "Moving the air" },
+    { k: "vrf", h: "VRF outdoor units (comparison only)" },
+    { k: "forgot", h: "Easily forgotten" }
+  ];
+  function renderTab1() {
+    var res = $("res1"), box = $("items1");
+    if (!M.rows.length) {
+      res.innerHTML = '<p class="empty">Enter a design cooling or heating capacity and the floor area of at least one riser group to see what goes in the room.</p>';
+      box.innerHTML = ""; $("dataTables").innerHTML = ""; return;
+    }
+    var roomBox = 0, roomEnv = 0, deckBox = 0, deckEnv = 0, heavy = null, nRoom = 0, nDeck = 0;
+    M.items.forEach(function (it) {
+      var a = it.L * it.W, e = envArea(it);
+      if (it.area0 === "room") { roomBox += a; roomEnv += e; nRoom++; } else { deckBox += a; deckEnv += e; nDeck++; }
+      if (it.kg > 0 && it.L * it.W > 0) { var k = it.kg * 0.00981 / (it.L * it.W); if (!heavy || k > heavy.k) heavy = { k: k, it: it }; }
+    });
+    var h = '<div class="headline">' +
+      '<div><div class="big">' + fmt(roomEnv) + '<small>m² plant room</small></div><div class="bigcap">' + nRoom + " items: " + fmt(roomBox) + "&nbsp;m² of boxes, " + fmt(roomEnv) + "&nbsp;m² with each item&rsquo;s clearances, before any aisles are shared</div></div>" +
+      '<div><div class="big sm">' + fmt(deckEnv) + '<small>m² roof or plant deck</small></div><div class="bigcap">' + nDeck + " items: " + fmt(deckBox) + "&nbsp;m² of boxes, " + fmt(deckEnv) + "&nbsp;m² with clearances</div></div></div>";
+    if (M.compare) {
+      var c = M.compare;
+      h += '<p class="verdict"><b>Heat pumps or boilers for this heating load?</b> As ' + c.count + " air-to-water heat pump" + (c.count > 1 ? "s" : "") + " on the roof: about " + fmt(c.hpA) + "&nbsp;m² with airflow clearances and " + fmt(c.hpT / 1000, 1) + "&nbsp;t. As " + c.count + " gas condensing boiler" + (c.count > 1 ? "s" : "") + " in the plant room: about " + fmt(c.blA) + "&nbsp;m² and " + fmt(c.blT / 1000, 1) + "&nbsp;t. Electrifying the heating moves it to the roof and multiplies its footprint.</p>";
+    }
+    if (M.central.vrfCool > 0) h += '<p class="verdict">' + fmt(M.central.vrfCool) + "&nbsp;kW of your cooling is carried by VRF in the comparison, so the central plant above is sized for " + fmt(M.central.cool) + "&nbsp;kWr.</p>";
+    if (heavy && heavy.k > KPA_OFFICE) h += '<p class="verdict">Heaviest on its footprint: ' + esc(heavy.it.row.name.toLowerCase()) + " at about " + fmt(heavy.k) + "&nbsp;kPa, against " + fmt(KPA_OFFICE, 1) + "&nbsp;kPa for a typical office floor. Plant needs a slab designed for it.</p>";
+    M.flags.forEach(function (f) { h += '<div class="flag">' + f + "</div>"; });
+    res.innerHTML = h;
+
+    var out = "";
+    CATS.forEach(function (cat) {
+      var rows = M.rows.filter(function (r) { return r.cat === cat.k; });
+      if (!rows.length) return;
+      out += "<h3>" + cat.h + "</h3>" + (cat.k === "forgot" ? '<p class="note">These are the items that most often go missing from a plant room sketch.</p>' : "") + '<div class="igrid">';
+      rows.forEach(function (r) {
+        out += '<div class="icard' + (r.cat === "forgot" ? " forgot" : "") + '"><div class="ihead"><span class="sw" style="background:var(--' + r.svc + ')"></span><b>' + esc(r.name) + '</b><span class="cnt">&times;&nbsp;' + r.count + (r.standby ? " (incl. standby)" : "") + '</span><span class="where' + (r.where === "deck" ? " deck" : "") + '">' + (r.where === "deck" ? "Roof or deck" : "Plant room") + "</span></div>" +
+          "<dl><dt>Each</dt><dd>" + r.each + "</dd><dt>Box</dt><dd>" + r.box + "</dd><dt>Weight</dt><dd>" + r.wt + "</dd><dt>Clearance</dt><dd>" + r.clr + (r.mfr ? '<span class="mfr">' + r.mfr + "</span>" : "") + "</dd></dl>" +
+          (r.note ? '<p class="inote">' + r.note + "</p>" : "") +
+          r.flags.map(function (f) { return '<div class="flag">' + f + "</div>"; }).join("") + "</div>";
+      });
+      out += "</div>";
+    });
+    box.innerHTML = out;
+    renderDataTables();
+  }
+  function renderDataTables() {
+    var h = "";
+    M.rows.forEach(function (r) {
+      if (!r.data) return;
+      var inSet = {};
+      r.nb.pts.forEach(function (p) { inSet[p.join()] = 1; });
+      h += "<h4>" + esc(r.name) + " (" + r.unit + ")</h4><div class=\"tablewrap\"><table class=\"data\"><thead><tr><th class=\"num\">Capacity</th><th class=\"num\">L &times; W &times; H (mm)</th><th class=\"num\">kg</th><th>Source</th></tr></thead><tbody>";
+      r.data.slice().sort(function (a, b) { return a[0] - b[0]; }).forEach(function (p) {
+        h += "<tr" + (inSet[p.join()] ? ' class="chosen"' : "") + '><td class="num">' + fmt(p[0]) + '</td><td class="num">' + fmt(p[1]) + " &times; " + fmt(p[2]) + " &times; " + fmt(p[3]) + '</td><td class="num">' + fmt(p[4]) + (p[6] === 1 ? " empty" : "") + '</td><td><a href="#src-' + srcAnchor(p[5]) + '">' + p[5] + "</a></td></tr>";
+      });
+      h += "</tbody></table></div>";
+    });
+    h += '<p class="deriv">Shaded rows are the units used for your size. Air-handling and outdoor-air units, pumps, tanks and VRF are sized from the fitted rules and selections described in the panels above (sources A1&ndash;A4, P1&ndash;P2, B1&ndash;B2, V1).</p>';
+    $("dataTables").innerHTML = h;
+  }
+  function srcAnchor(k) { return { S2: "S1", S4: "S3", S6: "S5", S15: "S10", S16: "S12", S14: "S13", S17: "S13", S19: "S18", S21: "S20", S22: "S20" }[k] || k; }
+
+  // ---- inputs ----
+  var FIELDS = ["cool", "heat", "nCool", "nHeat", "derate", "dt", "oaPP", "supp", "rooms", "apts"];
+  function numVal(v) { return v == null ? "" : String(v); }
+  function syncInputs() {
+    FIELDS.forEach(function (f) { $("in-" + f).value = numVal(S[f]); });
+    $("in-coolPlant").value = S.coolPlant;
+    $("in-heatPlant").value = S.coolPlant === "hp4" ? "hp4" : (S.heatPlant === "hp4" ? "hp" : S.heatPlant);
+    $("in-heatPlant").disabled = S.coolPlant === "hp4";
+    Array.prototype.forEach.call($("in-heatPlant").options, function (o) { o.disabled = (o.value === "hp4") !== (S.coolPlant === "hp4"); });
+    $("nHeatWrap").hidden = S.coolPlant === "hp4";
+    $("in-spareCool").checked = !!S.spareCool; $("in-spareHeat").checked = !!S.spareHeat;
+    $("in-hwt").value = S.hwt;
+    $("derateWrap").hidden = S.hwt === "45";
+    $("in-rw").value = numVal(S.room.w); $("in-rd").value = numVal(S.room.d); $("in-rh").value = numVal(S.room.h);
+    $("in-dwall").value = S.room.dwall; $("in-doff").value = numVal(S.room.doff); $("in-dw").value = numVal(S.room.dw); $("in-dh").value = numVal(S.room.dh);
+    $("in-kw").value = numVal(S.deck.w); $("in-kd").value = numVal(S.deck.d);
+    $("in-vS").value = numVal(S.vS); $("in-vR").value = numVal(S.vR);
+    renderGroups();
+  }
+  function renderGroups() {
+    var h = "";
+    S.groups.forEach(function (g, i) {
+      var p = "g" + i + "-";
+      h += '<div class="rg" data-gi="' + i + '"><div class="rg-head"><div class="fld"><label for="' + p + 'name">Riser group ' + (i + 1) + ': name</label>' +
+        '<input type="text" id="' + p + 'name" data-g="name" value="' + esc(g.name || "") + '" placeholder="e.g. Office, levels 1 to 4"></div>' +
+        '<button type="button" class="xbtn" data-gdel="' + i + '" aria-label="Remove riser group ' + (i + 1) + '"' + (S.groups.length < 2 ? " disabled" : "") + ">&times;</button></div>" +
+        '<div class="fgrid">' +
+        '<div class="fld"><label for="' + p + 'area">Floor area served (m²)</label><input type="number" inputmode="decimal" min="0" step="any" id="' + p + 'area" data-g="area" value="' + numVal(g.area) + '"></div>' +
+        '<div class="fld"><label for="' + p + 'floors">Floors served</label><input type="number" inputmode="numeric" min="1" step="1" id="' + p + 'floors" data-g="floors" value="' + numVal(g.floors) + '"></div>' +
+        '<div class="fld" style="grid-column:span 2;min-width:0"><label for="' + p + 'sys">Zone system</label><select id="' + p + 'sys" data-g="sys">' +
+        ["vav", "fcu", "beam", "vrf"].map(function (k) { return '<option value="' + k + '"' + (g.sys === k ? " selected" : "") + ">" + SYS_LONG[k] + "</option>"; }).join("") + "</select></div>" +
+        '<div class="fld"><label for="' + p + 'sens">Sensible cooling (W/m²)</label><input type="number" inputmode="decimal" min="0" step="any" id="' + p + 'sens" data-g="sens" value="' + numVal(g.sens) + '"></div>' +
+        '<div class="fld"><label for="' + p + 'mpp">Floor area per person (m²)</label><input type="number" inputmode="decimal" min="1" step="any" id="' + p + 'mpp" data-g="mpp" value="' + numVal(g.mpp) + '"></div>' +
+        "</div></div>";
+    });
+    $("groups").innerHTML = h;
+    $("addGroup").disabled = S.groups.length >= 4;
+  }
+  function renderGroupFlags() {
+    var f = [], used = {};
+    S.groups.forEach(function (g) { if (g.area > 0) used[g.sys] = 1; });
+    var water = Object.keys(used).filter(function (k) { return k !== "vrf"; });
+    if (used.vrf) f.push('<div class="flag"><b>VRF is a comparison here.</b> It is outside the Assignment 2 brief, which requires a water-based system. The tool shows it so you can see its roof area and riser against the water-based options.</div>');
+    if (water.length === 1 && Object.keys(used).length === 1) f.push('<div class="flag info"><b>One zone system.</b> Assignment 2 asks for at least two zone-level system types; give another part of the building its own group.</div>');
+    $("groupFlags").innerHTML = f.join("");
+  }
+
+  // =====================================================================
+  // RENDER: tab 2 (the layout)
+  // =====================================================================
+  var V = { room: null, deck: null };
+  function fitView(area) {
+    var st = $("stage"), D = areaDims(area), cw = st.clientWidth || 600, ch = st.clientHeight || 400;
+    var s = Math.min(cw / (D.w + 3.2), ch / (D.d + 3.6));
+    V[area] = { cx: D.w / 2, cy: D.d / 2 + 0.3, s: s, real: st.clientWidth > 0 };
+  }
+  function viewBox(area) {
+    var st = $("stage"), v = V[area], cw = st.clientWidth || 600, ch = st.clientHeight || 400;
+    return [v.cx - cw / 2 / v.s, v.cy - ch / 2 / v.s, cw / v.s, ch / v.s];
+  }
+  function svgArea(area, opt) {
+    opt = opt || {};
+    var D = areaDims(area), C = opt.C, pre = opt.print ? "p" + area : "s";
+    var vb = opt.vb, h = "";
+    h += '<defs><pattern id="' + pre + 'hp" patternUnits="userSpaceOnUse" width="0.25" height="0.25" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="0.25" class="hatch"/></pattern></defs>';
+    h += '<rect class="floor" x="0" y="0" width="' + D.w + '" height="' + D.d + '"/>';
+    // grid
+    for (var x = 1; x < D.w - 1e-6; x++) h += '<line class="' + (x % 5 ? "g1" : "g5") + '" vector-effect="non-scaling-stroke" x1="' + x + '" y1="0" x2="' + x + '" y2="' + D.d + '"/>';
+    for (var y = 1; y < D.d - 1e-6; y++) h += '<line class="' + (y % 5 ? "g1" : "g5") + '" vector-effect="non-scaling-stroke" x1="0" y1="' + y + '" x2="' + D.w + '" y2="' + y + '"/>';
+    var door = area === "room" ? doorRect() : null;
+    if (door) h += '<rect class="doorzone" vector-effect="non-scaling-stroke" x="' + door.zone[0] + '" y="' + door.zone[1] + '" width="' + (door.zone[2] - door.zone[0]) + '" height="' + (door.zone[3] - door.zone[1]) + '"/>';
+    var placed = C.placed;
+    // zones first
+    placed.forEach(function (it) {
+      var g = C.G[it.id], zb = C.zoneBad[it.id] ? " bad" : "";
+      if (g.env[0] < g.box[0] - 1e-6 || g.env[1] < g.box[1] - 1e-6 || g.env[2] > g.box[2] + 1e-6 || g.env[3] > g.box[3] + 1e-6)
+        h += '<rect class="zone' + zb + '" data-z="' + it.id + '" vector-effect="non-scaling-stroke" x="' + g.env[0] + '" y="' + g.env[1] + '" width="' + (g.env[2] - g.env[0]) + '" height="' + (g.env[3] - g.env[1]) + '"/>';
+      if (g.pull) h += '<rect class="pull' + (C.pullBad[it.id] ? " bad" : "") + '" data-z="' + it.id + '" vector-effect="non-scaling-stroke" fill="url(#' + pre + 'hp)" x="' + g.pull[0] + '" y="' + g.pull[1] + '" width="' + (g.pull[2] - g.pull[0]) + '" height="' + (g.pull[3] - g.pull[1]) + '"/>';
+    });
+    // walls
+    if (area === "room") {
+      h += '<rect class="wall" vector-effect="non-scaling-stroke" x="0" y="0" width="' + D.w + '" height="' + D.d + '"/>';
+      var s0 = door.span[0], s1 = door.span[1], dl;
+      if (door.wall === "t") dl = [s0, 0, s1, 0]; else if (door.wall === "b") dl = [s0, D.d, s1, D.d]; else if (door.wall === "l") dl = [0, s0, 0, s1]; else dl = [D.w, s0, D.w, s1];
+      h += '<line class="doorgap" vector-effect="non-scaling-stroke" x1="' + dl[0] + '" y1="' + dl[1] + '" x2="' + dl[2] + '" y2="' + dl[3] + '"/>';
+      h += '<line class="doorline" vector-effect="non-scaling-stroke" stroke-dasharray="4 3" x1="' + dl[0] + '" y1="' + dl[1] + '" x2="' + dl[2] + '" y2="' + dl[3] + '"/>';
+      var tx = (dl[0] + dl[2]) / 2, ty = (dl[1] + dl[3]) / 2, anc = "middle";
+      if (door.wall === "t") ty = -0.25; else if (door.wall === "b") ty = D.d + 0.45; else if (door.wall === "l") { tx = 0.15; ty = door.span[1] + 0.4; anc = "start"; } else { tx = D.w - 0.15; ty = door.span[1] + 0.4; anc = "end"; }
+      h += '<text class="dimt" font-size="0.3" text-anchor="' + anc + '" x="' + tx + '" y="' + ty + '">door ' + fmt(door.w, 1) + " &#215; " + fmt(door.h, 1) + " m</text>";
+    } else {
+      h += '<rect class="edge" vector-effect="non-scaling-stroke" x="0" y="0" width="' + D.w + '" height="' + D.d + '"/>';
+    }
+    // boxes
+    placed.forEach(function (it) {
+      var g = C.G[it.id], cls = "it" + (C.bad[it.id] || C.zoneBad[it.id] || C.pullBad[it.id] ? " bad" : "") + (!opt.print && ui.sel === it.id ? " sel" : "");
+      var bw = g.bw, bh = g.bh, x0 = g.box[0], y0 = g.box[1];
+      h += '<g class="' + cls + '" data-item="' + it.id + '"' + (opt.print ? "" : ' tabindex="0" role="button" aria-label="' + esc(it.name + ", " + fmt(it.L, 1) + " by " + fmt(it.W, 1) + " metres, at " + fmt(g.box[0], 1) + ", " + fmt(g.box[1], 1)) + '"') + ">";
+      if (it.round) {
+        h += '<circle class="box" vector-effect="non-scaling-stroke" cx="' + (x0 + bw / 2) + '" cy="' + (y0 + bh / 2) + '" r="' + bw / 2 + '"/>';
+      } else {
+        h += '<rect class="box" vector-effect="non-scaling-stroke" x="' + x0 + '" y="' + y0 + '" width="' + bw + '" height="' + bh + '"/>';
+        // service stripe on the connection side (-x end in local terms)
+        var st = 0.12, sr;
+        if (g.r === 0) sr = [x0, y0, Math.min(st, bw), bh]; else if (g.r === 90) sr = [x0, y0, bw, Math.min(st, bh)]; else if (g.r === 180) sr = [x0 + bw - Math.min(st, bw), y0, Math.min(st, bw), bh]; else sr = [x0, y0 + bh - Math.min(st, bh), bw, Math.min(st, bh)];
+        if (!it.isRiser) h += '<rect class="s-' + it.svc + '" x="' + sr[0] + '" y="' + sr[1] + '" width="' + sr[2] + '" height="' + sr[3] + '"/>';
+        else h += '<path d="M' + x0 + "," + y0 + " L" + (x0 + bw) + "," + (y0 + bh) + " M" + (x0 + bw) + "," + y0 + " L" + x0 + "," + (y0 + bh) + '" class="dim" vector-effect="non-scaling-stroke"/>';
+      }
+      // label
+      var raw = it.tag || it.name, dimsRaw = fmt(it.L, 1) + " x " + fmt(it.W, 1);
+      var vert = bh > bw * 1.6 && bh > 1.2, along = vert ? bh : bw, across = vert ? bw : bh;
+      if (it.round) { along = bw * 0.82; across = bh * 0.7; }
+      var fs = Math.max(0.1, Math.min(0.34, across * 0.42, along * 0.86 / (raw.length * 0.7)));
+      var fs2 = Math.min(fs * 0.85, along * 0.86 / (dimsRaw.length * 0.6));
+      var cx = x0 + bw / 2, cy = y0 + bh / 2;
+      var lab = esc(raw), dims = fmt(it.L, 1) + " &#215; " + fmt(it.W, 1);
+      if (vert) {
+        h += '<text class="plbl" font-size="' + fs + '" text-anchor="middle" transform="translate(' + cx + "," + cy + ') rotate(-90)" y="' + (fs * 0.1) + '">' + lab + "</text>";
+        if (bw > fs * 2.6) h += '<text class="plbl2" font-size="' + fs2 + '" text-anchor="middle" transform="translate(' + (cx + fs * 1.05) + "," + cy + ') rotate(-90)">' + dims + "</text>";
+      } else {
+        var two = across > fs * 2.6 && !it.isRiser;
+        h += '<text class="plbl" font-size="' + fs + '" text-anchor="middle" x="' + cx + '" y="' + (two ? cy - fs * 0.15 : cy + fs * 0.35) + '">' + lab + "</text>";
+        if (two) h += '<text class="plbl2" font-size="' + fs2 + '" text-anchor="middle" x="' + cx + '" y="' + (cy + fs * 0.95) + '">' + dims + "</text>";
+      }
+      h += "</g>";
+    });
+    // overall dimensions
+    var dy = -0.7, dx = -0.7, ts = 0.34;
+    h += '<line class="dim" vector-effect="non-scaling-stroke" x1="0" y1="' + dy + '" x2="' + D.w + '" y2="' + dy + '"/>';
+    h += '<line class="dim" vector-effect="non-scaling-stroke" x1="0" y1="' + (dy - .2) + '" x2="0" y2="' + (dy + .2) + '"/><line class="dim" vector-effect="non-scaling-stroke" x1="' + D.w + '" y1="' + (dy - .2) + '" x2="' + D.w + '" y2="' + (dy + .2) + '"/>';
+    h += '<text class="dimt" font-size="' + ts + '" text-anchor="middle" x="' + D.w / 2 + '" y="' + (dy - 0.15) + '">' + fmt(D.w, 1) + " m</text>";
+    h += '<line class="dim" vector-effect="non-scaling-stroke" x1="' + dx + '" y1="0" x2="' + dx + '" y2="' + D.d + '"/>';
+    h += '<line class="dim" vector-effect="non-scaling-stroke" x1="' + (dx - .2) + '" y1="0" x2="' + (dx + .2) + '" y2="0"/><line class="dim" vector-effect="non-scaling-stroke" x1="' + (dx - .2) + '" y1="' + D.d + '" x2="' + (dx + .2) + '" y2="' + D.d + '"/>';
+    h += '<text class="dimt" font-size="' + ts + '" text-anchor="middle" transform="translate(' + (dx - 0.18) + "," + D.d / 2 + ') rotate(-90)">' + fmt(D.d, 1) + " m</text>";
+    // scale bar
+    var sbY = D.d + 0.9, sbX = 0;
+    for (var k = 0; k < 5; k++) h += '<rect class="' + (k % 2 ? "sb0" : "sb1") + '" vector-effect="non-scaling-stroke" x="' + (sbX + k) + '" y="' + sbY + '" width="1" height="0.18"/>';
+    for (k = 0; k <= 5; k++) h += '<text class="dimt" font-size="0.28" text-anchor="middle" x="' + (sbX + k) + '" y="' + (sbY + 0.55) + '">' + k + (k === 5 ? " m" : "") + "</text>";
+    if (opt.print) h += '<text class="dimt" font-size="0.3" x="' + (sbX + 5.8) + '" y="' + (sbY + 0.2) + '">Scale 1:100 on ' + S.paper + " (the 5 m bar measures 50 mm)</text>";
+    var attrs = opt.print
+      ? 'width="' + opt.wmm + 'mm" height="' + opt.hmm + 'mm" viewBox="' + vb.join(" ") + '"'
+      : 'viewBox="' + vb.join(" ") + '" preserveAspectRatio="xMidYMid meet"';
+    return '<svg xmlns="http://www.w3.org/2000/svg" ' + attrs + ' role="img" aria-label="' + (area === "room" ? "Plant room" : "Roof or plant deck") + ' plan">' + h + "</svg>";
+  }
+
+  var C2 = { room: null, deck: null };
+  function renderStage() {
+    var area = ui.area;
+    if (!V[area] || (!V[area].real && $("stage").clientWidth > 0)) fitView(area);
+    var C = C2[area];
+    var focusId = document.activeElement && document.activeElement.getAttribute ? document.activeElement.getAttribute("data-item") : null;
+    $("stage").innerHTML = svgArea(area, { C: C, vb: viewBox(area) });
+    $("stage").classList.toggle("armed", ui.armed != null);
+    if (focusId) { var g = $("stage").querySelector('[data-item="' + focusId + '"]'); if (g) g.focus(); }
+  }
+  function itemById(id) { for (var i = 0; i < M.items.length; i++) if (M.items[i].id === id) return M.items[i]; return null; }
+
+  function renderTray() {
+    var area = ui.area, its = M.items.filter(function (it) { var p = posOf(it); return p.a === area && !p.on; });
+    $("trayHead").textContent = "In the tray: " + (area === "room" ? "plant room" : "roof or plant deck");
+    $("tray").innerHTML = its.length ? its.map(function (it) {
+      return '<button type="button" class="pcard" data-tray="' + it.id + '" aria-pressed="' + (ui.armed === it.id) + '"><b>' + esc(it.name) + "</b><span>" + fmt(it.L, 1) + " &times; " + fmt(it.W, 1) + "&nbsp;m</span></button>";
+    }).join("") : '<p class="trayempty">' + (M.items.length ? "Everything for this area is on the plan." : "Nothing to place yet: enter your plant on tab 1.") + "</p>";
+  }
+  function renderSel() {
+    var it = ui.sel ? itemById(ui.sel) : null;
+    $("selPanel").hidden = !it;
+    if (!it) return;
+    var p = posOf(it), kpa = it.kg > 0 ? it.kg * 0.00981 / (it.L * it.W) : null;
+    $("selInfo").innerHTML = "<b>" + esc(it.name) + "</b> &middot; " + esc(it.row.name) + "<br>" + fmt(it.L, 2) + " &times; " + fmt(it.W, 2) + "&nbsp;m" + (it.H > 0 ? ", " + fmt(it.H, 2) + "&nbsp;m high" : "") +
+      (kpa ? ", about " + fmt(kpa) + "&nbsp;kPa on its footprint" : "") +
+      (p.on ? '<p class="hint">At ' + fmt(geom(it, p).box[0], 2) + ", " + fmt(geom(it, p).box[1], 2) + "&nbsp;m from the top-left corner, turned " + p.r + "°.</p>" : '<p class="hint">In the tray. Select a spot on the plan to place it.</p>');
+    $("moveArea").textContent = p.a === "room" ? "Move to the roof" : "Move to the plant room";
+    $("toTray").disabled = !p.on;
+    Array.prototype.forEach.call(document.querySelectorAll("[data-nudge]"), function (b) { b.disabled = !p.on; });
+    $("rotBtn").disabled = !p.on;
+  }
+  function feedback(msg, cls) {
+    var el = $("fb2");
+    el.className = "fb" + (cls ? " " + cls : "");
+    el.innerHTML = msg || "";
+  }
+
+  function renderTab2() {
+    C2.room = checks("room", M.items); C2.deck = checks("deck", M.items);
+    renderStage(); renderTray(); renderSel();
+    $("areaRoom").setAttribute("aria-pressed", ui.area === "room"); $("areaDeck").setAttribute("aria-pressed", ui.area === "deck");
+    $("pullTight").setAttribute("aria-pressed", !S.ahuFull); $("pullFull").setAttribute("aria-pressed", !!S.ahuFull);
+    $("paperA4").setAttribute("aria-pressed", S.paper === "A4"); $("paperA3").setAttribute("aria-pressed", S.paper === "A3");
+
+    var T = { room: totals("room", M.items, C2.room), deck: totals("deck", M.items, C2.deck) };
+    var res = "";
+    if (!M.items.length) res = '<p class="empty">Nothing to lay out yet: enter your plant on tab 1.</p>';
+    else {
+      res = '<div class="headline">';
+      ["room", "deck"].forEach(function (a, i) {
+        var t = T[a];
+        res += "<div><div class=\"big" + (i ? " sm" : "") + "\">" + fmt(100 * (t.box + t.zone) / t.area) + "<small>% of the " + (a === "room" ? "plant room" : "deck") + " used</small></div><div class=\"bigcap\">" +
+          fmt(t.area) + "&nbsp;m²: " + fmt(t.box) + " of boxes, " + fmt(t.zone) + " of clearance and access, " + fmt(t.free) + " free</div></div>";
+      });
+      res += "</div>";
+    }
+    $("res2").innerHTML = res;
+
+    // checks for both areas
+    var L = [], nBad = 0;
+    ["room", "deck"].forEach(function (a) {
+      var C = C2[a];
+      C.list.forEach(function (c) { if (c.s === "bad") nBad++; L.push('<li class="' + c.s + '">' + (a === "room" ? "" : "<i>Roof:</i> ") + c.h + "</li>"); });
+    });
+    var H = heightCheck(), R = routeCheck(), F = loadCheck();
+    if (H) L.push(H.li); if (R) R.lis.forEach(function (x) { L.push(x); }); if (F) L.push(F.li);
+    if (M.items.length && !nBad) L.unshift('<li class="ok"><b>No clashes.</b> Every placed box and clearance is clear of the walls, the door and the other boxes.</li>');
+    $("checks2").innerHTML = M.items.length ? L.join("") : "<li>No items yet.</li>";
+
+    // five questions
+    renderFive(T, H, R);
+    printFit();
+  }
+  function heightCheck() {
+    var its = M.items.filter(function (it) { var p = posOf(it); return p.a === "room" && p.on && it.H > 0; });
+    if (!its.length) return null;
+    var need = null;
+    its.forEach(function (it) { var n = it.H + (it.clr.top || 0); if (!need || n > need.n) need = { n: n, it: it }; });
+    var hh = S.room.h > 0 ? S.room.h : 0, ok = hh >= need.n - 1e-6;
+    return {
+      need: need, ok: ok,
+      li: '<li class="' + (ok ? "ok" : "bad") + '"><b>Clear height ' + (ok ? "is enough" : "is too low") + ".</b> The tallest need is " + esc(need.it.name) + ": " + fmt(need.it.H, 2) + "&nbsp;m plus " + fmt(need.it.clr.top || 0, 2) + "&nbsp;m above it = " + fmt(need.n, 2) + "&nbsp;m, against " + fmt(hh, 1) + "&nbsp;m." + (ok ? " Pipes, ducts and cable trays above the plant need more." : " Raise the room or choose lower plant.") + "</li>"
+    };
+  }
+  function routeCheck() {
+    var its = M.items.filter(function (it) { var p = posOf(it); return p.a === "room" && p.on && it.piece; });
+    if (!its.length) return null;
+    var d = doorRect(), fails = [], big = null;
+    its.forEach(function (it) {
+      var w = Math.min(it.piece[0], it.piece[1] || 99), hgt = it.piece[1];
+      if (!big || it.piece[0] * it.piece[1] > big.piece[0] * big.piece[1]) big = it;
+      if (it.piece[0] > d.w + 1e-6 || it.piece[1] > d.h + 1e-6) fails.push(it);
+    });
+    var lis = [];
+    if (fails.length) lis.push('<li class="bad"><b>Not through the door: ' + fails.map(function (it) { return esc(it.name); }).join(", ") + ".</b> The door is " + fmt(d.w, 1) + " &times; " + fmt(d.h, 1) + "&nbsp;m; " + esc(fails[0].name) + " needs " + fmt(fails[0].piece[0], 2) + " &times; " + fmt(fails[0].piece[1], 2) + "&nbsp;m. Widen the door, add a removable louvre or panel, or plan a route in from above.</li>");
+    else lis.push('<li class="ok"><b>Everything gets in and out.</b> The largest piece, ' + esc(big.name) + " (" + fmt(big.piece[0], 2) + " &times; " + fmt(big.piece[1], 2) + "&nbsp;m), passes the " + fmt(d.w, 1) + " &times; " + fmt(d.h, 1) + "&nbsp;m door.</li>");
+    return { fails: fails, big: big, door: d, lis: lis };
+  }
+  function loadCheck() {
+    var its = M.items.filter(function (it) { return posOf(it).on && it.kg > 0; });
+    if (!its.length) return null;
+    var over = its.filter(function (it) { return it.kg * 0.00981 / (it.L * it.W) > KPA_OFFICE; });
+    var top = its.slice().sort(function (a, b) { return b.kg / (b.L * b.W) - a.kg / (a.L * a.W); })[0];
+    return {
+      li: '<li class="warn"><b>Floor loading: ' + over.length + " of " + its.length + " placed items exceed a typical office floor.</b> The highest is " + esc(top.name) + " at about " + fmt(top.kg * 0.00981 / (top.L * top.W)) + "&nbsp;kPa on its footprint, against " + fmt(KPA_OFFICE, 1) + "&nbsp;kPa. A plant room or roof deck needs a slab designed for its plant: tell the structural engineer what sits where.</li>"
+    };
+  }
+  function renderFive(T, H, R) {
+    if (!M.items.length) { $("five").innerHTML = "<li>Enter your plant on tab 1 first.</li>"; return; }
+    var t = T.room, L = [];
+    var roomItems = M.items.filter(function (it) { return posOf(it).a === "room"; });
+    L.push("<i>How big is the room, and how much of it is equipment against access and walkway?</i>" + fmt(S.room.w, 1) + " &times; " + fmt(S.room.d, 1) + "&nbsp;m = " + fmt(t.area) + "&nbsp;m². Equipment boxes " + fmt(t.box) + "&nbsp;m² (" + fmt(100 * t.box / t.area) + "%), clearance and access " + fmt(t.zone) + "&nbsp;m² (" + fmt(100 * t.zone / t.area) + "%), free " + fmt(t.free) + "&nbsp;m²." + (t.box > 0 ? " Access takes " + fmt(t.zone / t.box, 1) + " times the area of the boxes." : "") +
+      (roomItems.some(function (it) { return !posOf(it).on; }) ? " Some items are still in the tray, so the room is not finished." : ""));
+    L.push("<i>What is the clear height, and what forced it?</i>" + (H ? fmt(S.room.h, 1) + "&nbsp;m set; the tallest need is " + esc(H.need.it.name) + " at " + fmt(H.need.n, 2) + "&nbsp;m with the space above it. " + (H.ok ? "It fits, before pipes and ducts over the plant." : "It does not fit.") : "No plant placed in the room yet."));
+    L.push("<i>How would a chiller or a pump get out, and a new one get in?</i>" + (R ? "Through the " + fmt(R.door.w, 1) + " &times; " + fmt(R.door.h, 1) + "&nbsp;m door in the " + WALLNAME[R.door.wall] + " wall. " + (R.fails.length ? R.fails.length + " item" + (R.fails.length > 1 ? "s do" : " does") + " not fit through it (" + R.fails.map(function (it) { return esc(it.name); }).join(", ") + ")." : "Every placed item passes it; the largest is " + esc(R.big.name) + ".") + " Keep the route from the door to the street or loading dock as wide." : "No plant placed in the room yet."));
+    var rs = M.groups.map(function (g) { return { g: g, r: riser(g, g.sys) }; });
+    var lost = sum(rs.map(function (x) { return x.r.lost || 0; }));
+    var riserPlaced = M.items.some(function (it) { return it.isRiser && posOf(it).on; });
+    L.push("<i>Where do the risers leave the room, and what do they cost the floors above?</i>" + (rs.length ? rs.map(function (x) { return esc(x.g.name) + ": " + fmt(x.r.tot, 1) + "&nbsp;m² a floor" + (x.r.pct != null ? " (" + fmt(x.r.pct, 1) + "% of the plate)" : ""); }).join("; ") + "." + (lost > 0 ? " About " + fmt(lost) + "&nbsp;m² of floor in all, across the floors served." : "") : "") +
+      (riserPlaced ? " The pipe riser is placed on the plan." : " Place the pipe riser item on the plan to show where it leaves."));
+    var noisy = M.items.filter(function (it) { return it.noisy && posOf(it).on; });
+    var kinds = {}; noisy.forEach(function (it) { kinds[it.row.name.split(",")[0].replace(/^[A-Z][a-z]/, function (m) { return m.toLowerCase(); })] = 1; });
+    var pumpsBig = M.items.some(function (it) { return it.kind === "pump" && it.motor >= 11 && posOf(it).on; });
+    L.push("<i>What is noisy, and what has been done about it?</i>" + (noisy.length ? "Noisy here: " + Object.keys(kinds).join(", ") + ". " : "") + "What has been done is for you to say on the drawing: spring mounts under plant, flexible connections on pipes and ducts, attenuators, and the construction of the plant room walls and door." + (pumpsBig ? " The larger pumps here (11&nbsp;kW and over) are where the pump maker suggests considering vibration isolation." : "") + " On the roof, keep the outdoor units away from neighbours&rsquo; windows and from your own outdoor-air intakes.");
+    $("five").innerHTML = L.map(function (x) { return "<li>" + x + "</li>"; }).join("");
+  }
+
+  // ---- print ----
+  var PAPER = { A4: [277, 190], A3: [400, 277] };
+  function printDims(area) {
+    var D = areaDims(area), m = 1.6;
+    var vb = [-m, -m, D.w + 2 * m, D.d + 2 * m + 1.0];
+    return { vb: vb, wmm: vb[2] * 10, hmm: vb[3] * 10 };
+  }
+  function printFit() {
+    var P = PAPER[S.paper], msgs = [];
+    ["room", "deck"].forEach(function (a) {
+      var d = printDims(a), ok = d.wmm <= P[0] && d.hmm <= P[1] - 22;
+      if (!ok) msgs.push("The " + (a === "room" ? "plant room" : "deck") + " needs " + fmt(d.wmm) + " &times; " + fmt(d.hmm + 22) + "&nbsp;mm at 1:100, more than " + S.paper + " landscape gives" + (S.paper === "A4" ? "; try A3." : "; it will run onto a second sheet."));
+    });
+    $("printFit").innerHTML = msgs.length ? msgs.join(" ") : "Both plans fit " + S.paper + " landscape at 1:100.";
+  }
+  function buildPrint() {
+    $("pageSize").textContent = "@page { size: " + S.paper + " landscape; margin: 10mm; }";
+    var h = "";
+    ["room", "deck"].forEach(function (a) {
+      var d = printDims(a), C = C2[a], its = M.items.filter(function (it) { return posOf(it).a === a && posOf(it).on; });
+      if (!its.length && a === "deck") return;
+      var title = a === "room" ? "Plant room, " + fmt(S.room.w, 1) + " &times; " + fmt(S.room.d, 1) + " m, clear height " + fmt(S.room.h, 1) + " m" : "Roof or plant deck, " + fmt(S.deck.w, 1) + " &times; " + fmt(S.deck.d, 1) + " m";
+      h += '<div class="psheet"><h2>' + title + " &middot; scale 1:100 on " + S.paper + "</h2>" + svgArea(a, { C: C, vb: d.vb, wmm: d.wmm, hmm: d.hmm, print: true }) +
+        "<p>Boxes are the largest unit in each range from current manufacturers&rsquo; data; dashed zones are service and airflow clearances, which may be shared; hatched is a chiller&rsquo;s tube-pull zone. Concept-stage allowances: a real selection governs. " +
+        (C.list.filter(function (c) { return c.s === "bad"; }).length ? C.list.filter(function (c) { return c.s === "bad"; }).length + " check(s) fail on this sheet." : "No clashes on this sheet.") + " BPSD6030 plant room planner.</p></div>";
+    });
+    $("printSheet").innerHTML = h;
+  }
+  window.addEventListener("beforeprint", function () { if (M) buildPrint(); });
+
+  // =====================================================================
+  // RENDER: tab 3
+  // =====================================================================
+  function renderTab3() {
+    if (!M.groups.length) { $("res3").innerHTML = '<p class="empty">Enter the floor area of at least one riser group on tab 1.</p>'; return; }
+    var h = "";
+    M.groups.forEach(function (g) {
+      var R = {}, keys = ["vav", "fcu", "beam", "vrf"], top = 0;
+      keys.forEach(function (k) { R[k] = riser(g, k); top = Math.max(top, R[k].tot); });
+      h += "<h3>" + esc(g.name) + "</h3><p class=\"note\">" + fmt(g.area) + "&nbsp;m² over " + (g.floors ? g.floors + " floor" + (g.floors > 1 ? "s" : "") + " (" + fmt(g.area / g.floors) + "&nbsp;m² a floor)" : "an unknown number of floors") + "; your zone system: <b>" + SYS[g.sys] + "</b>. Its share of your design capacity: " + fmt(g.cool) + "&nbsp;kWr cooling, " + fmt(g.heat) + "&nbsp;kW heating.</p>";
+      h += '<div class="bars" role="img" aria-label="' + esc("Shaft area per floor for " + g.name + ": " + keys.map(function (k) { return SYS[k] + " " + fmt(R[k].tot, 1) + " square metres"; }).join(", ")) + '">';
+      keys.forEach(function (k) {
+        var r = R[k], w1 = top > 0 ? 100 * r.airTot / top : 0, w2 = top > 0 ? 100 * r.pipeTot / top : 0;
+        h += '<div class="brow' + (g.sys === k ? " chosen" : "") + '"><span class="nm">' + SYS[k].replace(" (comparison only)", "*") + '</span><div class="btrack"><div class="bseg air" style="width:' + w1 + '%"></div><div class="bseg ' + (k === "vrf" ? "ref" : "pipe") + '" style="width:' + w2 + '%"></div></div><span class="val">' + fmt(r.tot, 1) + "&nbsp;m²</span></div>";
+      });
+      h += '</div><div class="legendrow" aria-hidden="true"><span><i style="background:var(--air)"></i>duct shaft</span><span><i style="background:var(--cool)"></i>pipe riser</span><span><i style="background:var(--refrig)"></i>refrigerant pipes</span><span>* VRF: comparison only, outside the Assignment 2 brief</span></div>';
+      h += '<div class="tablewrap"><table class="data"><thead><tr><th></th>' + keys.map(function (k) { return '<th class="num' + (g.sys === k ? " chosen" : "") + '">' + SYS[k].replace(" (comparison only)", "*") + "</th>"; }).join("") + "</tr></thead><tbody>";
+      function row(label, f, d) { h += "<tr><td>" + label + "</td>" + keys.map(function (k) { var v = f(R[k], k); return '<td class="num' + (g.sys === k ? " chosen" : "") + '">' + (typeof v === "string" ? v : fmt(v, d == null ? 1 : d)) + "</td>"; }).join("") + "</tr>"; }
+      row("Air rate, L/s per m²", function (r) { return fmt(r.air[0].q, 2) + " / " + fmt(r.air[1].q, 2); });
+      row("Airflow, m³/s", function (r) { return fmt(r.air[0].Q, 1) + " / " + fmt(r.air[1].Q, 1); });
+      row("Duct shaft, m² (supply or outdoor air + return or exhaust)", function (r) { return fmt(r.air[0].area, 2) + " + " + fmt(r.air[1].area, 2); });
+      row("Pipe riser, m²", function (r, k) { return k === "vrf" ? fmt(r.ref, 2) + " (" + r.nsys + " system" + (r.nsys === 1 ? "" : "s") + ")" : fmt(r.pipeTot, 2) + (r.pipes.length ? " (" + r.pipes.map(function (p) { return "DN" + p.dn; }).join(", ") + ")" : ""); });
+      row("<b>Shaft a floor, m²</b>", function (r) { return "<b>" + fmt(r.tot, 1) + "</b>"; });
+      row("Share of the floor plate", function (r) { return r.pct != null ? fmt(r.pct, 1) + "%" : "—"; });
+      row("Floor area taken across the floors served, m²", function (r) { return r.lost != null ? fmt(r.lost) : "—"; });
+      h += "</tbody></table></div>";
+      var v = R.vav.tot, b = R.beam.tot, f = R.fcu.tot;
+      if (v > 0) h += '<p class="verdict">Against all-air VAV, DOAS with fan-coil units takes ' + fmt(100 * (1 - f / v)) + "% less shaft and DOAS with chilled beams " + fmt(100 * (1 - b / v)) + "% less" + (g.floors ? ", about " + fmt((v - Math.min(f, b)) * g.floors) + "&nbsp;m² of floor back across the " + g.floors + " floors" : "") + ". The duct shaft alone falls by " + fmt(100 * (1 - R.beam.airTot / R.vav.airTot)) + "%; the larger pipe riser gives some of it back.</p>";
+      var small = R.fcu.air.some(function (d) { return d.k === 2.0; });
+      if (small) h += '<p class="hint">The outdoor-air ducts here are under 1&nbsp;m², so they take the larger gross-up (<i>k</i>&nbsp;=&nbsp;2.0).</p>';
+    });
+    if (M.mainPipes.length) {
+      h += "<h3>The pipe riser leaving the plant room</h3><p class=\"note\">" + M.mainPipes.map(function (p) { return p.name + ": " + fmt(p.Ls, 1) + "&nbsp;L/s, DN" + p.dn + " at " + fmt(p.v, 1) + "&nbsp;m/s" + (p.over ? " (above the largest size listed)" : ""); }).join("; ") + ". About " + fmt(sum(M.mainPipes.map(function (p) { return p.area; })), 2) + "&nbsp;m² with insulation, gaps and 20% spare; it is the &ldquo;Pipe riser&rdquo; item on tab 2.</p>";
+    }
+    $("res3").innerHTML = h;
+  }
+
+  // =====================================================================
+  // DATASOURCE + UPDATE
+  // =====================================================================
+  function renderSource() {
+    var el = $("dataSource");
+    if (origin === "empty" && !M.rows.length) { el.hidden = true; return; }
+    var mine = origin !== "example";
+    var msg = mine ? "Numbers on screen: <b>yours</b>." : "Numbers on screen: <b>the worked example</b> (a nine-storey retail, office and hotel building of 8,000&nbsp;m², illustrative values).";
+    el.hidden = false;
+    el.classList.toggle("mine", mine);
+    if (el.innerHTML !== msg) el.innerHTML = msg;
+  }
+  var saveT = null;
+  function update() {
+    M = model();
+    M.items.forEach(posOf);
+    renderGroupFlags();
+    renderTab1(); renderTab2(); renderTab3(); renderSource();
+    clearTimeout(saveT); saveT = setTimeout(save, 300);
+  }
+  function touched() { if (origin !== "mine") origin = "mine"; }
+  window.addEventListener("pagehide", function () { clearTimeout(saveT); save(); });
+
+  // =====================================================================
+  // EVENTS: tab 1 inputs
+  // =====================================================================
+  function num(v) { if (v === "" || v == null) return null; var x = parseFloat(v); return isFinite(x) && x >= 0 ? x : null; }
+  FIELDS.forEach(function (f) {
+    $("in-" + f).addEventListener("input", function (e) { S[f] = num(e.target.value); touched(); update(); });
+  });
+  $("in-coolPlant").addEventListener("change", function (e) { S.coolPlant = e.target.value; if (S.coolPlant !== "hp4" && S.heatPlant === "hp4") S.heatPlant = "hp"; touched(); syncInputs(); update(); });
+  $("in-heatPlant").addEventListener("change", function (e) { S.heatPlant = e.target.value; touched(); update(); });
+  $("in-spareCool").addEventListener("change", function (e) { S.spareCool = e.target.checked; touched(); update(); });
+  $("in-spareHeat").addEventListener("change", function (e) { S.spareHeat = e.target.checked; touched(); update(); });
+  $("in-hwt").addEventListener("change", function (e) {
+    S.hwt = e.target.value; S.derate = S.hwt === "45" ? 0 : S.hwt === "55" ? 20 : 30;
+    touched(); syncInputs(); update();
+  });
+  $("groups").addEventListener("input", function (e) {
+    var t = e.target, row = t.closest(".rg"); if (!row || !t.getAttribute("data-g")) return;
+    var g = S.groups[+row.getAttribute("data-gi")], f = t.getAttribute("data-g");
+    if (f === "name") g.name = t.value; else if (f === "sys") g.sys = t.value; else g[f] = num(t.value);
+    touched(); update();
+  });
+  $("groups").addEventListener("change", function (e) {
+    var t = e.target; if (t.getAttribute("data-g") !== "sys") return;
+    var row = t.closest(".rg"); S.groups[+row.getAttribute("data-gi")].sys = t.value; touched(); update();
+  });
+  $("groups").addEventListener("click", function (e) {
+    var b = e.target.closest ? e.target.closest("[data-gdel]") : null; if (!b || S.groups.length < 2) return;
+    S.groups.splice(+b.getAttribute("data-gdel"), 1); touched(); renderGroups(); update();
+    var f = $("groups").querySelector("input"); if (f) f.focus();
+  });
+  $("addGroup").addEventListener("click", function () {
+    if (S.groups.length >= 4) return;
+    S.groups.push(clone(BLANK_GROUP)); touched(); renderGroups(); update();
+    var rows = $("groups").querySelectorAll(".rg"); rows[rows.length - 1].querySelector("input").focus();
+  });
+  $("clearBtn").addEventListener("click", function () {
+    S.cool = null; S.heat = null; S.rooms = null; S.apts = null; S.groups = [clone(BLANK_GROUP)]; S.pos = {};
+    origin = "empty"; ui.sel = null; ui.armed = null; V.room = V.deck = null;
+    syncInputs(); update(); $("in-cool").focus();
+  });
+  $("resetBtn").addEventListener("click", function () {
+    S = clone(EXAMPLE); origin = "example"; ui.sel = null; ui.armed = null; V.room = V.deck = null;
+    syncInputs(); M = model(); exampleLayout(); update();
+  });
+
+  // ---- tab 2 inputs ----
+  function roomInput(id, obj, key) {
+    $(id).addEventListener("input", function (e) { var v = num(e.target.value); S[obj][key] = v; touched(); if (key === "w" || key === "d") V[obj === "room" ? "room" : "deck"] = null; update(); });
+  }
+  roomInput("in-rw", "room", "w"); roomInput("in-rd", "room", "d"); roomInput("in-rh", "room", "h");
+  roomInput("in-doff", "room", "doff"); roomInput("in-dw", "room", "dw"); roomInput("in-dh", "room", "dh");
+  roomInput("in-kw", "deck", "w"); roomInput("in-kd", "deck", "d");
+  $("in-dwall").addEventListener("change", function (e) { S.room.dwall = e.target.value; touched(); update(); });
+  $("in-vS").addEventListener("input", function (e) { S.vS = num(e.target.value) || 7; touched(); update(); });
+  $("in-vR").addEventListener("input", function (e) { S.vR = num(e.target.value) || 6; touched(); update(); });
+  $("pullTight").addEventListener("click", function () { S.ahuFull = false; touched(); update(); });
+  $("pullFull").addEventListener("click", function () { S.ahuFull = true; touched(); update(); });
+  $("paperA4").addEventListener("click", function () { S.paper = "A4"; update(); });
+  $("paperA3").addEventListener("click", function () { S.paper = "A3"; update(); });
+  $("printBtn").addEventListener("click", function () { buildPrint(); window.print(); });
+  function setArea(a) { ui.area = a; ui.armed = null; if (!V[a] || !V[a].real) fitView(a); renderTab2(); }
+  $("areaRoom").addEventListener("click", function () { setArea("room"); });
+  $("areaDeck").addEventListener("click", function () { setArea("deck"); });
+  function zoom(f) { var v = V[ui.area]; if (!v) return; v.s = Math.max(4, Math.min(400, v.s * f)); renderStage(); }
+  $("zoomIn").addEventListener("click", function () { zoom(1.25); });
+  $("zoomOut").addEventListener("click", function () { zoom(0.8); });
+  $("zoomFit").addEventListener("click", function () { fitView(ui.area); renderStage(); });
+  $("packBtn").addEventListener("click", function () {
+    var left = pack(ui.area, M.items); touched(); update();
+    feedback(left ? "Packed in rows. " + left + " item" + (left > 1 ? "s do" : " does") + " not fit and stay" + (left > 1 ? "" : "s") + " in the tray: make the " + (ui.area === "room" ? "room" : "deck") + " bigger or move something." : "Packed in rows, with no aisles shared. Now pull items together so their clearance zones overlap.", left ? "bad" : "good");
+  });
+
+  // ---- placing and moving ----
+  function snap(v) { return Math.round(v * 20) / 20; }
+  function placeAt(id, x, y, viaKeys) {
+    var it = itemById(id); if (!it) return;
+    var p = posOf(it); p.a = ui.area; p.on = true; p.x = snap(x); p.y = snap(y);
+    ui.armed = null; ui.sel = id; touched(); update();
+    reportItem(id, "Placed");
+    if (viaKeys) { var g = $("stage").querySelector('[data-item="' + id + '"]'); if (g) g.focus(); }
+  }
+  function reportItem(id, verb) {
+    var C = C2[ui.area], it = itemById(id), mine = C.list.filter(function (c) { return c.ids.indexOf(id) >= 0 && c.s !== "ok"; });
+    var p = posOf(it), g = geom(it, p);
+    var where = fmt(g.box[0], 2) + ", " + fmt(g.box[1], 2) + "&nbsp;m";
+    if (mine.length) feedback(verb + " " + esc(it.name) + " at " + where + ". " + mine[0].h, "bad");
+    else feedback(verb + " " + esc(it.name) + " at " + where + ". Its box and clearance are clear.", "good");
+  }
+  function moveBy(id, dx, dy) {
+    var it = itemById(id), p = posOf(it); if (!p.on) return;
+    p.x = snap(p.x + dx); p.y = snap(p.y + dy); touched(); update(); reportItem(id, "Moved");
+  }
+  function rotate(id) {
+    var it = itemById(id), p = posOf(it); if (!p.on) return;
+    p.r = (p.r + 90) % 360; touched(); update(); reportItem(id, "Turned");
+  }
+  function toTray(id) {
+    var it = itemById(id), p = posOf(it); p.on = false; ui.sel = null; touched(); update();
+    feedback(esc(it.name) + " is back in the tray.");
+  }
+  function toWorld(e) {
+    var svg = $("stage").querySelector("svg"); if (!svg) return { x: 0, y: 0 };
+    var pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+    var m = svg.getScreenCTM(); if (!m) return { x: 0, y: 0 };
+    var r = pt.matrixTransform(m.inverse()); return { x: r.x, y: r.y };
+  }
+  var drag = null, pan = null, suppress = false;
+  var stage = $("stage");
+  stage.addEventListener("pointerdown", function (e) {
+    if (e.button > 0) return;
+    var g = e.target.closest ? e.target.closest("[data-item]") : null;
+    if (g) {
+      var id = g.getAttribute("data-item"), p = posOf(itemById(id)), w = toWorld(e);
+      drag = { id: id, g: g, x0: w.x, y0: w.y, px: p.x, py: p.y, moved: false, pid: e.pointerId, dx: 0, dy: 0 };
+      try { stage.setPointerCapture(e.pointerId); } catch (err) {}
+      e.preventDefault();
+      return;
+    }
+    if (ui.armed) { var w2 = toWorld(e); placeAt(ui.armed, w2.x, w2.y, false); return; }
+    var v = V[ui.area];
+    pan = { sx: e.clientX, sy: e.clientY, cx: v.cx, cy: v.cy, pid: e.pointerId, moved: false };
+    try { stage.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+  stage.addEventListener("pointermove", function (e) {
+    if (drag && e.pointerId === drag.pid) {
+      var w = toWorld(e), dx = w.x - drag.x0, dy = w.y - drag.y0;
+      if (!drag.moved && Math.abs(dx) + Math.abs(dy) < 0.08) return;
+      drag.moved = true; drag.dx = snap(drag.px + dx) - drag.px; drag.dy = snap(drag.py + dy) - drag.py;
+      drag.g.setAttribute("transform", "translate(" + drag.dx + "," + drag.dy + ")");
+      drag.g.classList.add("dragging");
+      Array.prototype.forEach.call(stage.querySelectorAll('[data-z="' + drag.id + '"]'), function (z) { z.setAttribute("transform", "translate(" + drag.dx + "," + drag.dy + ")"); });
+      e.preventDefault();
+    } else if (pan && e.pointerId === pan.pid) {
+      var v = V[ui.area], ddx = e.clientX - pan.sx, ddy = e.clientY - pan.sy;
+      if (!pan.moved && Math.abs(ddx) + Math.abs(ddy) < 4) return;
+      pan.moved = true; v.cx = pan.cx - ddx / v.s; v.cy = pan.cy - ddy / v.s;
+      var svg = stage.querySelector("svg"); if (svg) svg.setAttribute("viewBox", viewBox(ui.area).join(" "));
+    }
+  });
+  function endPointer(e, cancel) {
+    if (drag && e.pointerId === drag.pid) {
+      var d = drag; drag = null;
+      if (d.moved && !cancel) {
+        var p = posOf(itemById(d.id)); p.x = round2(d.px + d.dx); p.y = round2(d.py + d.dy);
+        ui.sel = d.id; touched(); update(); reportItem(d.id, "Moved");
+        var g = stage.querySelector('[data-item="' + d.id + '"]'); if (g) g.focus({ preventScroll: true });
+      } else if (!d.moved) {
+        ui.sel = ui.sel === d.id ? null : d.id; ui.armed = null; renderTab2();
+        var g2 = stage.querySelector('[data-item="' + d.id + '"]'); if (g2) g2.focus({ preventScroll: true });
+        if (ui.sel) reportItem(d.id, "Selected"); else feedback("");
+      } else renderStage();
+    }
+    if (pan && e.pointerId === pan.pid) {
+      var wasMoved = pan.moved; pan = null;
+      if (!wasMoved && ui.sel) { ui.sel = null; renderTab2(); feedback(""); }
+    }
+  }
+  stage.addEventListener("pointerup", function (e) { endPointer(e, false); });
+  stage.addEventListener("pointercancel", function (e) { endPointer(e, true); });
+  stage.addEventListener("wheel", function (e) {
+    if (!e.ctrlKey && !e.metaKey) return;
+    e.preventDefault(); zoom(e.deltaY < 0 ? 1.12 : 0.89);
+  }, { passive: false });
+  stage.addEventListener("keydown", function (e) {
+    var g = e.target.closest ? e.target.closest("[data-item]") : null;
+    if (g) {
+      var id = g.getAttribute("data-item"), step = e.shiftKey ? 0.5 : 0.1;
+      if (e.key === "ArrowLeft") { e.preventDefault(); ui.sel = id; moveBy(id, -step, 0); }
+      else if (e.key === "ArrowRight") { e.preventDefault(); ui.sel = id; moveBy(id, step, 0); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); ui.sel = id; moveBy(id, 0, -step); }
+      else if (e.key === "ArrowDown") { e.preventDefault(); ui.sel = id; moveBy(id, 0, step); }
+      else if (e.key === "r" || e.key === "R") { e.preventDefault(); ui.sel = id; rotate(id); }
+      else if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); toTray(id); stage.focus(); }
+      else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); ui.sel = id; renderTab2(); reportItem(id, "Selected"); }
+      return;
+    }
+    if (e.target === stage && ui.armed && (e.key === "Enter" || e.key === " ")) {
+      e.preventDefault(); var v = V[ui.area]; placeAt(ui.armed, v.cx, v.cy, true);
+    }
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && (ui.armed || ui.sel)) { ui.armed = null; ui.sel = null; renderTab2(); feedback(""); }
+  });
+
+  // tray: click to arm, or drag onto the plan
+  var tdrag = null, tsuppress = false;
+  $("tray").addEventListener("click", function (e) {
+    if (tsuppress) return;
+    var b = e.target.closest ? e.target.closest("[data-tray]") : null; if (!b) return;
+    var id = b.getAttribute("data-tray");
+    ui.armed = ui.armed === id ? null : id; ui.sel = ui.armed;
+    renderTab2();
+    var nb = $("tray").querySelector('[data-tray="' + id + '"]'); if (nb) nb.focus();
+    feedback(ui.armed ? "Now select a spot on the plan for " + esc(itemById(id).name) + " (or focus the plan and press Enter to put it in the middle of the view)." : "");
+  });
+  $("tray").addEventListener("pointerdown", function (e) {
+    var b = e.target.closest ? e.target.closest("[data-tray]") : null; if (!b || e.button > 0) return;
+    tdrag = { b: b, id: b.getAttribute("data-tray"), x0: e.clientX, y0: e.clientY, on: false, pid: e.pointerId };
+  });
+  document.addEventListener("pointermove", function (e) {
+    if (!tdrag || e.pointerId !== tdrag.pid) return;
+    if (!tdrag.on) {
+      if (Math.abs(e.clientX - tdrag.x0) + Math.abs(e.clientY - tdrag.y0) < 6) return;
+      tdrag.on = true;
+      var gh = tdrag.b.cloneNode(true); gh.classList.add("ghostcard"); gh.setAttribute("aria-hidden", "true"); gh.style.width = tdrag.b.offsetWidth + "px";
+      document.body.appendChild(gh); tdrag.ghost = gh; tdrag.b.classList.add("lifted");
+    }
+    e.preventDefault();
+    tdrag.ghost.style.left = (e.clientX - tdrag.b.offsetWidth / 2) + "px"; tdrag.ghost.style.top = (e.clientY - 20) + "px";
+  });
+  function endT(e, drop) {
+    if (!tdrag || e.pointerId !== tdrag.pid) return;
+    var d = tdrag; tdrag = null;
+    if (!d.on) return;
+    d.ghost.remove(); d.b.classList.remove("lifted");
+    tsuppress = true; setTimeout(function () { tsuppress = false; }, 0);
+    var r = stage.getBoundingClientRect();
+    if (drop && e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) {
+      var w = toWorld(e); placeAt(d.id, w.x, w.y, false);
+    }
+  }
+  document.addEventListener("pointerup", function (e) { endT(e, true); });
+  document.addEventListener("pointercancel", function (e) { endT(e, false); });
+
+  // selected panel buttons
+  Array.prototype.forEach.call(document.querySelectorAll("[data-nudge]"), function (b) {
+    b.addEventListener("click", function () { if (!ui.sel) return; var d = b.getAttribute("data-nudge").split(","); moveBy(ui.sel, 0.1 * d[0], 0.1 * d[1]); });
+  });
+  $("rotBtn").addEventListener("click", function () { if (ui.sel) rotate(ui.sel); });
+  $("toTray").addEventListener("click", function () { if (ui.sel) toTray(ui.sel); });
+  $("moveArea").addEventListener("click", function () {
+    if (!ui.sel) return;
+    var it = itemById(ui.sel), p = posOf(it); p.a = p.a === "room" ? "deck" : "room"; p.on = false; touched();
+    ui.area = p.a; ui.armed = it.id; update();
+    feedback(esc(it.name) + " is now in the tray for the " + (p.a === "room" ? "plant room" : "roof or plant deck") + ". Select a spot on the plan to place it.");
+  });
+
+  // =====================================================================
+  // TABS
+  // =====================================================================
+  var tabs = Array.prototype.slice.call(document.querySelectorAll(".tab"));
+  var panels = [$("panel-1"), $("panel-2"), $("panel-3")];
+  function activate(idx, focusTab) {
+    if (idx < 0 || idx >= panels.length) return;
+    ui.tab = idx;
+    tabs.forEach(function (t, i) {
+      var on = i === idx;
+      t.classList.toggle("active", on);
+      t.setAttribute("aria-selected", on ? "true" : "false");
+      t.tabIndex = on ? 0 : -1;
+      panels[i].hidden = !on;
+    });
+    if (idx === 1) { if (!V[ui.area] || !V[ui.area].real) fitView(ui.area); renderTab2(); }
+    if (focusTab) tabs[idx].focus();
+  }
+  tabs.forEach(function (t) {
+    t.addEventListener("click", function () { activate(+t.getAttribute("data-idx")); });
+    t.addEventListener("keydown", function (e) {
+      var i = +t.getAttribute("data-idx");
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); activate(Math.min(i + 1, tabs.length - 1), true); }
+      else if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); activate(Math.max(i - 1, 0), true); }
+      else if (e.key === "Home") { e.preventDefault(); activate(0, true); }
+      else if (e.key === "End") { e.preventDefault(); activate(tabs.length - 1, true); }
+    });
+  });
+  document.querySelectorAll("[data-nav]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      activate(ui.tab + (b.getAttribute("data-nav") === "next" ? 1 : -1), true);
+      window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    });
+  });
+
+  // ---------- accessible info popovers ----------
+  (function () {
+    var openPop = null;
+    function hasHover() { return matchMedia("(hover: hover)").matches; }
+    function close() { if (openPop) { openPop.pop.hidden = true; openPop.btn.setAttribute("aria-expanded", "false"); openPop = null; } }
+    document.addEventListener("click", function (e) {
+      var btn = e.target.closest ? e.target.closest(".info-tip") : null;
+      if (btn) {
+        e.preventDefault(); e.stopPropagation();
+        var pop = btn.parentNode.querySelector(".popover"), isOpen = openPop && openPop.btn === btn;
+        close();
+        if (!isOpen && pop) { pop.hidden = false; btn.setAttribute("aria-expanded", "true"); openPop = { btn: btn, pop: pop }; }
+      } else { close(); }
+    });
+    document.addEventListener("mouseover", function (e) {
+      if (!hasHover() || !e.target.closest) return;
+      var wrap = e.target.closest(".info-wrap"); if (!wrap) return;
+      var btn = wrap.querySelector(".info-tip"), pop = wrap.querySelector(".popover");
+      if (pop) { pop.hidden = false; btn.setAttribute("aria-expanded", "true"); }
+    });
+    document.addEventListener("mouseout", function (e) {
+      if (!hasHover() || !e.target.closest) return;
+      var wrap = e.target.closest(".info-wrap"); if (!wrap || wrap.contains(e.relatedTarget)) return;
+      var btn = wrap.querySelector(".info-tip"), pop = wrap.querySelector(".popover");
+      if ((!openPop || openPop.btn !== btn) && pop) { pop.hidden = true; btn.setAttribute("aria-expanded", "false"); }
+    });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+  })();
+
+  // ---------- resize ----------
+  var lastW = 0, rt = null;
+  window.addEventListener("resize", function () {
+    clearTimeout(rt);
+    rt = setTimeout(function () {
+      var w = $("stage").clientWidth;
+      if (w === lastW) return; lastW = w;
+      if (ui.tab === 1) { fitView(ui.area); renderStage(); }
+    }, 120);
+  });
+  /* The plan takes its colours from CSS variables, so a theme change needs no redraw. */
+
+  // ---------- init ----------
+  var restored = load();
+  syncInputs();
+  M = model(); M.items.forEach(posOf);
+  if (!restored) exampleLayout();
+  update();
+  lastW = $("stage").clientWidth;
+  // read-only handle used by the headless checks; nothing on the page depends on it
+  window.__pr = { S: function () { return S; }, M: function () { return M; }, C: function () { return C2; }, riser: riser, activate: activate, update: update, ui: ui, setArea: setArea };
+})();
+</script>
+<script>
+  /* Theme control. The head script has already applied the theme; this reflects
+     it in the radios and handles changes. */
+  (function () {
+    var group = document.getElementById("themePick");
+    if (!group) return;
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    var pref = window.__ttPref || "system";
+    function apply() {
+      var dark = pref === "dark" || (pref === "system" && mq.matches);
+      document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+      if (window.__ttRedraw) window.__ttRedraw();
+    }
+    var sel = group.querySelector('input[value="' + pref + '"]');
+    if (sel) sel.checked = true;
+    group.addEventListener("change", function (e) {
+      if (e.target.name !== "theme") return;
+      pref = e.target.value;
+      try { localStorage.setItem("tt-theme", pref); } catch (err) {}
+      apply();
+    });
+    mq.addEventListener("change", function () { if (pref === "system") apply(); });
+  })();
+</script>
+</body>
+</html>
