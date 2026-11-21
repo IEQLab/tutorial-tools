@@ -721,9 +721,10 @@
       <p>Air carries heat poorly: a cubic metre of water holds about 3,500 times as much heat per degree as a cubic metre of air. So a system that moves the sensible cooling to water (DOAS with fan-coil units or chilled beams) needs <b>much smaller duct shafts</b> than an all-air VAV system, and somewhat larger pipe risers. Every square metre of shaft is lost on every floor it passes through.</p>
       <p>Each group below is shown four ways, with your choice highlighted. The pipe riser leaving the plant room is on tab 2 as an item to place.</p>
     </div>
-    <div class="fgrid" style="max-width:520px">
+    <div class="fgrid" style="max-width:780px">
       <div class="fld"><label for="in-vS">Supply and outdoor-air riser velocity (m/s)</label><input type="number" inputmode="decimal" min="3" max="12" step="0.5" id="in-vS"><p class="hint">7&nbsp;m/s default; 5&ndash;10.</p></div>
       <div class="fld"><label for="in-vR">Return and exhaust riser velocity (m/s)</label><input type="number" inputmode="decimal" min="3" max="10" step="0.5" id="in-vR"><p class="hint">6&nbsp;m/s default; 4&ndash;8.</p></div>
+      <div class="fld"><label for="in-fth">Floor-to-floor height (m)</label><input type="number" inputmode="decimal" min="2.7" max="8" step="0.1" id="in-fth"><p class="hint">Sets the riser length for the pressure rows. 3.6&nbsp;m default; enter your section&rsquo;s.</p></div>
     </div>
     <div id="res3"></div>
 
@@ -734,6 +735,15 @@
       <p class="deriv"><b>Pipe riser.</b> Chilled water at 6&nbsp;K, heating water at 10&nbsp;K and chilled-beam water at 3&nbsp;K, each with a flow and a return pipe. Each pipe is the smallest steel size whose velocity stays within 2.4&nbsp;m/s and within one university standard&rsquo;s limit for that size (1.5&nbsp;m/s up to DN100, 1.8&nbsp;m/s at DN150&ndash;200). Its footprint is a square of the outside diameter plus insulation on both sides (50&nbsp;mm chilled, 40&nbsp;mm heating) plus a 100&nbsp;mm gap, then 20% spare. With chilled beams the primary chilled water carries the latent and outdoor-air load (the group&rsquo;s cooling less its sensible load) and the beam water the sensible load. Each group&rsquo;s cooling and heating are its share of your design capacities by floor area.</p>
       <p class="deriv"><b>VRF (comparison only).</b> Refrigerant pipes are small, so the riser is set by the number of systems: about 0.04&nbsp;m² for each system of about 90&nbsp;kW (a worked estimate, not a manufacturer&rsquo;s rule). VRF still needs a DOAS duct riser for the outdoor air.</p>
       <p class="deriv">Not included: electrical and communications risers (no recognised source for their area was found), hydraulics, fire services, fire dampers (in Australian practice usually at each floor branch, outside the shaft) and a standing zone in walk-in risers.</p>
+    </details>
+
+    <details class="maths">
+      <summary>What the riser velocity costs the fan</summary>
+      <p class="deriv"><b>Three pressures.</b> Air in a duct has a <b>static pressure</b> (it pushes on the duct walls) and a <b>velocity pressure</b>, the pressure its motion would give up if it were brought to rest: <i>p</i><sub>v</sub> = &frac12;&nbsp;&rho;&nbsp;<i>v</i>² = 0.6&nbsp;<i>v</i>² Pa at &rho; = 1.2&nbsp;kg/m³. Their sum is the <b>total pressure</b>. At 5&nbsp;m/s the velocity pressure is 15&nbsp;Pa; at 7&nbsp;m/s, 29&nbsp;Pa; at 10&nbsp;m/s, 60&nbsp;Pa. Doubling the velocity quadruples it.</p>
+      <p class="deriv"><b>What the fan has to make.</b> The fan&rsquo;s total pressure is the rise in total pressure from its inlet to its outlet, and it equals every loss along the worst path: filters, coils, the riser, branches, the terminal and the diffuser. A fan&rsquo;s <b>static pressure</b> is its total pressure less the velocity pressure at its outlet. Catalogues quote either, so compare a fan selection with a system&rsquo;s losses on the same basis. These are the definitions of AMCA&nbsp;210 and ISO&nbsp;5801 <a href="#src-D2">[D2]</a>.</p>
+      <p class="deriv"><b>Why velocity pressure matters.</b> Every bend, take-off, damper and transition loses a multiple of the local velocity pressure (its loss coefficient <i>C</i> &times; <i>p</i><sub>v</sub>). So the riser velocity sets the cost of every fitting on it as well as of its straight run.</p>
+      <p class="deriv"><b>Riser friction</b>, for each duct: the Darcy&ndash;Weisbach equation, &Delta;<i>p</i> = <i>f</i>&nbsp;(<i>L</i>&nbsp;/&nbsp;<i>D</i>)&nbsp;<i>p</i><sub>v</sub>, with the friction factor <i>f</i> from the Colebrook equation for galvanised steel duct (roughness 0.09&nbsp;mm), as in ASHRAE <i>Fundamentals</i>, ch.&nbsp;21 <a href="#src-D1">[D1]</a>. <i>D</i> is the diameter of a round duct of the net area (a squarish rectangular duct loses slightly more), and <i>L</i> is the floors served &times; the floor-to-floor height. The whole group&rsquo;s airflow is carried the full height, so it is an upper bound: in a real riser the flow falls at each floor.</p>
+      <p class="deriv"><b>Fan power</b> for that loss = airflow (m³/s) &times; &Delta;<i>p</i> (Pa) &divide; 0.6, the 0.6 being an assumed overall efficiency for fan, motor and drive, not a selection. Not included: the riser&rsquo;s fittings and take-offs, the air-handling unit, branches and terminals. Those are most of a real fan pressure, so read the rows as the riser&rsquo;s share, and as how it changes with velocity.</p>
     </details>
 
     <div class="nav">
@@ -765,6 +775,8 @@
       <li id="src-P1">[P1] Grundfos, <i>TP, TPD data booklet, 50&nbsp;Hz</i>, V7124417 (2025), dimensions, curves, foundations pp. 140&ndash;142; <i>NBG, NKG data booklet</i>, 96653948 (2025); <i>TP, TPD installation and operating instructions</i>, 96653082 (2026), p. 10. [P2] McGill University, <i>Building design standards: mechanical rooms</i> (2024), p. 3: 915&nbsp;mm around pumps.</li>
       <li id="src-B1">[B1] Carrier, <i>30RB/30RQ IOM</i>, 10597 (2024), p. 24; Trane, &ldquo;Chiller minimum loop time&rdquo; (2025); Mitsubishi Electric, <i>CAHV-Z450YA-HPB data book</i> (2026), p. 36; Ideal Heating, <i>ECOMOD buffer tanks</i> (2025). [B2] Rheem Australia, <i>Commercial and industrial brochure</i> (2020), pp. 54&ndash;56, 82; Mitsubishi Electric, <i>QAHV application guide</i> v1.3 (2023), pp. 6, 12, quoting CIBSE Guide G.</li>
       <li id="src-R1">[R1] Macquarie University, <i>Mechanical services design standard</i> V1.4 (2018), cl. 5.14.2, 5.20.1; UNSW, <i>Design and construction requirements E.2, mechanical services</i> Rev 6.3 (2019), air velocities, duct risers, pipe sizes; University of Queensland, <i>DS-07 mechanical design standard</i> Rev 3.0 (2025), cl. 1.18. Outdoor air of 10&nbsp;L/s per person (AS 1668.2) and 10&nbsp;m² per person and 0.3&nbsp;L/s per m² supplementary air (Property Council office guide) are quoted second-hand.</li>
+      <li id="src-D1">[D1] ASHRAE (2025), <i>Handbook&mdash;Fundamentals</i>, ch.&nbsp;21, Duct Design: the Darcy&ndash;Weisbach and Colebrook equations for duct friction, and the absolute roughness of galvanised steel duct (0.09&nbsp;mm). Used for the riser friction rows on tab 3.</li>
+      <li id="src-D2">[D2] ANSI/AMCA 210-16 / ASHRAE 51-16, <i>Laboratory methods of testing fans for certified aerodynamic performance rating</i>; ISO 5801:2017, <i>Fans: performance testing using standardized airways</i>: definitions of fan total, static and velocity pressure. The 60% overall fan, motor and drive efficiency on tab 3 is an assumption, not from these.</li>
       <li id="src-X1">[X1] Parlour, R. P., <i>Building Services: Engineering for Architects: A Guide to Integrated Design</i>, early 2000s edition (Integral Publishing): plant, shaft and air-handling space allowances as recorded in the unit&rsquo;s teaching data, used only for the comparison panel. Floor loading: AS/NZS 1170.1:2002, Table 3.1, offices for general use, 3.0&nbsp;kPa. Pipe outside diameters: standard steel tube sizes.</li>
     </ul>
     <p>Built by the IEQ Lab, Sydney School of Architecture, Design and Planning, for the BPSD6030 Assignment 2 plant room and riser drawings. The data were compiled from current manufacturers&rsquo; documents in November 2026; all of them state that their figures are indicative and that certified drawings govern. Your inputs and layout are kept in this browser only, so they are still there if you reload the page; nothing is sent anywhere. Self-contained, open-source, no tracking.</p>
@@ -871,7 +883,7 @@
     dt: 10, oaPP: 10, supp: 0.3, rooms: 60, apts: 0,
     room: { w: 13, d: 9.4, h: 4.5, dwall: "r", doff: 1.4, dw: 2.0, dh: 2.7 },
     deck: { w: 26, d: 20 },
-    ahuFull: false, vS: 7, vR: 6, paper: "A3",
+    ahuFull: false, vS: 7, vR: 6, fth: 3.6, paper: "A3",
     pos: {}
   };
   // The worked example's plant room, arranged by hand to share aisles and pull one
@@ -959,15 +971,34 @@
     return { name: name, Ls: Ls, dn: p.dn, v: p.v, area: 2 * side * side * 1.2, over: p.over };
   }
 
-  // the riser for one group, one system
-  function riser(g, sys) {
+  // Friction in a round duct of net area a (m²) at velocity v (m/s), Pa per metre:
+  // Darcy-Weisbach with the Colebrook friction factor, galvanised steel (roughness
+  // 0.09 mm, ASHRAE Fundamentals ch. 21), air at 1.2 kg/m³ and 1.81e-5 Pa s.
+  var RHO = 1.2, MU = 1.81e-5, EPS_DUCT = 0.00009, FAN_ETA = 0.6;
+  function vp(v) { return 0.5 * RHO * v * v; }
+  function ductFriction(a, v) {
+    if (!(a > 0) || !(v > 0)) return 0;
+    var D = Math.sqrt(4 * a / Math.PI), Re = RHO * v * D / MU, f = 0.02;
+    for (var i = 0; i < 30; i++) {
+      var x = -2 * Math.log10(EPS_DUCT / (3.7 * D) + 2.51 / (Re * Math.sqrt(f)));
+      f = 1 / (x * x);
+    }
+    return f / D * vp(v);
+  }
+  function fth() { return S.fth > 0 ? S.fth : 3.6; }
+
+  // the riser for one group, one system; vS and vR override the set velocities
+  function riser(g, sys, vS, vR) {
     var A = g.area, out = { air: [], pipes: [], ref: 0 };
+    var L = g.floors ? g.floors * fth() : null;
+    vS = vS || S.vS; vR = vR || S.vR;
     function duct(name, q, v, kBig) {
       var Q = q * A / 1000, net = Q / v, k = net < 1 ? 2.0 : kBig;
-      out.air.push({ name: name, q: q, Q: Q, net: net, k: k, area: net * k * 1.2 });
+      var dp = L ? ductFriction(net, v) * L : null;
+      out.air.push({ name: name, q: q, Q: Q, v: v, net: net, k: k, area: net * k * 1.2, dp: dp, kw: dp != null ? Q * dp / FAN_ETA / 1000 : null });
     }
-    if (sys === "vav") { duct("Supply", g.qVav, S.vS, 1.5); duct("Return", 0.9 * g.qVav, S.vR, 1.35); }
-    else { duct("Outdoor air", g.oa, S.vS, 1.5); duct("Exhaust and relief", 0.8 * g.oa, S.vR, 1.35); }
+    if (sys === "vav") { duct("Supply", g.qVav, vS, 1.5); duct("Return", 0.9 * g.qVav, vR, 1.35); }
+    else { duct("Outdoor air", g.oa, vS, 1.5); duct("Exhaust and relief", 0.8 * g.oa, vR, 1.35); }
     if (sys === "vav" || sys === "fcu") {
       out.pipes.push(pipePair("Chilled water", g.cool, 6, 0.05), pipePair("Heating water", g.heat, 10, 0.04));
     } else if (sys === "beam") {
@@ -978,6 +1009,7 @@
     }
     out.pipes = out.pipes.filter(Boolean);
     out.airTot = sum(out.air.map(function (d) { return d.area; }));
+    out.fanKW = L ? sum(out.air.map(function (d) { return d.kw; })) : null;
     out.pipeTot = sum(out.pipes.map(function (p) { return p.area; })) + out.ref;
     out.tot = out.airTot + out.pipeTot;
     out.plate = g.floors > 0 ? A / g.floors : null;
@@ -1538,7 +1570,7 @@
     $("in-rw").value = numVal(S.room.w); $("in-rd").value = numVal(S.room.d); $("in-rh").value = numVal(S.room.h);
     $("in-dwall").value = S.room.dwall; $("in-doff").value = numVal(S.room.doff); $("in-dw").value = numVal(S.room.dw); $("in-dh").value = numVal(S.room.dh);
     $("in-kw").value = numVal(S.deck.w); $("in-kd").value = numVal(S.deck.d);
-    $("in-vS").value = numVal(S.vS); $("in-vR").value = numVal(S.vR);
+    $("in-vS").value = numVal(S.vS); $("in-vR").value = numVal(S.vR); $("in-fth").value = numVal(fth());
     renderGroups();
   }
   function renderGroups() {
@@ -1849,7 +1881,16 @@
       row("<b>Shaft a floor, m²</b>", function (r) { return "<b>" + fmt(r.tot, 1) + "</b>"; });
       row("Share of the floor plate", function (r) { return r.pct != null ? fmt(r.pct, 1) + "%" : "—"; });
       row("Floor area taken across the floors served, m²", function (r) { return r.lost != null ? fmt(r.lost) : "—"; });
+      row("Riser friction, Pa (supply or outdoor air / return or exhaust)", function (r) { return r.air[0].dp != null ? fmt(r.air[0].dp, 0) + " / " + fmt(r.air[1].dp, 0) : "—"; });
+      row("Fan power for that friction, W", function (r) { return r.fanKW != null ? fmt(r.fanKW * 1000, 0) : "—"; });
       h += "</tbody></table></div>";
+      if (g.floors) {
+        var sw = [5, 7, 10].map(function (v) { return { v: v, r: riser(g, g.sys, v, v) }; });
+        var d0 = sw[0].r.air[0];
+        h += '<p class="note">Velocity pressure at ' + fmt(S.vS, 1) + "&nbsp;m/s is " + fmt(vp(S.vS), 0) + "&nbsp;Pa" + (S.vR !== S.vS ? " and at " + fmt(S.vR, 1) + "&nbsp;m/s " + fmt(vp(S.vR), 0) + "&nbsp;Pa" : "") + ": every bend and take-off on the riser loses a multiple of it. " +
+          "With both ducts of your " + SYS[g.sys].replace(" (comparison only)", "") + " riser at 5, 7 and 10&nbsp;m/s, the duct shaft would be " + sw.map(function (o) { return fmt(o.r.airTot, 1); }).join(", ") + "&nbsp;m² a floor and the " + d0.name.toLowerCase() + " riser&rsquo;s friction " + sw.map(function (o) { return fmt(o.r.air[0].dp, 0); }).join(", ") + "&nbsp;Pa over its " + fmt(g.floors * fth(), 0) + "&nbsp;m: halving the velocity about doubles the shaft and cuts the friction to about a fifth. " +
+          "At your velocity the straight run loses " + fmt(R[g.sys].air[0].dp / vp(S.vS), 1) + " velocity pressures. A bend or take-off loses its loss coefficient times the velocity pressure, so one fitting with a coefficient near that figure loses as much as the whole straight run. On a riser the velocity sets the pressure loss mostly through the fittings, and it sets the noise.</p>";
+      }
       var v = R.vav.tot, b = R.beam.tot, f = R.fcu.tot;
       if (v > 0) h += '<p class="verdict">Against all-air VAV, DOAS with fan-coil units takes ' + fmt(100 * (1 - f / v)) + "% less shaft and DOAS with chilled beams " + fmt(100 * (1 - b / v)) + "% less" + (g.floors ? ", about " + fmt((v - Math.min(f, b)) * g.floors) + "&nbsp;m² of floor back across the " + g.floors + " floors" : "") + ". The duct shaft alone falls by " + fmt(100 * (1 - R.beam.airTot / R.vav.airTot)) + "%; the larger pipe riser gives some of it back.</p>";
       var small = R.fcu.air.some(function (d) { return d.k === 2.0; });
@@ -1939,6 +1980,7 @@
   $("in-dwall").addEventListener("change", function (e) { S.room.dwall = e.target.value; touched(); update(); });
   $("in-vS").addEventListener("input", function (e) { S.vS = num(e.target.value) || 7; touched(); update(); });
   $("in-vR").addEventListener("input", function (e) { S.vR = num(e.target.value) || 6; touched(); update(); });
+  $("in-fth").addEventListener("input", function (e) { S.fth = num(e.target.value) || 3.6; touched(); update(); });
   $("pullTight").addEventListener("click", function () { S.ahuFull = false; touched(); update(); });
   $("pullFull").addEventListener("click", function () { S.ahuFull = true; touched(); update(); });
   $("paperA4").addEventListener("click", function () { S.paper = "A4"; update(); });
