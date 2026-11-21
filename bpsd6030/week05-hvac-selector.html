@@ -38,6 +38,9 @@
     --heat: #c0392b; --cool: #0b5fa5; --elec: #c98a12; --gas: #7a4e2d;
     --water: #0e7c86; --air: #8a8880; --refrig: #7b4bc9;
     --plant: #cfd8e0; --plant-ink: #33414f; --floor: #f1f4f7;
+    /* heat pump check chart: two series, validated with the dataviz palette
+       checks against --result-bg in each theme */
+    --bp-loss: #c0392b; --bp-hp: #4a52b5;
   }
 
   /* ---- dark theme ----
@@ -54,6 +57,7 @@
     --heat: #e2707a; --cool: #6ba7e6; --elec: #e3b25a; --gas: #c9a079;
     --water: #38b2bd; --air: #8d8b84; --refrig: #a583e0;
     --plant: #2b3947; --plant-ink: #c4d0dc; --floor: #131c25;
+    --bp-loss: #d8636e; --bp-hp: #7b86e0;
   }
   /* Light text on a dark surface blooms and reads thinner. Compensate on
      all three axes: a little more leading, a little more tracking, and one
@@ -190,6 +194,25 @@
   .note { color: var(--muted); font-size: var(--t-label); }
   footer.page { color: var(--muted); font-size: var(--t-meta); margin-top: var(--s-8); border-top: 1px solid var(--line); padding-top: var(--s-4); }
   footer.page a { color: var(--accent); }
+
+  /* ---- heat pump balance point check ---- */
+  .hpcheck { margin-top: var(--s-6); padding-top: var(--s-2); border-top: 1px solid var(--line); }
+  .hpcheck .fieldrow { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+  .hpgrp { font-size: var(--t-label); font-weight: 600; color: var(--ink); margin: var(--s-4) 0 var(--s-2); }
+  .hpchart { background: var(--result-bg); border-radius: var(--r-md); padding: var(--s-3); margin-top: var(--s-4); position: relative; }
+  .hpchart > svg { display: block; width: 100%; height: auto; touch-action: none; }
+  .hpchart .ax { stroke: var(--line); stroke-width: 1; }
+  .hpchart .tick { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+  .hpchart .lab { fill: var(--ink); font-size: 11.5px; font-weight: 600; }
+  .hpchart .lab.m { fill: var(--muted); font-weight: 400; }
+  .hptip { position: absolute; pointer-events: none; background: var(--card); color: var(--ink);
+    border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s-1) var(--s-2);
+    font-size: var(--t-meta); line-height: 1.45; box-shadow: var(--shadow); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .hptip[hidden] { display: none; }
+  .hptip i { display: inline-block; width: 12px; height: 0; border-top: 2px solid; vertical-align: middle; margin-right: var(--s-1); }
+  .hpread { margin-top: var(--s-3); font-size: var(--t-label); }
+  .hpread p { margin: var(--s-2) 0 0; max-width: 72ch; }
+  .hpread .big { font-size: var(--t-h2); font-weight: 650; font-variant-numeric: tabular-nums; }
 
   /* ---- per-step primer ("the idea behind the choice") ----
      Hierarchy comes from type and space, not a coloured bar. */
@@ -425,6 +448,7 @@
       </div>
 
       <div id="plantFields"></div>
+      <div id="hpCheck"></div>
 
       <div class="nav">
         <button type="button" class="btn ghost" data-go="3">Back</button>
@@ -483,7 +507,7 @@
   </form>
 
   <footer class="page">
-    The system taxonomy follows the unit's key terminology and the Australian commercial market; the schematic is a stylised concept diagram, not a construction drawing. Wizard structure and the fresh-air / conditioning framing adapt the openly published <a href="https://doi.org/10.5281/zenodo.10711959">HVAC System Selector</a> (Irani, Reinhard &amp; Reinhart, 2023, MIT Sustainable Design Lab, CC&nbsp;BY) to Australian systems, metric units, NCC climate zones, and a decarbonisation focus. Not the output of a load or energy simulation.
+    The system taxonomy follows the unit's key terminology and the Australian commercial market; the schematic is a stylised concept diagram, not a construction drawing. Wizard structure and the fresh-air / conditioning framing adapt the openly published <a href="https://doi.org/10.5281/zenodo.10711959">HVAC System Selector</a> (Irani, Reinhard &amp; Reinhart, 2023, MIT Sustainable Design Lab, CC&nbsp;BY) to Australian systems, metric units, NCC climate zones, and a decarbonisation focus. Not the output of a load or energy simulation. The heat pump check on step 5 is a two-line balance point estimate from the student&rsquo;s own load and catalogue figures; the 99.6% heating design temperature it asks for is defined in ASHRAE (2025), <i>Handbook&mdash;Fundamentals</i>, ch.&nbsp;14, Climatic Design Information.
     Built for the BPSD6030 Week 5 tutorial and the Assignment 2 system choice by the IEQ Lab, Sydney School of Architecture, Design and Planning. It deliberately stops short of sizing plant, because that is DesignBuilder's job and the choice of family is the one worth arguing about in class. Self-contained, open-source, no tracking.
     Revised November 2026 &middot; <a href="https://github.com/IEQLab/tutorial-tools">source on GitHub</a>.
   </footer>
@@ -703,7 +727,9 @@
     mode: "new", program: "office", zone: "5", floors: 6, gfa: 12000,
     operable: "sealed", oa: "mixed-air", cond: "both",
     system: "vav", coolSource: "air-chiller", coolTouched: false, heatSource: "heatpump", refrigerant: "low",
-    notes: ""
+    notes: "",
+    // heat pump balance point check: illustrative defaults until the student enters their own
+    hp: { ti: 21, td: 6.9, q: 300, t1: 7, c1: 280, t2: -7, c2: 200, touched: false }
   };
   var step = 0;
   var STEPS = ["Building", "Fresh air", "Heating & cooling", "System", "Plant", "Result"];
@@ -862,6 +888,180 @@
     });
     wireRadioGroup("heat", "heatSource");
     wireRadioGroup("ref", "refrigerant");
+    document.querySelectorAll('input[name="heat"]').forEach(function (r) { r.addEventListener("change", renderHpCheck); });
+    renderHpCheck();
+  }
+
+  // ---------- step 5: will the heat pump carry the coldest hour? ----------
+  /* Two straight lines against outdoor temperature. The building's heat loss
+     falls to zero at the indoor setpoint and reaches the design load at the
+     design temperature (no sun or internal gains, as in a heating design
+     calculation). The heat pump's output runs through two catalogue points.
+     Where they cross is the balance point; below it the heat pump alone falls short. */
+  function heatByHP() { return state.coolSource === "hp4" || state.heatSource === "heatpump"; }
+  function hpCalc() {
+    var h = state.hp, a = h.q / (h.ti - h.td), s = (h.c1 - h.c2) / (h.t1 - h.t2);
+    function load(T) { return Math.max(0, a * (h.ti - T)); }
+    function cap(T) { return h.c1 + s * (T - h.t1); }
+    var ok = h.ti > h.td && h.q > 0 && h.t1 !== h.t2 && h.c1 > 0 && h.c2 > 0;
+    var tb = ok && a + s > 0 ? (a * h.ti - h.c1 + s * h.t1) / (a + s) : null;
+    if (tb !== null && (tb >= h.ti || cap(tb) <= 0)) tb = null;
+    var cd = cap(h.td);
+    return { ok: ok, a: a, s: s, load: load, cap: cap, tb: tb, cd: cd, short: Math.max(0, h.q - cd), cover: 100 * cd / h.q };
+  }
+  function hpField(key, label, step, hint) {
+    return '<div><label for="hp_' + key + '">' + label + '</label>' +
+      '<input type="number" id="hp_' + key + '" step="' + step + '" value="' + state.hp[key] + '">' +
+      (hint ? '<p class="hint">' + hint + '</p>' : '') + '</div>';
+  }
+  function renderHpCheck() {
+    var box = $("hpCheck");
+    if (!heatByHP()) {
+      box.innerHTML = state.heatSource === "none" ? "" :
+        '<div class="hpcheck"><p class="hint">Choose a heat pump as the heat source to check whether it carries your building through its coldest design hour.</p></div>';
+      return;
+    }
+    var rc = sysById(state.system).refrig === "high";
+    box.innerHTML = '<div class="hpcheck">' +
+      '<h3>Will the heat pump carry the coldest hour?</h3>' +
+      '<p class="sub">An air-source heat pump gives less heat as the outdoor air gets colder, just as the building needs more. Where the two lines cross is the heat pump&rsquo;s <b>balance point</b>: below it the heat pump alone falls short, and something has to make up the rest. Enter your own figures; the ones shown are illustrative.</p>' +
+      '<p class="hpgrp">Your building (from DesignBuilder)</p>' +
+      '<div class="fieldrow">' +
+        hpField("q", "Design heating load (kW)", "1", "The heating design peak for the whole building.") +
+        hpField("td", "Outdoor design temperature (°C)", "0.1", "The 99.6% heating dry bulb: read it in the Week 3 chart or your model&rsquo;s location settings. 6.9&nbsp;°C is Sydney Airport.") +
+        hpField("ti", "Indoor heating setpoint (°C)", "0.5", "") +
+      '</div>' +
+      '<p class="hpgrp">Your heat pump' + (rc ? ' (the outdoor units in heating)' : 's, all modules together') + ', from a catalogue</p>' +
+      '<div class="fieldrow">' +
+        hpField("t1", "Outdoor temperature A (°C)", "1", "7&nbsp;°C is the standard rating point.") +
+        hpField("c1", "Heating output at A (kW)", "1", "") +
+        hpField("t2", "Outdoor temperature B (°C)", "1", "A colder point the catalogue lists, at or below your design temperature.") +
+        hpField("c2", "Heating output at B (kW)", "1", "") +
+      '</div>' +
+      '<p class="hint">Read both outputs at the heating water temperature you will run' + (rc ? '' : ' (45&nbsp;°C suits fan coils and coils; hotter water gets less from the same machine)') + ', and check whether the catalogue&rsquo;s figures include defrost (&ldquo;integrated&rdquo; capacity). If they do not, the real output on cold, damp mornings is lower.</p>' +
+      '<div class="hpchart" id="hpChart"></div>' +
+      '<div class="hpread" id="hpRead" role="status" aria-live="polite"></div>' +
+      '<details class="maths"><summary>The maths behind the balance point</summary>' +
+        '<p class="deriv"><b>The building.</b> Heat loss is taken as proportional to the indoor&ndash;outdoor difference: <i>Q</i>(<i>T</i>) = <i>Q</i><sub>design</sub> &times; (<i>T</i><sub>in</sub> &minus; <i>T</i>) &divide; (<i>T</i><sub>in</sub> &minus; <i>T</i><sub>design</sub>). It counts no sun and no people, lights or equipment, as in DesignBuilder&rsquo;s heating design calculation, so it is the cautious line. In use, internal gains lower it and the building needs no heat above its own (lower) balance point: the Week 3 chart shows that one.</p>' +
+        '<p class="deriv"><b>The heat pump.</b> Output is taken as a straight line through the two catalogue points: <i>C</i>(<i>T</i>) = <i>C</i><sub>A</sub> + <i>s</i>(<i>T</i> &minus; <i>T</i><sub>A</sub>), with slope <i>s</i> = (<i>C</i><sub>A</sub> &minus; <i>C</i><sub>B</sub>) &divide; (<i>T</i><sub>A</sub> &minus; <i>T</i><sub>B</sub>). The real curve bends, and dips where defrost cuts in, so read between catalogue points rather than far beyond them.</p>' +
+        '<p class="deriv"><b>The balance point</b> is where <i>Q</i>(<i>T</i>) = <i>C</i>(<i>T</i>): <i>T</i><sub>bal</sub> = (<i>a</i>&nbsp;<i>T</i><sub>in</sub> &minus; <i>C</i><sub>A</sub> + <i>s</i>&nbsp;<i>T</i><sub>A</sub>) &divide; (<i>a</i> + <i>s</i>), with <i>a</i> = <i>Q</i><sub>design</sub> &divide; (<i>T</i><sub>in</sub> &minus; <i>T</i><sub>design</sub>). The shortfall at design is <i>Q</i><sub>design</sub> &minus; <i>C</i>(<i>T</i><sub>design</sub>).</p>' +
+        '<p class="deriv">This is a check on a choice, not a selection. The heating load and the plant size come from your DesignBuilder model and a manufacturer&rsquo;s data.</p>' +
+      '</details>' +
+    '</div>';
+    ["q", "td", "ti", "t1", "c1", "t2", "c2"].forEach(function (k) {
+      $("hp_" + k).addEventListener("input", function () {
+        var v = parseFloat(this.value);
+        if (isFinite(v)) { state.hp[k] = v; state.hp.touched = true; drawHp(); }
+      });
+    });
+    drawHp();
+  }
+  function f1(x) { return (Math.round(x * 10) / 10).toFixed(1).replace("-", "−"); }
+  function f0(x) { return Math.round(x).toLocaleString(); }
+  function drawHp() {
+    var h = state.hp, c = hpCalc(), chart = $("hpChart"), read = $("hpRead");
+    if (!c.ok) {
+      chart.innerHTML = "";
+      read.innerHTML = '<p>Enter a design load above zero, a setpoint above the design temperature, two different catalogue temperatures and outputs above zero.</p>';
+      return;
+    }
+    // ---- scales ----
+    var x0 = Math.floor(Math.min(h.td, h.t2, c.tb === null ? h.td : c.tb) - 3), x1 = Math.ceil(h.ti + 1);
+    var ymax = Math.max(c.load(x0), c.cap(x0), c.cap(x1), h.q) * 1.12;
+    var W = 640, H = 300, ml = 48, mr = 16, mt = 16, mb = 40, pw = W - ml - mr, ph = H - mt - mb;
+    function X(t) { return ml + (t - x0) / (x1 - x0) * pw; }
+    function Y(q) { return mt + ph - Math.max(0, q) / ymax * ph; }
+    function nice(m) { var p = Math.pow(10, Math.floor(Math.log10(m / 4))); var r = m / 4 / p; return (r > 5 ? 10 : r > 2 ? 5 : r > 1 ? 2 : 1) * p; }
+    var o = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' +
+      'Heating needed by the building and heat pump output against outdoor temperature. ' +
+      (c.tb !== null ? 'They cross at ' + f1(c.tb) + ' degrees. ' : '') +
+      'At the design temperature of ' + f1(h.td) + ' degrees the building needs ' + f0(h.q) + ' kilowatts and the heat pump gives ' + f0(c.cd) + '.">';
+    // grid + y ticks
+    var yt = nice(ymax);
+    for (var v = 0; v <= ymax; v += yt) {
+      o += '<line class="ax" x1="' + ml + '" x2="' + (W - mr) + '" y1="' + Y(v) + '" y2="' + Y(v) + '"' + (v ? ' stroke-dasharray="2 4"' : '') + '/>' +
+        '<text class="tick" x="' + (ml - 6) + '" y="' + (Y(v) + 4) + '" text-anchor="end">' + f0(v) + '</text>';
+    }
+    var xt = (x1 - x0) > 24 ? 5 : 2;
+    for (var t = Math.ceil(x0 / xt) * xt; t <= x1; t += xt) {
+      o += '<text class="tick" x="' + X(t) + '" y="' + (H - mb + 16) + '" text-anchor="middle">' + String(t).replace("-", "−") + '</text>';
+    }
+    o += '<text class="tick" x="' + (ml + pw / 2) + '" y="' + (H - 4) + '" text-anchor="middle">Outdoor temperature, °C</text>' +
+      '<text class="tick" x="' + ml + '" y="' + (mt - 4) + '" text-anchor="start">kW</text>';
+    // design temperature
+    o += '<line x1="' + X(h.td) + '" x2="' + X(h.td) + '" y1="' + mt + '" y2="' + (mt + ph) + '" style="stroke:var(--muted)" stroke-dasharray="3 3"/>' +
+      '<text class="lab m" x="' + (X(h.td) + 5) + '" y="' + (mt + 11) + '">design ' + f1(h.td) + ' °C</text>';
+    // shortfall bracket at design
+    if (c.short > 0) {
+      o += '<line x1="' + X(h.td) + '" x2="' + X(h.td) + '" y1="' + Y(h.q) + '" y2="' + Y(c.cd) + '" style="stroke:var(--bp-loss)" stroke-width="6" stroke-opacity=".28"/>';
+    }
+    // series: building (solid), heat pump (dashed), 2px
+    var lineB = 'M' + X(x0) + ',' + Y(c.load(x0)) + 'L' + X(h.ti) + ',' + Y(0) + 'L' + X(x1) + ',' + Y(0);
+    var lineH = 'M' + X(x0) + ',' + Y(c.cap(x0)) + 'L' + X(x1) + ',' + Y(c.cap(x1));
+    o += '<path d="' + lineB + '" fill="none" style="stroke:var(--bp-loss)" stroke-width="2"/>' +
+      '<path d="' + lineH + '" fill="none" style="stroke:var(--bp-hp)" stroke-width="2" stroke-dasharray="7 4"/>';
+    // catalogue points
+    [[h.t1, h.c1], [h.t2, h.c2]].forEach(function (p) {
+      if (p[0] >= x0 && p[0] <= x1) o += '<circle cx="' + X(p[0]) + '" cy="' + Y(p[1]) + '" r="4" style="fill:var(--bp-hp);stroke:var(--result-bg)" stroke-width="2"/>';
+    });
+    // balance point
+    if (c.tb !== null) {
+      var bx = X(c.tb), near = Math.abs(bx - X(h.td)) < 130 && c.tb < h.td;
+      o += '<line x1="' + bx + '" x2="' + bx + '" y1="' + Y(c.cap(c.tb)) + '" y2="' + (mt + ph) + '" style="stroke:var(--ink)" stroke-width="1" stroke-dasharray="1 3"/>' +
+        '<circle cx="' + bx + '" cy="' + Y(c.cap(c.tb)) + '" r="5" style="fill:var(--ink);stroke:var(--result-bg)" stroke-width="2"/>' +
+        '<text class="lab" text-anchor="' + (near ? "end" : "start") + '" x="' + (bx + (near ? -6 : 6)) + '" y="' + (mt + ph - 8) + '">balance point ' + f1(c.tb) + ' °C</text>';
+    }
+    // direct labels near the left end
+    var lx = X(x0) + 6;
+    var yb = Y(c.load(x0)), yh = Y(c.cap(x0));
+    var below = yb > yh;
+    o += '<text class="lab" x="' + lx + '" y="' + (below ? yb + 15 : yb - 7) + '">building needs</text>' +
+      '<text class="lab" x="' + lx + '" y="' + (below ? yh - 7 : yh + 15) + '">heat pump gives</text>';
+    // hover layer
+    o += '<line id="hpX" x1="0" x2="0" y1="' + mt + '" y2="' + (mt + ph) + '" style="stroke:var(--muted)" stroke-width="1" visibility="hidden"/>' +
+      '<rect x="' + ml + '" y="' + mt + '" width="' + pw + '" height="' + ph + '" fill="transparent" id="hpHit"/>';
+    o += '</svg><div class="hptip" id="hpTip" hidden></div>';
+    o += '<div class="legend" aria-hidden="true">' +
+      '<span><svg width="20" height="8"><line x1="0" x2="20" y1="4" y2="4" style="stroke:var(--bp-loss)" stroke-width="2"/></svg>Building&rsquo;s heating need</span>' +
+      '<span><svg width="20" height="8"><line x1="0" x2="20" y1="4" y2="4" style="stroke:var(--bp-hp)" stroke-width="2" stroke-dasharray="7 4"/></svg>Heat pump output</span></div>';
+    chart.innerHTML = o;
+
+    var svg = chart.querySelector("svg"), hit = $("hpHit"), cross = $("hpX"), tip = $("hpTip");
+    function move(e) {
+      var r = svg.getBoundingClientRect(), sx = (e.clientX - r.left) / r.width * W;
+      var T = x0 + (Math.max(ml, Math.min(W - mr, sx)) - ml) / pw * (x1 - x0);
+      T = Math.round(T * 2) / 2;
+      cross.setAttribute("x1", X(T)); cross.setAttribute("x2", X(T)); cross.setAttribute("visibility", "visible");
+      var need = c.load(T), give = Math.max(0, c.cap(T));
+      tip.innerHTML = '<b>' + f1(T) + ' °C outdoors</b><br>' +
+        '<i style="color:var(--bp-loss)"></i>Building needs ' + f0(need) + ' kW<br>' +
+        '<i style="color:var(--bp-hp);border-top-style:dashed"></i>Heat pump gives ' + f0(give) + ' kW' +
+        (need > give ? '<br>Short by ' + f0(need - give) + ' kW' : '');
+      tip.hidden = false;
+      var px = X(T) / W * r.width, cw = chart.clientWidth;
+      tip.style.left = Math.min(cw - tip.offsetWidth - 8, px + 24) + "px";
+      tip.style.top = "12px";
+    }
+    hit.addEventListener("pointermove", move);
+    hit.addEventListener("pointerdown", move);
+    hit.addEventListener("pointerleave", function () { tip.hidden = true; cross.setAttribute("visibility", "hidden"); });
+
+    // ---- readout ----
+    var r = "";
+    if (c.s < 0) r += '<p class="hint">Output B is higher than output A at the colder temperature. Check the two catalogue points: an air-source heat pump gives less heat in colder air.</p>';
+    if (c.short <= 0) {
+      r += '<p><span class="big">Carries the design hour</span></p>' +
+        '<p>At ' + f1(h.td) + '&nbsp;°C the heat pump gives about ' + f0(c.cd) + '&nbsp;kW against the ' + f0(h.q) + '&nbsp;kW the building needs: ' + f0(c.cover) + '% of the design load' +
+        (c.tb !== null ? ', with its balance point at ' + f1(c.tb) + '&nbsp;°C, below the design temperature.' : '.') +
+        (c.cover > 130 ? ' That is a large margin: check that the cooling duty, not heating, is what sets its size, or whether a smaller machine would do.' : '') + '</p>';
+    } else {
+      r += '<p><span class="big">Short by ' + f0(c.short) + '&nbsp;kW at design</span></p>' +
+        '<p>At ' + f1(h.td) + '&nbsp;°C the heat pump gives about ' + f0(c.cd) + '&nbsp;kW, ' + f0(c.cover) + '% of the ' + f0(h.q) + '&nbsp;kW the building needs.' +
+        (c.tb !== null ? ' Its balance point is ' + f1(c.tb) + '&nbsp;°C: below that it needs help.' : '') +
+        ' Count how many hours of your weather file are colder than that (the Week 3 chart sorts them): if they are few, a small top-up covers them cheaply.</p>' +
+        '<p>Ways to close the gap: add capacity (another module, which also gives redundancy); a small resistance or storage top-up for the coldest hours; a lower heating water temperature, which raises the output of the same machine; or a better envelope, which lowers the load line. Weigh each one&rsquo;s carbon and cost in Assignment 2.</p>';
+    }
+    read.innerHTML = r;
   }
   function radio(group, val, title, sub, current) {
     var id = group + "_" + val;
@@ -1595,11 +1795,18 @@
       ["Heat source", heatLabel()],
       ["Refrigerant", refrigLabel()]
     ];
+    var hpl = hpLine();
+    if (hpl) rows.push(["Heat pump check", hpl]);
     $("summaryBox").innerHTML = rows.map(function (r) {
       return '<div class="row"><span class="k">' + r[0] + '</span><span class="v">' + r[1] + '</span></div>';
     }).join("");
   }
 
+  function hpLine() {
+    if (!heatByHP() || !state.hp.touched) return "";
+    var c = hpCalc(); if (!c.ok) return "";
+    return (c.tb !== null ? "balance point " + f1(c.tb) + " °C; " : "") + f0(c.cover) + "% of the " + f0(state.hp.q) + " kW design load at " + f1(state.hp.td) + " °C" + (c.short > 0 ? " (short by " + f0(c.short) + " kW)" : "");
+  }
   function renderResult() {
     readCols();
     reconcilePlant();
@@ -1622,6 +1829,7 @@
     lines.push("Cooling: " + coolLabel());
     lines.push("Heat source: " + heatLabel());
     lines.push("Refrigerant: " + refrigLabel());
+    if (hpLine()) lines.push("Heat pump check: " + hpLine() + " (my inputs)");
     lines.push("");
     lines.push("My justification:");
     lines.push(state.notes.trim() ? state.notes.trim() : "[write your reasoning above before copying]");
